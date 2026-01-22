@@ -1,0 +1,103 @@
+# 易享生活棋牌室 - 快速检查命令
+
+========================================
+在服务器上运行以下命令进行检查：
+========================================
+
+# 1. 下载并运行完整检查脚本
+wget https://raw.githubusercontent.com/wukangbin6173/easy-joy-life/main/deploy/server-check.sh
+chmod +x server-check.sh
+./server-check.sh
+
+========================================
+或者手动逐项检查：
+========================================
+
+# 1. 系统信息
+lsb_release -a
+uname -a
+uptime
+
+# 2. 网络连接
+ping -c 3 8.8.8.8
+ping -c 3 github.com
+curl -s ifconfig.me
+dig easyjoylife.xin
+
+# 3. 端口检查
+netstat -tlnp | grep -E ':22|:80|:443|:8080'
+
+# 4. 基础软件
+which curl wget git vim unzip
+
+# 5. Java环境
+java -version
+echo $JAVA_HOME
+
+# 6. MySQL数据库
+systemctl status mysql
+mysql -u root -pEasyJoyLife2024!@# -e "SHOW DATABASES;"
+mysql -u root -pEasyJoyLife2024!@# -e "USE easy_joy_life_db; SHOW TABLES;"
+mysql -u root -pEasyJoyLife2024!@# -e "USE easy_joy_life_db; SELECT COUNT(*) FROM stores;"
+
+# 7. Nginx服务
+systemctl status nginx
+nginx -t
+ls -la /etc/nginx/sites-available/easy-joy-life
+
+# 8. Docker环境
+systemctl status docker
+docker --version
+docker-compose --version
+
+# 9. SSL证书
+certbot certificates
+ls -la /etc/letsencrypt/live/easyjoylife.xin/
+
+# 10. 项目文件
+ls -la /opt/easy-joy-life/
+ls -la /opt/easy-joy-life/backend/
+ls -la /opt/easy-joy-life/miniprogram/
+ls -la /opt/easy-joy-life/deploy/
+
+# 11. 应用服务
+cd /opt/easy-joy-life/deploy
+docker-compose -f docker-compose.prod.yml ps
+docker-compose -f docker-compose.prod.yml logs backend --tail=20
+
+# 12. API测试
+curl http://localhost:8080/api/stores
+curl https://easyjoylife.xin/api/stores
+
+# 13. 系统资源
+free -h
+df -h
+top -bn1 | head -20
+
+# 14. 防火墙状态
+ufw status
+
+# 15. 自动任务
+crontab -l
+
+========================================
+预期结果检查：
+========================================
+
+✅ 应该看到的正常状态：
+- MySQL服务: active (running)
+- Nginx服务: active (running)  
+- Docker服务: active (running)
+- 应用容器: Up状态
+- API返回: JSON格式的门店数据
+- SSL证书: 有效期30天以上
+- 端口开放: 22, 80, 443, 8080
+
+⚠️ 需要关注的问题：
+- 服务状态为failed或inactive
+- API返回错误或无响应
+- SSL证书过期或不存在
+- 端口未开放或被占用
+- 系统资源使用率过高(>80%)
+
+========================================

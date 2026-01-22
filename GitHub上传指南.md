@@ -29,8 +29,8 @@ git config --global user.email
 1. 点击右上角的 "+" 号
 2. 选择 "New repository"
 3. 填写仓库信息：
-   - **Repository name**: `qiupai-chess-room` （建议的项目名）
-   - **Description**: `无人值守棋牌室小程序管理系统`
+   - **Repository name**: `easy-joy-life` （建议的项目名）
+   - **Description**: `Easy Joy Life 管理系统`
    - **Public/Private**: 选择Public（公开）或Private（私有）
    - **不要勾选** "Add a README file"
    - **不要勾选** "Add .gitignore"
@@ -214,7 +214,7 @@ git add .
 git commit -m "Initial commit: 雀胜无人棋牌室管理系统"
 
 # 添加远程仓库地址（替换为你的仓库地址）
-git remote add origin https://github.com/你的用户名/qiupai-chess-room.git
+git remote add origin https://github.com/你的用户名/easy-joy-life.git
 
 # 推送到GitHub
 git push -u origin main

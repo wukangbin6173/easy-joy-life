@@ -24,8 +24,8 @@ echo 1. 打开浏览器访问: https://github.com
 echo 2. 登录你的GitHub账号
 echo 3. 点击右上角的 + 号，选择 "New repository"
 echo 4. 填写仓库信息：
-echo    - Repository name: qiupai-chess-room
-echo    - Description: 雀胜无人棋牌室管理系统
+echo    - Repository name: easy-joy-life
+echo    - Description: Easy Joy Life 管理系统
 echo    - 选择 Public 或 Private
 echo    - 不要勾选任何额外选项
 echo 5. 点击 "Create repository"
@@ -48,7 +48,7 @@ echo.
 echo 第四步：创建第一次提交
 echo ----------------------------------------
 echo 正在创建提交...
-git commit -m "Initial commit: 雀胜无人棋牌室管理系统"
+git commit -m "Initial commit: Easy Joy Life 管理系统"
 if %errorlevel% neq 0 (
     echo 错误：提交失败！请检查Git用户配置。
     pause

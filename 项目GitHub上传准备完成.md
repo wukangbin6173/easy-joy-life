@@ -69,14 +69,14 @@ git config --global user.email "你的GitHub邮箱"
 
 ### 2. 在GitHub创建仓库
 - 访问 https://github.com
-- 创建名为 `qiupai-chess-room` 的新仓库
+- 创建名为 `easy-joy-life` 的新仓库
 - 复制仓库的HTTPS地址
 
 ### 3. 执行上传命令
 ```bash
 git add .
-git commit -m "Initial commit: 雀胜无人棋牌室管理系统"
-git remote add origin https://github.com/你的用户名/qiupai-chess-room.git
+git commit -m "Initial commit: Easy Joy Life 管理系统"
+git remote add origin https://github.com/你的用户名/easy-joy-life.git
 git push -u origin main
 ```
 
@@ -84,7 +84,7 @@ git push -u origin main
 
 ### 仓库名称
 ```
-qiupai-chess-room
+easy-joy-life
 ```
 
 ### 仓库描述

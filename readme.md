@@ -1,4 +1,4 @@
-# 雀胜无人棋牌室管理系统
+# Easy Joy Life 管理系统
 
 ## 项目简介
 这是一个完整的无人值守棋牌室管理系统，包含微信小程序前端和Spring Boot后端，支持门店管理、房间预订、智能门锁控制等功能。
@@ -35,7 +35,7 @@
 
 ## 项目结构
 ```
-qiupai-chess-room/
+easy-joy-life/
 ├── backend/                    # Spring Boot后端
 │   ├── src/main/java/         # Java源码
 │   │   └── com/qiupai/        # 主包
@@ -81,8 +81,8 @@ qiupai-chess-room/
 ### 后端启动
 1. **克隆项目**
    ```bash
-   git clone https://github.com/你的用户名/qiupai-chess-room.git
-   cd qiupai-chess-room
+   git clone https://github.com/你的用户名/easy-joy-life.git
+   cd easy-joy-life
    ```
 
 2. **配置数据库**
@@ -192,7 +192,7 @@ qiupai-chess-room/
 
 ## 联系方式
 如有问题或建议，请：
-- 提交 [Issue](https://github.com/你的用户名/qiupai-chess-room/issues)
+- 提交 [Issue](https://github.com/你的用户名/easy-joy-life/issues)
 - 发送邮件至开发者
 - 在项目中创建 Discussion
 

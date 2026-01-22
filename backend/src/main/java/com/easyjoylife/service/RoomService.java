@@ -1,7 +1,7 @@
-package com.qiupai.service;
+package com.easyjoylife.service;
 
-import com.qiupai.entity.Room;
-import com.qiupai.repository.RoomRepository;
+import com.easyjoylife.entity.Room;
+import com.easyjoylife.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

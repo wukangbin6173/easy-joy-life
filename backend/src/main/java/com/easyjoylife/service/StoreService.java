@@ -1,7 +1,7 @@
-package com.qiupai.service;
+package com.easyjoylife.service;
 
-import com.qiupai.entity.Store;
-import com.qiupai.repository.StoreRepository;
+import com.easyjoylife.entity.Store;
+import com.easyjoylife.repository.StoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.qiupai.entity;
+package com.easyjoylife.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import javax.persistence.*;

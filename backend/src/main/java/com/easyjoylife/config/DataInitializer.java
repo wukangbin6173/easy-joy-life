@@ -1,9 +1,9 @@
-package com.qiupai.config;
+package com.easyjoylife.config;
 
-import com.qiupai.entity.Room;
-import com.qiupai.entity.Store;
-import com.qiupai.repository.RoomRepository;
-import com.qiupai.repository.StoreRepository;
+import com.easyjoylife.entity.Room;
+import com.easyjoylife.entity.Store;
+import com.easyjoylife.repository.RoomRepository;
+import com.easyjoylife.repository.StoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

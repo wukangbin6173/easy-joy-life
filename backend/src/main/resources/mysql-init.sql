@@ -1,8 +1,8 @@
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS qiupai_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS easy_joy_life_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- 使用数据库
-USE qiupai_db;
+USE easy_joy_life_db;
 
 -- 创建门店表
 CREATE TABLE IF NOT EXISTS store (

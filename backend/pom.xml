@@ -5,12 +5,12 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.qiupai</groupId>
-    <artifactId>qiupai-system</artifactId>
+    <groupId>com.easyjoylife</groupId>
+    <artifactId>easy-joy-life-system</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>qiupai-system</name>
+    <name>easy-joy-life-system</name>
     <description>易享生活无人棋牌室管理系统</description>
 
     <parent>

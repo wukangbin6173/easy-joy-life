@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-MySQL 8.0.44 自动下载和安装脚本
-使用BrightData搜索到的最新版本
+MySQL 8.0.44 自动下载和安装脚�?
+使用BrightData搜索到的最新版�?
 """
 
 import os
@@ -13,7 +13,7 @@ import hashlib
 import time
 
 def print_status(message):
-    """打印状态信息"""
+    """打印状态信�?""
     print(f"[INFO] {message}")
 
 def print_error(message):
@@ -35,14 +35,14 @@ def download_file(url, filename, expected_md5=None):
         
         # 验证MD5 (如果提供)
         if expected_md5:
-            print_status("验证文件完整性...")
+            print_status("验证文件完整�?..")
             with open(filename, 'rb') as f:
                 file_hash = hashlib.md5(f.read()).hexdigest()
             
             if file_hash.lower() == expected_md5.lower():
                 print_success("文件完整性验证通过")
             else:
-                print_error(f"文件完整性验证失败! 期望: {expected_md5}, 实际: {file_hash}")
+                print_error(f"文件完整性验证失�? 期望: {expected_md5}, 实际: {file_hash}")
                 return False
         
         return True
@@ -110,27 +110,27 @@ def start_mysql_service():
         return False
 
 def create_database():
-    """创建项目数据库"""
-    print_status("创建项目数据库...")
+    """创建项目数据�?""
+    print_status("创建项目数据�?..")
     
     try:
-        # 创建数据库
+        # 创建数据�?
         cmd = [
             "mysql", "-u", "root", "-proot", "-e",
-            "CREATE DATABASE IF NOT EXISTS qiupai_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+            "CREATE DATABASE IF NOT EXISTS easy_joy_life_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
         ]
         
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode == 0:
-            print_success("数据库创建成功")
+            print_success("数据库创建成�?)
             return True
         else:
-            print_error(f"数据库创建失败: {result.stderr}")
+            print_error(f"数据库创建失�? {result.stderr}")
             return False
             
     except Exception as e:
-        print_error(f"创建数据库出错: {str(e)}")
+        print_error(f"创建数据库出�? {str(e)}")
         return False
 
 def import_test_data():
@@ -141,10 +141,10 @@ def import_test_data():
         # 导入SQL文件
         sql_file = "backend/src/main/resources/mysql-init.sql"
         if not os.path.exists(sql_file):
-            print_error(f"SQL文件不存在: {sql_file}")
+            print_error(f"SQL文件不存�? {sql_file}")
             return False
         
-        cmd = ["mysql", "-u", "root", "-proot", "qiupai_db"]
+        cmd = ["mysql", "-u", "root", "-proot", "easy_joy_life_db"]
         
         with open(sql_file, 'r', encoding='utf-8') as f:
             result = subprocess.run(cmd, input=f.read(), text=True, 
@@ -162,13 +162,13 @@ def import_test_data():
         return False
 
 def main():
-    """主函数"""
+    """主函�?""
     print("=" * 50)
-    print("MySQL 8.0.44 自动下载和安装脚本")
+    print("MySQL 8.0.44 自动下载和安装脚�?)
     print("=" * 50)
     print()
     
-    # MySQL安装包信息 (从BrightData搜索结果获取)
+    # MySQL安装包信�?(从BrightData搜索结果获取)
     mysql_info = {
         "web_installer": {
             "url": "https://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-installer-web-community-8.0.44.0.msi",
@@ -184,19 +184,19 @@ def main():
         }
     }
     
-    # 选择安装包类型
-    print("选择MySQL安装包类型:")
-    print("1. Web安装包 (2.1MB) - 需要网络连接")
-    print("2. 完整安装包 (558.3MB) - 离线安装")
+    # 选择安装包类�?
+    print("选择MySQL安装包类�?")
+    print("1. Web安装�?(2.1MB) - 需要网络连�?)
+    print("2. 完整安装�?(558.3MB) - 离线安装")
     print()
     
-    choice = input("请选择 (1 或 2, 默认选择1): ").strip()
+    choice = input("请选择 (1 �?2, 默认选择1): ").strip()
     if choice == "2":
         installer_info = mysql_info["full_installer"]
-        print_status("选择完整安装包")
+        print_status("选择完整安装�?)
     else:
         installer_info = mysql_info["web_installer"]
-        print_status("选择Web安装包")
+        print_status("选择Web安装�?)
     
     print()
     
@@ -212,9 +212,9 @@ def main():
     if os.path.exists(installer_path):
         print_status(f"安装包已存在: {installer_path}")
     else:
-        # 下载MySQL安装包
+        # 下载MySQL安装�?
         if not download_file(installer_info["url"], installer_path, installer_info["md5"]):
-            print_error("下载失败，退出安装")
+            print_error("下载失败，退出安�?)
             return False
     
     print()
@@ -222,14 +222,14 @@ def main():
     # 安装MySQL
     print_status("开始安装MySQL...")
     print("注意: 安装过程需要管理员权限")
-    print("如果弹出UAC提示，请点击'是'")
+    print("如果弹出UAC提示，请点击'�?")
     print()
     
     # 手动安装提示
-    print("由于需要管理员权限和用户交互，请手动运行安装程序:")
+    print("由于需要管理员权限和用户交互，请手动运行安装程�?")
     print(f"1. 双击运行: {installer_path}")
     print("2. 安装配置建议:")
-    print("   - 选择 'Server only' 或 'Developer Default'")
+    print("   - 选择 'Server only' �?'Developer Default'")
     print("   - 配置类型: 'Development Computer'")
     print("   - 端口: 3306 (默认)")
     print("   - Root密码: root")
@@ -246,7 +246,7 @@ def main():
         result = subprocess.run(["mysql", "--version"], 
                               capture_output=True, text=True)
         if result.returncode == 0:
-            print_success("MySQL命令行工具可用")
+            print_success("MySQL命令行工具可�?)
             print(f"版本信息: {result.stdout.strip()}")
         else:
             print_error("MySQL命令行工具不可用，请检查PATH环境变量")
@@ -264,9 +264,9 @@ def main():
     print_status("等待MySQL服务完全启动...")
     time.sleep(5)
     
-    # 创建数据库
+    # 创建数据�?
     if not create_database():
-        print_error("数据库创建失败")
+        print_error("数据库创建失�?)
         return False
     
     # 导入测试数据
@@ -276,21 +276,21 @@ def main():
     
     print()
     print("=" * 50)
-    print("🎉 MySQL安装和配置完成!")
+    print("🎉 MySQL安装和配置完�?")
     print("=" * 50)
     print()
     print("📊 MySQL配置信息:")
     print("- 版本: MySQL 8.0.44")
     print("- 端口: 3306")
-    print("- 用户名: root")
+    print("- 用户�? root")
     print("- 密码: root")
-    print("- 数据库: qiupai_db")
+    print("- 数据�? easy_joy_life_db")
     print()
     print("📈 测试数据:")
-    print("- 门店: 5个")
-    print("- 房间: 13个")
+    print("- 门店: 5�?)
+    print("- 房间: 13�?)
     print()
-    print("🚀 下一步操作:")
+    print("🚀 下一步操�?")
     print("1. 重启后端服务以连接MySQL")
     print("2. 将小程序切换到真实API模式")
     print("3. 访问管理后台验证数据")
@@ -302,9 +302,9 @@ if __name__ == "__main__":
     try:
         success = main()
         if success:
-            print_success("所有操作完成!")
+            print_success("所有操作完�?")
         else:
-            print_error("安装过程中出现错误")
+            print_error("安装过程中出现错�?)
             sys.exit(1)
     except KeyboardInterrupt:
         print("\n用户取消操作")

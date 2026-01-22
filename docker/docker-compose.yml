@@ -4,13 +4,13 @@ services:
   # MySQL数据库
   mysql:
     image: mysql:8.0
-    container_name: qiupai-mysql
+    container_name: easy-joy-life-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: qiupai_db
-      MYSQL_USER: qiupai
-      MYSQL_PASSWORD: qiupai123
+      MYSQL_DATABASE: easy_joy_life_db
+      MYSQL_USER: easyjoylife
+      MYSQL_PASSWORD: easyjoylife123
     ports:
       - "3306:3306"
     volumes:
@@ -21,7 +21,7 @@ services:
   # Redis缓存
   redis:
     image: redis:6.2-alpine
-    container_name: qiupai-redis
+    container_name: easy-joy-life-redis
     restart: always
     ports:
       - "6379:6379"
@@ -33,12 +33,12 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: qiupai-backend
+    container_name: easy-joy-life-backend
     restart: always
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/qiupai_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/easy_joy_life_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_REDIS_HOST: redis
@@ -51,7 +51,7 @@ services:
   # Nginx反向代理 (可选)
   nginx:
     image: nginx:alpine
-    container_name: qiupai-nginx
+    container_name: easy-joy-life-nginx
     restart: always
     ports:
       - "80:80"

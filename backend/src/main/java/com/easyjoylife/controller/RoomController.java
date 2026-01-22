@@ -1,8 +1,8 @@
-package com.qiupai.controller;
+package com.easyjoylife.controller;
 
-import com.qiupai.common.ApiResponse;
-import com.qiupai.entity.Room;
-import com.qiupai.service.RoomService;
+import com.easyjoylife.common.ApiResponse;
+import com.easyjoylife.entity.Room;
+import com.easyjoylife.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

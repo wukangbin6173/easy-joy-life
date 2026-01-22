@@ -1,6 +1,6 @@
-package com.qiupai.repository;
+package com.easyjoylife.repository;
 
-import com.qiupai.entity.Room;
+import com.easyjoylife.entity.Room;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

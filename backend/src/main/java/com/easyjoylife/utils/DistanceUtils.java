@@ -1,4 +1,4 @@
-package com.qiupai.utils;
+package com.easyjoylife.utils;
 
 /**
  * 距离计算工具类

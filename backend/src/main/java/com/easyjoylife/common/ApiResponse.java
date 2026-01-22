@@ -1,4 +1,4 @@
-package com.qiupai.common;
+package com.easyjoylife.common;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

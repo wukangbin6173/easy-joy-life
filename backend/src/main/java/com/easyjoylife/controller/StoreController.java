@@ -1,8 +1,8 @@
-package com.qiupai.controller;
+package com.easyjoylife.controller;
 
-import com.qiupai.common.ApiResponse;
-import com.qiupai.entity.Store;
-import com.qiupai.service.StoreService;
+import com.easyjoylife.common.ApiResponse;
+import com.easyjoylife.entity.Store;
+import com.easyjoylife.service.StoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

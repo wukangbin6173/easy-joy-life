@@ -1,6 +1,6 @@
-package com.qiupai.repository;
+package com.easyjoylife.repository;
 
-import com.qiupai.entity.Store;
+import com.easyjoylife.entity.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -72,10 +72,11 @@ cd /opt
 git clone https://github.com/wukangbin6173/easy-joy-life.git
 chown -R root:root easy-joy-life
 
-# 11. 配置SSL证书 (Let's Encrypt)
+# 11. 配置SSL证书 (使用专用脚本)
 echo "11. 配置SSL证书..."
-apt install -y certbot python3-certbot-nginx
-certbot --nginx -d easyjoylife.xin -d www.easyjoylife.xin --non-interactive --agree-tos --email admin@easyjoylife.xin
+cd /opt/easy-joy-life/deploy
+chmod +x ssl-auto-setup.sh
+./ssl-auto-setup.sh install
 
 # 12. 配置环境变量
 echo "12. 配置环境变量..."
@@ -95,11 +96,8 @@ chmod +x mvnw
 cd ../deploy
 docker-compose -f docker-compose.prod.yml up -d
 
-# 15. 配置Nginx
-echo "15. 配置Nginx..."
-cp nginx.conf /etc/nginx/sites-available/easy-joy-life
-ln -sf /etc/nginx/sites-available/easy-joy-life /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
+# 15. 配置Nginx (SSL脚本已自动配置)
+echo "15. Nginx配置已完成..."
 
 # 16. 等待服务启动
 echo "16. 等待服务启动..."

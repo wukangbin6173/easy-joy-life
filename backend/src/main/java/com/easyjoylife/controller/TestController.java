@@ -27,7 +27,7 @@ public class TestController {
     public Map<String, Object> health() {
         Map<String, Object> result = new HashMap<>();
         result.put("status", "UP");
-        result.put("service", "qiupai-system");
+        result.put("service", "easy-joy-life-system");
         result.put("version", "1.0.0");
         return result;
     }

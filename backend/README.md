@@ -37,7 +37,7 @@ mvnw.cmd spring-boot:run
 开发环境使用H2内存数据库，配置文件：`src/main/resources/application-dev.yml`
 
 ### H2数据库连接信息
-- **JDBC URL**: `jdbc:h2:mem:qiupai_system`
+- **JDBC URL**: `jdbc:h2:mem:easy_joy_life_system`
 - **用户名**: `sa`
 - **密码**: (空)
 - **驱动**: `org.h2.Driver`
@@ -97,14 +97,14 @@ server:
 ```yaml
 spring:
   datasource:
-    url: jdbc:h2:file:./data/qiupai_system;AUTO_SERVER=TRUE
+    url: jdbc:h2:file:./data/easy_joy_life_system;AUTO_SERVER=TRUE
 ```
 
 ### 微信接口配置
 在生产环境中，需要配置真实的微信小程序参数：
 
 ```yaml
-qiupai:
+easyjoylife:
   wechat:
     appid: 你的微信小程序AppID
     secret: 你的微信小程序Secret

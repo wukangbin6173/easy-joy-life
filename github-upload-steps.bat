@@ -29,7 +29,7 @@ echo    - Description: Easy Joy Life 管理系统
 echo    - 选择 Public 或 Private
 echo    - 不要勾选任何额外选项
 echo 5. 点击 "Create repository"
-echo 6. 复制仓库的HTTPS地址（类似：https://github.com/用户名/qiupai-chess-room.git）
+echo 6. 复制仓库的HTTPS地址（类似：https://github.com/用户名/easy-joy-life.git）
 echo.
 pause
 

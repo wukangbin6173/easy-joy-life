@@ -5,13 +5,13 @@ server:
 
 spring:
   application:
-    name: qiupai-system
+    name: easy-joy-life-system
   
   # H2 Database for development
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:qiupai_system;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    url: jdbc:h2:mem:easy_joy_life_system;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
     username: sa
     password: 
     druid:
@@ -72,7 +72,7 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
-  type-aliases-package: com.qiupai.entity
+  type-aliases-package: com.easyjoylife.entity
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
@@ -87,16 +87,16 @@ mybatis-plus:
 
 logging:
   level:
-    com.qiupai: debug
+    com.easyjoylife: debug
     org.springframework.security: debug
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
 
 # 自定义配置
-qiupai:
+easyjoylife:
   jwt:
-    secret: qiupai-jwt-secret-key-2024
+    secret: easy-joy-life-jwt-secret-key-2024
     expiration: 86400000 # 24小时
   wechat:
     appid: ${WECHAT_APPID:wx1234567890abcdef}
@@ -105,7 +105,7 @@ qiupai:
     api-key: ${WECHAT_API_KEY:test-api-key}
   mqtt:
     broker: tcp://localhost:1883
-    client-id: qiupai-server
+    client-id: easy-joy-life-server
     username: 
     password: 
   file:

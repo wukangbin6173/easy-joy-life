@@ -1,5 +1,5 @@
 @echo off
-echo Starting Qiupai Chess Room Management System...
+echo Starting Easy Joy Life Chess Room Management System...
 echo.
 echo Using H2 in-memory database for development
 echo Backend will be available at: http://localhost:8080/api

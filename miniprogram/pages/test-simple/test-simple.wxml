@@ -1,0 +1,5 @@
+<view class="container">
+  <text class="title">真机调试测试页面</text>
+  <text class="desc">如果你能看到这个页面，说明真机调试正常工作</text>
+  <button bindtap="testClick">点击测试</button>
+</view>

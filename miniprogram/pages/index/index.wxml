@@ -1,0 +1,74 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 轮播图 -->
+  <swiper class="banner-swiper" indicator-dots="true" autoplay="true" interval="4000" duration="500">
+    <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-banner="{{item}}">
+      <image class="banner-image" src="{{item.image}}" mode="aspectFill" />
+      <view class="banner-overlay">
+        <view class="banner-content">
+          <text class="banner-title">{{item.title}}</text>
+          <text class="banner-subtitle">{{item.subtitle}}</text>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 快捷操作 -->
+  <view class="quick-actions">
+    <view class="action-item" wx:for="{{quickActions}}" wx:key="title" 
+          bindtap="onQuickAction" data-action="{{item.action}}">
+      <image class="action-icon" src="{{item.icon}}" />
+      <text class="action-title">{{item.title}}</text>
+    </view>
+  </view>
+
+  <!-- 附近门店 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">附近门店</text>
+      <text class="section-more" bindtap="onMoreStores">更多 ></text>
+    </view>
+    <view class="store-list">
+      <view class="store-item" wx:for="{{nearbyStores}}" wx:key="id" 
+            bindtap="onStoreDetail" data-id="{{item.id}}">
+        <image class="store-image" src="{{item.images[0] || '/images/default-store.jpg'}}" />
+        <view class="store-info">
+          <text class="store-name">{{item.name}}</text>
+          <text class="store-address">{{item.address}}</text>
+          <view class="store-tags">
+            <text class="tag">24小时营业</text>
+            <text class="tag">智能门锁</text>
+          </view>
+        </view>
+        <view class="store-action">
+          <text class="distance">{{item.distance || '1.2km'}}</text>
+          <button class="book-btn" size="mini">预订</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 服务特色 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">服务特色</text>
+    </view>
+    <view class="features">
+      <view class="feature-item">
+        <image class="feature-icon" src="/images/feature-24h.png" />
+        <text class="feature-title">24小时营业</text>
+        <text class="feature-desc">全天候无人值守</text>
+      </view>
+      <view class="feature-item">
+        <image class="feature-icon" src="/images/feature-smart.png" />
+        <text class="feature-title">智能开门</text>
+        <text class="feature-desc">扫码即可开门</text>
+      </view>
+      <view class="feature-item">
+        <image class="feature-icon" src="/images/feature-clean.png" />
+        <text class="feature-title">环境整洁</text>
+        <text class="feature-desc">定时清洁消毒</text>
+      </view>
+    </view>
+  </view>
+</view>

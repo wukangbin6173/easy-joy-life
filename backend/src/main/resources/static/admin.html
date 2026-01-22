@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雀胜棋牌室管理后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: white;
+            color: #666;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab:hover {
+            background: #ecf0f1;
+        }
+        
+        .tab.active:hover {
+            background: #2980b9;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-group .form-label {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>雀胜棋牌室管理后台</h1>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('stores')">门店管理</button>
+            <button class="tab" onclick="switchTab('rooms')">房间管理</button>
+            <button class="tab" onclick="switchTab('orders')">订单管理</button>
+            <button class="tab" onclick="switchTab('users')">用户管理</button>
+        </div>
+        
+        <div class="content">
+            <!-- 门店管理 -->
+            <div id="stores" class="section active">
+                <div class="section-header">
+                    <h2 class="section-title">门店管理</h2>
+                    <button class="btn btn-primary" onclick="showStoreModal()">新增门店</button>
+                </div>
+                <div id="stores-loading" class="loading">加载中...</div>
+                <div id="stores-content" style="display: none;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>门店名称</th>
+                                <th>地址</th>
+                                <th>电话</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stores-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 房间管理 -->
+            <div id="rooms" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">房间管理</h2>
+                    <div class="header-actions">
+                        <div class="filter-group">
+                            <label class="form-label">请选择门店：</label>
+                            <select class="form-control" id="room-filter-store" onchange="filterRoomsByStore()" style="width: 200px; display: inline-block; margin-right: 1rem;">
+                                <option value="">全部门店</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="showRoomModal()">新增房间</button>
+                    </div>
+                </div>
+                <div id="rooms-loading" class="loading">加载中...</div>
+                <div id="rooms-content" style="display: none;">
+                    <div class="rooms-summary" id="rooms-summary" style="margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 6px; color: #666;">
+                        <span id="rooms-count">共 0 个房间</span>
+                        <span id="rooms-filter-info" style="margin-left: 1rem;"></span>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>房间号</th>
+                                <th>房间名称</th>
+                                <th>所属门店</th>
+                                <th>类型</th>
+                                <th>容量</th>
+                                <th>价格/小时</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rooms-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 订单管理 -->
+            <div id="orders" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">订单管理</h2>
+                </div>
+                <div class="empty">订单管理功能开发中...</div>
+            </div>
+            
+            <!-- 用户管理 -->
+            <div id="users" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">用户管理</h2>
+                </div>
+                <div class="empty">用户管理功能开发中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 门店编辑模态框 -->
+    <div id="store-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="store-modal-title">新增门店</h3>
+                <button class="close" onclick="hideStoreModal()">&times;</button>
+            </div>
+            <form id="store-form">
+                <input type="hidden" id="store-id">
+                <div class="form-group">
+                    <label class="form-label">门店名称</label>
+                    <input type="text" class="form-control" id="store-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">地址</label>
+                    <input type="text" class="form-control" id="store-address" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">经度</label>
+                        <input type="number" class="form-control" id="store-longitude" step="0.000001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">纬度</label>
+                        <input type="number" class="form-control" id="store-latitude" step="0.000001">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">电话</label>
+                    <input type="text" class="form-control" id="store-phone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-control" id="store-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">营业时间</label>
+                    <input type="text" class="form-control" id="store-business-hours" placeholder="例如：09:00-24:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">设施</label>
+                    <input type="text" class="form-control" id="store-facilities" placeholder="用逗号分隔，例如：智能门锁,空调,WiFi">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">图片路径</label>
+                    <input type="text" class="form-control" id="store-images" placeholder="例如：/images/store-logo-1.jpg">
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-success">保存</button>
+                    <button type="button" class="btn" onclick="hideStoreModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 房间编辑模态框 -->
+    <div id="room-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="room-modal-title">新增房间</h3>
+                <button class="close" onclick="hideRoomModal()">&times;</button>
+            </div>
+            <form id="room-form">
+                <input type="hidden" id="room-id">
+                <div class="form-group">
+                    <label class="form-label">所属门店</label>
+                    <select class="form-control" id="room-store-id" required>
+                        <option value="">请选择门店</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">房间号</label>
+                        <input type="text" class="form-control" id="room-no" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">房间名称</label>
+                        <input type="text" class="form-control" id="room-name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">房间类型</label>
+                        <select class="form-control" id="room-type" required>
+                            <option value="">请选择类型</option>
+                            <option value="麻将房">麻将房</option>
+                            <option value="扑克房">扑克房</option>
+                            <option value="棋牌房">棋牌房</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">容量</label>
+                        <input type="number" class="form-control" id="room-capacity" required min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">面积(平方米)</label>
+                        <input type="number" class="form-control" id="room-area" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">价格/小时</label>
+                        <input type="number" class="form-control" id="room-price" required step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">设施</label>
+                    <input type="text" class="form-control" id="room-facilities" placeholder="例如：自动麻将机,空调,茶水">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">图片路径</label>
+                    <input type="text" class="form-control" id="room-images" placeholder="例如：/images/room-default.jpg">
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-success">保存</button>
+                    <button type="button" class="btn" onclick="hideRoomModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let stores = [];
+        let rooms = [];
+        let allRooms = []; // 存储所有房间数据，用于筛选
+        let currentStoreFilter = ''; // 当前筛选的门店ID
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStores();
+        });
+        
+        // 切换标签页
+        function switchTab(tabName) {
+            // 更新标签样式
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 显示对应内容
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            // 加载对应数据
+            if (tabName === 'stores') {
+                loadStores();
+            } else if (tabName === 'rooms') {
+                loadRooms();
+            }
+        }
+        
+        // 加载门店列表
+        async function loadStores() {
+            try {
+                document.getElementById('stores-loading').style.display = 'block';
+                document.getElementById('stores-content').style.display = 'none';
+                
+                const response = await fetch(`${API_BASE}/stores/admin/all`);
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    stores = result.data;
+                    renderStores();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('加载门店失败:', error);
+                alert('加载门店失败: ' + error.message);
+            } finally {
+                document.getElementById('stores-loading').style.display = 'none';
+                document.getElementById('stores-content').style.display = 'block';
+            }
+        }
+        
+        // 渲染门店列表
+        function renderStores() {
+            const tbody = document.getElementById('stores-tbody');
+            tbody.innerHTML = '';
+            
+            stores.forEach(store => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${store.id}</td>
+                    <td>${store.name}</td>
+                    <td>${store.address}</td>
+                    <td>${store.phone || '-'}</td>
+                    <td><span class="status ${store.status === 1 ? 'status-active' : 'status-inactive'}">${store.status === 1 ? '启用' : '禁用'}</span></td>
+                    <td>${formatDateTime(store.createdAt)}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-primary btn-sm" onclick="editStore(${store.id})">编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStore(${store.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 加载房间列表
+        async function loadRooms() {
+            try {
+                document.getElementById('rooms-loading').style.display = 'block';
+                document.getElementById('rooms-content').style.display = 'none';
+                
+                // 确保门店数据已加载
+                if (stores.length === 0) {
+                    await loadStores();
+                }
+                
+                // 填充门店筛选下拉框
+                populateStoreFilter();
+                
+                const response = await fetch(`${API_BASE}/rooms/admin/all`);
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    allRooms = result.data;
+                    rooms = allRooms; // 初始显示所有房间
+                    renderRooms();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('加载房间失败:', error);
+                alert('加载房间失败: ' + error.message);
+            } finally {
+                document.getElementById('rooms-loading').style.display = 'none';
+                document.getElementById('rooms-content').style.display = 'block';
+            }
+        }
+        
+        // 填充门店筛选下拉框
+        function populateStoreFilter() {
+            const filterSelect = document.getElementById('room-filter-store');
+            filterSelect.innerHTML = '<option value="">全部门店</option>';
+            
+            stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = store.id;
+                option.textContent = store.name;
+                if (store.id.toString() === currentStoreFilter) {
+                    option.selected = true;
+                }
+                filterSelect.appendChild(option);
+            });
+        }
+        
+        // 按门店筛选房间
+        function filterRoomsByStore() {
+            const filterSelect = document.getElementById('room-filter-store');
+            currentStoreFilter = filterSelect.value;
+            
+            if (currentStoreFilter === '') {
+                // 显示所有房间
+                rooms = allRooms;
+            } else {
+                // 筛选指定门店的房间
+                rooms = allRooms.filter(room => room.storeId.toString() === currentStoreFilter);
+            }
+            
+            renderRooms();
+        }
+        
+        // 渲染房间列表
+        function renderRooms() {
+            const tbody = document.getElementById('rooms-tbody');
+            const countElement = document.getElementById('rooms-count');
+            const filterInfoElement = document.getElementById('rooms-filter-info');
+            
+            tbody.innerHTML = '';
+            
+            // 更新统计信息
+            countElement.textContent = `共 ${rooms.length} 个房间`;
+            
+            // 更新筛选信息
+            if (currentStoreFilter === '') {
+                filterInfoElement.textContent = '（显示全部门店）';
+            } else {
+                const selectedStore = stores.find(s => s.id.toString() === currentStoreFilter);
+                filterInfoElement.textContent = `（筛选门店：${selectedStore ? selectedStore.name : '未知门店'}）`;
+            }
+            
+            rooms.forEach(room => {
+                const store = stores.find(s => s.id === room.storeId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${room.id}</td>
+                    <td>${room.roomNo}</td>
+                    <td>${room.name}</td>
+                    <td>${store ? store.name : '未知门店'}</td>
+                    <td>${room.type}</td>
+                    <td>${room.capacity}人</td>
+                    <td>¥${room.pricePerHour}</td>
+                    <td><span class="status ${room.status === 1 ? 'status-active' : 'status-inactive'}">${room.status === 1 ? '启用' : '禁用'}</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-primary btn-sm" onclick="editRoom(${room.id})">编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteRoom(${room.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // 如果没有房间，显示提示信息
+            if (rooms.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="9" style="text-align: center; padding: 2rem; color: #999;">
+                        ${currentStoreFilter === '' ? '暂无房间数据' : '该门店暂无房间'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+        
+        // 显示门店编辑模态框
+        function showStoreModal(storeId = null) {
+            const modal = document.getElementById('store-modal');
+            const title = document.getElementById('store-modal-title');
+            const form = document.getElementById('store-form');
+            
+            form.reset();
+            
+            if (storeId) {
+                title.textContent = '编辑门店';
+                const store = stores.find(s => s.id === storeId);
+                if (store) {
+                    document.getElementById('store-id').value = store.id;
+                    document.getElementById('store-name').value = store.name;
+                    document.getElementById('store-address').value = store.address;
+                    document.getElementById('store-longitude').value = store.longitude || '';
+                    document.getElementById('store-latitude').value = store.latitude || '';
+                    document.getElementById('store-phone').value = store.phone || '';
+                    document.getElementById('store-description').value = store.description || '';
+                    document.getElementById('store-business-hours').value = store.businessHours || '';
+                    document.getElementById('store-facilities').value = store.facilities || '';
+                    document.getElementById('store-images').value = store.images || '';
+                }
+            } else {
+                title.textContent = '新增门店';
+                document.getElementById('store-id').value = '';
+            }
+            
+            modal.classList.add('show');
+        }
+        
+        // 隐藏门店编辑模态框
+        function hideStoreModal() {
+            document.getElementById('store-modal').classList.remove('show');
+        }
+        
+        // 编辑门店
+        function editStore(id) {
+            showStoreModal(id);
+        }
+        
+        // 删除门店
+        async function deleteStore(id) {
+            if (!confirm('确定要删除这个门店吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/stores/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    alert('删除成功');
+                    loadStores();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('删除门店失败:', error);
+                alert('删除门店失败: ' + error.message);
+            }
+        }
+        
+        // 显示房间编辑模态框
+        function showRoomModal(roomId = null) {
+            const modal = document.getElementById('room-modal');
+            const title = document.getElementById('room-modal-title');
+            const form = document.getElementById('room-form');
+            const storeSelect = document.getElementById('room-store-id');
+            
+            form.reset();
+            
+            // 填充门店选项
+            storeSelect.innerHTML = '<option value="">请选择门店</option>';
+            stores.filter(s => s.status === 1).forEach(store => {
+                const option = document.createElement('option');
+                option.value = store.id;
+                option.textContent = store.name;
+                storeSelect.appendChild(option);
+            });
+            
+            if (roomId) {
+                title.textContent = '编辑房间';
+                const room = rooms.find(r => r.id === roomId);
+                if (room) {
+                    document.getElementById('room-id').value = room.id;
+                    document.getElementById('room-store-id').value = room.storeId;
+                    document.getElementById('room-no').value = room.roomNo;
+                    document.getElementById('room-name').value = room.name;
+                    document.getElementById('room-type').value = room.type;
+                    document.getElementById('room-capacity').value = room.capacity;
+                    document.getElementById('room-area').value = room.area || '';
+                    document.getElementById('room-price').value = room.pricePerHour;
+                    document.getElementById('room-facilities').value = room.facilities || '';
+                    document.getElementById('room-images').value = room.images || '';
+                }
+            } else {
+                title.textContent = '新增房间';
+                document.getElementById('room-id').value = '';
+            }
+            
+            modal.classList.add('show');
+        }
+        
+        // 隐藏房间编辑模态框
+        function hideRoomModal() {
+            document.getElementById('room-modal').classList.remove('show');
+        }
+        
+        // 编辑房间
+        function editRoom(id) {
+            showRoomModal(id);
+        }
+        
+        // 删除房间
+        async function deleteRoom(id) {
+            if (!confirm('确定要删除这个房间吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/rooms/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    alert('删除成功');
+                    // 重新加载房间数据，保持当前筛选状态
+                    await loadRoomsData();
+                    filterRoomsByStore();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('删除房间失败:', error);
+                alert('删除房间失败: ' + error.message);
+            }
+        }
+        
+        // 仅加载房间数据，不重置筛选
+        async function loadRoomsData() {
+            const response = await fetch(`${API_BASE}/rooms/admin/all`);
+            const result = await response.json();
+            
+            if (result.code === 200) {
+                allRooms = result.data;
+                return true;
+            } else {
+                throw new Error(result.message);
+            }
+        }
+        
+        // 门店表单提交
+        document.getElementById('store-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('store-id').value;
+            const data = {
+                name: document.getElementById('store-name').value,
+                address: document.getElementById('store-address').value,
+                longitude: document.getElementById('store-longitude').value || null,
+                latitude: document.getElementById('store-latitude').value || null,
+                phone: document.getElementById('store-phone').value || null,
+                description: document.getElementById('store-description').value || null,
+                businessHours: document.getElementById('store-business-hours').value || null,
+                facilities: document.getElementById('store-facilities').value || null,
+                images: document.getElementById('store-images').value || null,
+                status: 1
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/stores/${id}` : `${API_BASE}/stores`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    alert(id ? '更新成功' : '创建成功');
+                    hideStoreModal();
+                    loadStores();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('保存门店失败:', error);
+                alert('保存门店失败: ' + error.message);
+            }
+        });
+        
+        // 房间表单提交
+        document.getElementById('room-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('room-id').value;
+            const data = {
+                storeId: parseInt(document.getElementById('room-store-id').value),
+                roomNo: document.getElementById('room-no').value,
+                name: document.getElementById('room-name').value,
+                type: document.getElementById('room-type').value,
+                capacity: parseInt(document.getElementById('room-capacity').value),
+                area: document.getElementById('room-area').value || null,
+                pricePerHour: parseFloat(document.getElementById('room-price').value),
+                facilities: document.getElementById('room-facilities').value || null,
+                images: document.getElementById('room-images').value || null,
+                status: 1
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/rooms/${id}` : `${API_BASE}/rooms`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    alert(id ? '更新成功' : '创建成功');
+                    hideRoomModal();
+                    // 重新加载房间数据，保持当前筛选状态
+                    await loadRoomsData();
+                    filterRoomsByStore();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('保存房间失败:', error);
+                alert('保存房间失败: ' + error.message);
+            }
+        });
+        
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        // 点击模态框外部关闭
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

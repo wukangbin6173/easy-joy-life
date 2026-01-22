@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="room-header">
+    <image class="room-image" src="{{room.image}}" mode="aspectFill"></image>
+    <view class="room-info">
+      <text class="room-name">{{room.name}}</text>
+      <text class="room-type">{{room.type}}</text>
+      <text class="room-price">¥{{room.price}}/小时</text>
+    </view>
+  </view>
+
+  <view class="room-details">
+    <view class="detail-item">
+      <text class="label">房间设施：</text>
+      <text class="value">{{room.facilities}}</text>
+    </view>
+    <view class="detail-item">
+      <text class="label">房间状态：</text>
+      <text class="value status-{{room.status}}">{{room.statusText}}</text>
+    </view>
+    <view class="detail-item">
+      <text class="label">容纳人数：</text>
+      <text class="value">{{room.capacity}}人</text>
+    </view>
+  </view>
+
+  <view class="booking-section">
+    <button class="booking-btn" bindtap="bookRoom" disabled="{{room.status !== 'available'}}">
+      {{room.status === 'available' ? '立即预订' : '暂不可用'}}
+    </button>
+  </view>
+</view>

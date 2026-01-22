@@ -1,0 +1,108 @@
+/* pages/store-detail/store-detail.wxss */
+.container {
+  padding: 20rpx;
+}
+
+.store-header {
+  display: flex;
+  margin-bottom: 30rpx;
+  background: white;
+  border-radius: 10rpx;
+  padding: 20rpx;
+}
+
+.store-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 10rpx;
+  margin-right: 20rpx;
+}
+
+.store-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.store-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.store-address {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.store-phone {
+  font-size: 28rpx;
+  color: #1890ff;
+}
+
+.section {
+  background: white;
+  border-radius: 10rpx;
+  padding: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.room-item:last-child {
+  border-bottom: none;
+}
+
+.room-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.room-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.room-type {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.room-price {
+  font-size: 28rpx;
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.room-status {
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+}
+
+.room-status.available {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.room-status.unavailable {
+  background: #fff2f0;
+  color: #ff4d4f;
+}

@@ -1,0 +1,54 @@
+<view class="container">
+  <view class="room-info">
+    <text class="room-name">{{room.name}}</text>
+    <text class="room-price">¥{{room.price}}/小时</text>
+  </view>
+
+  <view class="booking-form">
+    <view class="form-item">
+      <text class="label">预订日期</text>
+      <picker mode="date" value="{{bookingDate}}" bindchange="onDateChange">
+        <view class="picker">{{bookingDate || '请选择日期'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">开始时间</text>
+      <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
+        <view class="picker">{{startTime || '请选择时间'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">结束时间</text>
+      <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
+        <view class="picker">{{endTime || '请选择时间'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">联系电话</text>
+      <input class="input" placeholder="请输入联系电话" value="{{phone}}" bindinput="onPhoneInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label">备注</text>
+      <textarea class="textarea" placeholder="请输入备注信息（可选）" value="{{remark}}" bindinput="onRemarkInput"></textarea>
+    </view>
+  </view>
+
+  <view class="price-summary">
+    <view class="summary-item">
+      <text class="label">使用时长：</text>
+      <text class="value">{{duration}}小时</text>
+    </view>
+    <view class="summary-item">
+      <text class="label">总金额：</text>
+      <text class="value price">¥{{totalPrice}}</text>
+    </view>
+  </view>
+
+  <view class="booking-actions">
+    <button class="confirm-btn" bindtap="confirmBooking">确认预订</button>
+  </view>
+</view>

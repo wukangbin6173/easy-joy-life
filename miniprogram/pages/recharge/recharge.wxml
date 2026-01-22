@@ -1,0 +1,96 @@
+<view class="container">
+  <!-- 当前余额 -->
+  <view class="balance-info">
+    <text class="balance-label">当前余额</text>
+    <text class="balance-amount">¥{{currentBalance}}</text>
+  </view>
+
+  <!-- 充值金额选择 -->
+  <view class="amount-section">
+    <text class="section-title">选择充值金额</text>
+    <view class="amount-grid">
+      <view 
+        class="amount-item {{selectedAmount === item ? 'selected' : ''}}" 
+        wx:for="{{amountOptions}}" 
+        wx:key="*this"
+        bindtap="selectAmount"
+        data-amount="{{item}}"
+      >
+        <text class="amount-text">¥{{item}}</text>
+      </view>
+    </view>
+    
+    <!-- 自定义金额 -->
+    <view class="custom-amount">
+      <text class="custom-label">自定义金额</text>
+      <view class="input-wrapper">
+        <text class="currency">¥</text>
+        <input 
+          class="amount-input" 
+          type="digit" 
+          placeholder="请输入充值金额"
+          value="{{customAmount}}"
+          bindinput="onCustomAmountInput"
+          bindblur="onCustomAmountBlur"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 支付方式 -->
+  <view class="payment-section">
+    <text class="section-title">选择支付方式</text>
+    <view class="payment-methods">
+      <view 
+        class="payment-item {{selectedPayment === item.id ? 'selected' : ''}}"
+        wx:for="{{paymentMethods}}" 
+        wx:key="id"
+        bindtap="selectPayment"
+        data-id="{{item.id}}"
+      >
+        <image class="payment-icon" src="{{item.icon}}" mode="aspectFit"></image>
+        <view class="payment-info">
+          <text class="payment-name">{{item.name}}</text>
+          <text class="payment-desc">{{item.desc}}</text>
+        </view>
+        <view class="payment-radio">
+          <view class="radio {{selectedPayment === item.id ? 'checked' : ''}}"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 优惠信息 -->
+  <view class="promotion-section" wx:if="{{promotion}}">
+    <view class="promotion-item">
+      <image class="promotion-icon" src="/images/gift-icon.png"></image>
+      <text class="promotion-text">{{promotion}}</text>
+    </view>
+  </view>
+
+  <!-- 充值说明 -->
+  <view class="notice-section">
+    <text class="notice-title">充值说明</text>
+    <view class="notice-list">
+      <text class="notice-item">• 充值金额实时到账，可用于房间消费</text>
+      <text class="notice-item">• 支持微信支付、支付宝等多种支付方式</text>
+      <text class="notice-item">• 充值记录可在交易明细中查看</text>
+      <text class="notice-item">• 如有问题请联系客服：400-123-4567</text>
+    </view>
+  </view>
+
+  <!-- 充值按钮 -->
+  <view class="recharge-footer">
+    <view class="amount-summary">
+      <text class="summary-label">充值金额：</text>
+      <text class="summary-amount">¥{{finalAmount}}</text>
+    </view>
+    <button 
+      class="recharge-btn {{finalAmount > 0 ? 'active' : ''}}" 
+      bindtap="confirmRecharge"
+      disabled="{{finalAmount <= 0}}"
+    >
+      确认充值
+    </button>
+  </view>
+</view>

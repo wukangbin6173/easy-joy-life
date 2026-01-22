@@ -1,0 +1,27 @@
+.container {
+  padding: 40rpx;
+  text-align: center;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30rpx;
+  display: block;
+}
+
+.desc {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 60rpx;
+  display: block;
+}
+
+button {
+  width: 300rpx;
+  height: 80rpx;
+  background: #1890ff;
+  color: white;
+  border-radius: 40rpx;
+}

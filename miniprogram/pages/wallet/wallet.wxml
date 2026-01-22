@@ -1,0 +1,113 @@
+<view class="container">
+  <!-- 钱包余额卡片 -->
+  <view class="balance-card">
+    <view class="balance-header">
+      <text class="balance-title">钱包余额</text>
+      <view class="balance-actions">
+        <button class="action-btn recharge-btn" bindtap="goToRecharge">充值</button>
+        <button class="action-btn withdraw-btn" bindtap="goToWithdraw">提现</button>
+      </view>
+    </view>
+    <view class="balance-amount">
+      <text class="currency">¥</text>
+      <text class="amount">{{wallet.balance}}</text>
+    </view>
+    <view class="balance-info">
+      <view class="info-item">
+        <text class="label">冻结金额</text>
+        <text class="value">¥{{wallet.frozen}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">累计充值</text>
+        <text class="value">¥{{wallet.totalRecharge}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="quick-actions">
+    <view class="action-item" bindtap="goToRecharge">
+      <image class="action-icon" src="/images/recharge-icon.png"></image>
+      <text class="action-text">充值</text>
+    </view>
+    <view class="action-item" bindtap="goToWithdraw">
+      <image class="action-icon" src="/images/withdraw-icon.png"></image>
+      <text class="action-text">提现</text>
+    </view>
+    <view class="action-item" bindtap="goToTransfer">
+      <image class="action-icon" src="/images/transfer-icon.png"></image>
+      <text class="action-text">转账</text>
+    </view>
+    <view class="action-item" bindtap="goToRecords">
+      <image class="action-icon" src="/images/record-icon.png"></image>
+      <text class="action-text">明细</text>
+    </view>
+  </view>
+
+  <!-- 交易记录 -->
+  <view class="transaction-section">
+    <view class="section-header">
+      <text class="section-title">最近交易</text>
+      <text class="more-btn" bindtap="goToRecords">查看全部</text>
+    </view>
+    
+    <view class="transaction-list">
+      <view class="transaction-item" wx:for="{{transactions}}" wx:key="id">
+        <view class="transaction-icon">
+          <image src="/images/{{item.type}}-icon.png" mode="aspectFit"></image>
+        </view>
+        <view class="transaction-info">
+          <text class="transaction-title">{{item.title}}</text>
+          <text class="transaction-time">{{item.time}}</text>
+        </view>
+        <view class="transaction-amount {{item.type}}">
+          <text>{{item.type === 'income' ? '+' : '-'}}¥{{item.amount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{transactions.length === 0}}">
+      <image class="empty-icon" src="/images/empty-transaction.png"></image>
+      <text class="empty-text">暂无交易记录</text>
+    </view>
+  </view>
+
+  <!-- 钱包功能 -->
+  <view class="wallet-features">
+    <view class="feature-item" bindtap="goToBankCard">
+      <view class="feature-icon">
+        <image src="/images/bank-card-icon.png" mode="aspectFit"></image>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">银行卡管理</text>
+        <text class="feature-desc">添加或管理银行卡</text>
+      </view>
+      <text class="feature-arrow">></text>
+    </view>
+    
+    <view class="feature-item" bindtap="goToPayPassword">
+      <view class="feature-icon">
+        <image src="/images/password-icon.png" mode="aspectFit"></image>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">支付密码</text>
+        <text class="feature-desc">设置或修改支付密码</text>
+      </view>
+      <text class="feature-arrow">></text>
+    </view>
+    
+    <view class="feature-item" bindtap="goToAutoRecharge">
+      <view class="feature-icon">
+        <image src="/images/auto-recharge-icon.png" mode="aspectFit"></image>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">自动充值</text>
+        <text class="feature-desc">余额不足时自动充值</text>
+      </view>
+      <view class="feature-switch">
+        <switch checked="{{wallet.autoRecharge}}" bindchange="toggleAutoRecharge" />
+      </view>
+    </view>
+  </view>
+</view>

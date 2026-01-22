@@ -1,0 +1,58 @@
+# 编译输出
+backend/target/
+backend/build/
+*.class
+*.jar
+*.war
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件
+*.db
+*.sqlite
+
+# IDE文件
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Node.js (如果有)
+node_modules/
+npm-debug.log*
+
+# 临时文件
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# 敏感信息
+application-prod.yml
+application-local.yml
+*.env
+
+# MySQL数据
+mysql-data/
+mysql-download/
+mysql-installer/
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 测试文件
+test_*.py
+*_test.py
+
+# 构建文件
+dist/
+build/

@@ -1,0 +1,122 @@
+.container {
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+.room-info {
+  background: white;
+  border-radius: 10rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.room-price {
+  font-size: 36rpx;
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.booking-form {
+  background: white;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  padding: 25rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  width: 200rpx;
+  color: #333;
+  font-size: 28rpx;
+}
+
+.picker {
+  flex: 1;
+  color: #333;
+  font-size: 28rpx;
+  text-align: right;
+}
+
+.input {
+  flex: 1;
+  font-size: 28rpx;
+  text-align: right;
+}
+
+.textarea {
+  flex: 1;
+  font-size: 28rpx;
+  min-height: 100rpx;
+}
+
+.price-summary {
+  background: white;
+  border-radius: 10rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item .label {
+  color: #666;
+  font-size: 28rpx;
+}
+
+.summary-item .value {
+  color: #333;
+  font-size: 28rpx;
+}
+
+.summary-item .price {
+  color: #ff4d4f;
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.booking-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx;
+  background: white;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.confirm-btn {
+  width: 100%;
+  height: 88rpx;
+  background: #1890ff;
+  color: white;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+}

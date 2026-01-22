@@ -1,0 +1,207 @@
+/* pages/stores/stores.wxss */
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 搜索栏 */
+.search-bar {
+  background: white;
+  padding: 20rpx 30rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 50rpx;
+  padding: 0 20rpx;
+  height: 70rpx;
+}
+
+.search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 16rpx;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.clear-btn {
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-btn image {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+/* 位置授权 */
+.location-auth {
+  background: #fff7e6;
+  border: 2rpx solid #ffd591;
+  margin: 20rpx;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.location-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+
+.auth-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #d48806;
+}
+
+.auth-btn {
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 20rpx;
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+}
+
+/* 门店列表 */
+.store-list {
+  padding: 20rpx;
+}
+
+.store-item {
+  background: white;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  display: flex;
+}
+
+.store-image {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.store-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.store-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.store-status {
+  background: #52c41a;
+  color: white;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+}
+
+.store-address {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  line-height: 1.4;
+}
+
+.store-tags {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.tag {
+  font-size: 22rpx;
+  color: #1890ff;
+  background: #e6f7ff;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.store-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.distance {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.store-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 20rpx;
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+}
+
+.navigate-btn {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.book-btn {
+  background: #1890ff;
+  color: white;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}

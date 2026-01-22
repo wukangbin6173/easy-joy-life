@@ -1,0 +1,27 @@
+<!--pages/store-detail/store-detail.wxml-->
+<view class="container">
+  <view class="store-header">
+    <image class="store-image" src="{{store.images[0] || '/images/default-store.png'}}" mode="aspectFill"></image>
+    <view class="store-info">
+      <text class="store-name">{{store.name}}</text>
+      <text class="store-address">{{store.address}}</text>
+      <text class="store-phone">{{store.phone}}</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section-title">房间列表</text>
+    <view class="room-list">
+      <view class="room-item" wx:for="{{rooms}}" wx:key="id" bindtap="selectRoom" data-room="{{item}}">
+        <view class="room-info">
+          <text class="room-name">{{item.name}}</text>
+          <text class="room-type">{{item.type}} | {{item.capacity}}人</text>
+          <text class="room-price">¥{{item.pricePerHour}}/小时</text>
+        </view>
+        <view class="room-status {{item.status === 1 ? 'available' : 'unavailable'}}">
+          {{item.status === 1 ? '空闲' : '使用中'}}
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

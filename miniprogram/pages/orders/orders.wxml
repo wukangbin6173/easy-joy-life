@@ -1,0 +1,52 @@
+<view class="container">
+  <view class="tabs">
+    <view class="tab-item {{activeTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">
+      全部
+    </view>
+    <view class="tab-item {{activeTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">
+      待使用
+    </view>
+    <view class="tab-item {{activeTab === 'using' ? 'active' : ''}}" bindtap="switchTab" data-tab="using">
+      使用中
+    </view>
+    <view class="tab-item {{activeTab === 'completed' ? 'active' : ''}}" bindtap="switchTab" data-tab="completed">
+      已完成
+    </view>
+  </view>
+
+  <view class="order-list">
+    <view class="order-item" wx:for="{{orders}}" wx:key="id" bindtap="viewOrderDetail" data-id="{{item.id}}">
+      <view class="order-header">
+        <text class="store-name">{{item.storeName}}</text>
+        <text class="order-status status-{{item.status}}">{{item.statusText}}</text>
+      </view>
+      
+      <view class="order-content">
+        <view class="room-info">
+          <text class="room-name">{{item.roomName}}</text>
+          <text class="booking-time">{{item.bookingDate}} {{item.startTime}}-{{item.endTime}}</text>
+        </view>
+        <view class="order-price">
+          <text class="price">¥{{item.totalPrice}}</text>
+        </view>
+      </view>
+
+      <view class="order-actions">
+        <button class="action-btn" wx:if="{{item.status === 'pending'}}" bindtap="cancelOrder" data-id="{{item.id}}">
+          取消订单
+        </button>
+        <button class="action-btn primary" wx:if="{{item.status === 'using'}}" bindtap="unlockRoom" data-id="{{item.id}}">
+          开门
+        </button>
+        <button class="action-btn" wx:if="{{item.status === 'completed'}}" bindtap="rateOrder" data-id="{{item.id}}">
+          评价
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{orders.length === 0}}">
+    <image class="empty-icon" src="/images/empty-order.png"></image>
+    <text class="empty-text">暂无订单</text>
+  </view>
+</view>

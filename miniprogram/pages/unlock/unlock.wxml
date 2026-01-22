@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="unlock-header">
+    <image class="lock-icon" src="/images/smart-lock.png" mode="aspectFit"></image>
+    <text class="title">智能开门</text>
+    <text class="subtitle">{{room.name}}</text>
+  </view>
+
+  <view class="unlock-methods">
+    <view class="method-item" bindtap="unlockByCode">
+      <view class="method-icon">
+        <image src="/images/password-icon.png" mode="aspectFit"></image>
+      </view>
+      <view class="method-info">
+        <text class="method-title">密码开门</text>
+        <text class="method-desc">在门锁上输入开门密码</text>
+      </view>
+      <view class="method-action">
+        <text class="unlock-code">{{unlockCode}}</text>
+      </view>
+    </view>
+
+    <view class="method-item" bindtap="unlockByBluetooth">
+      <view class="method-icon">
+        <image src="/images/bluetooth-icon.png" mode="aspectFit"></image>
+      </view>
+      <view class="method-info">
+        <text class="method-title">蓝牙开门</text>
+        <text class="method-desc">靠近门锁自动开启</text>
+      </view>
+      <view class="method-action">
+        <button class="unlock-btn" size="mini">开门</button>
+      </view>
+    </view>
+
+    <view class="method-item" bindtap="unlockByQR">
+      <view class="method-icon">
+        <image src="/images/qr-icon.png" mode="aspectFit"></image>
+      </view>
+      <view class="method-info">
+        <text class="method-title">扫码开门</text>
+        <text class="method-desc">扫描门锁二维码开门</text>
+      </view>
+      <view class="method-action">
+        <button class="unlock-btn" size="mini">扫码</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="unlock-status" wx:if="{{unlockStatus}}">
+    <view class="status-icon success" wx:if="{{unlockStatus === 'success'}}">
+      <image src="/images/success-icon.png" mode="aspectFit"></image>
+    </view>
+    <view class="status-icon error" wx:if="{{unlockStatus === 'error'}}">
+      <image src="/images/error-icon.png" mode="aspectFit"></image>
+    </view>
+    <text class="status-text">{{unlockMessage}}</text>
+  </view>
+
+  <view class="unlock-tips">
+    <view class="tip-title">使用说明</view>
+    <view class="tip-item">
+      <text class="tip-number">1</text>
+      <text class="tip-text">请在预订时间内使用开门功能</text>
+    </view>
+    <view class="tip-item">
+      <text class="tip-number">2</text>
+      <text class="tip-text">如遇开门问题，请联系客服</text>
+    </view>
+    <view class="tip-item">
+      <text class="tip-number">3</text>
+      <text class="tip-text">离开时请确保房门已锁好</text>
+    </view>
+  </view>
+
+  <view class="contact-service">
+    <button class="service-btn" bindtap="contactService">联系客服</button>
+  </view>
+</view>

@@ -1,0 +1,68 @@
+<view class="container">
+  <!-- 筛选选项 -->
+  <view class="filter-section">
+    <view class="filter-tabs">
+      <view 
+        class="filter-tab {{activeFilter === item.key ? 'active' : ''}}"
+        wx:for="{{filterOptions}}" 
+        wx:key="key"
+        bindtap="switchFilter"
+        data-key="{{item.key}}"
+      >
+        {{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 交易记录列表 -->
+  <view class="records-list">
+    <view class="date-group" wx:for="{{groupedRecords}}" wx:key="date">
+      <view class="date-header">
+        <text class="date-text">{{item.date}}</text>
+        <text class="date-summary">{{item.summary}}</text>
+      </view>
+      
+      <view class="record-item" wx:for="{{item.records}}" wx:key="id" wx:for-item="record">
+        <view class="record-icon">
+          <image src="/images/{{record.type}}-icon.png" mode="aspectFit"></image>
+        </view>
+        <view class="record-info">
+          <text class="record-title">{{record.title}}</text>
+          <text class="record-desc">{{record.desc}}</text>
+          <text class="record-time">{{record.time}}</text>
+        </view>
+        <view class="record-amount">
+          <text class="amount {{record.type}}">
+            {{record.type === 'income' ? '+' : '-'}}¥{{record.amount}}
+          </text>
+          <text class="status {{record.status}}">{{record.statusText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore}}">
+    <button class="load-btn" bindtap="loadMore" loading="{{loading}}">
+      {{loading ? '加载中...' : '加载更多'}}
+    </button>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{groupedRecords.length === 0 && !loading}}">
+    <image class="empty-icon" src="/images/empty-transaction.png"></image>
+    <text class="empty-text">暂无交易记录</text>
+  </view>
+
+  <!-- 统计信息 -->
+  <view class="statistics" wx:if="{{statistics}}">
+    <view class="stat-item">
+      <text class="stat-label">本月收入</text>
+      <text class="stat-value income">+¥{{statistics.monthIncome}}</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-label">本月支出</text>
+      <text class="stat-value expense">-¥{{statistics.monthExpense}}</text>
+    </view>
+  </view>
+</view>

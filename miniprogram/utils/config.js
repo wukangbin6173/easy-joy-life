@@ -9,7 +9,7 @@ const config = {
   
   // 生产环境
   production: {
-    baseUrl: 'https://your-domain.com',  // 替换为你的域名
+    baseUrl: 'https://easyjoylife.xin',  // 你的实际域名
     mockMode: false,
     debug: false
   }

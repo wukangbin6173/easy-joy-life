@@ -18,7 +18,7 @@ Page({
     const orders = [
       {
         id: '001',
-        storeName: '雀胜棋牌室(万达店)',
+        storeName: '易享生活棋牌室(万达店)',
         roomName: '豪华包间A',
         bookingDate: '2025-01-20',
         startTime: '14:00',
@@ -29,7 +29,7 @@ Page({
       },
       {
         id: '002',
-        storeName: '雀胜棋牌室(中心店)',
+        storeName: '易享生活棋牌室(中心店)',
         roomName: '标准包间B',
         bookingDate: '2025-01-19',
         startTime: '19:00',
@@ -40,7 +40,7 @@ Page({
       },
       {
         id: '003',
-        storeName: '雀胜棋牌室(万达店)',
+        storeName: '易享生活棋牌室(万达店)',
         roomName: 'VIP包间',
         bookingDate: '2025-01-18',
         startTime: '10:00',

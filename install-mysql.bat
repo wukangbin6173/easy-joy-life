@@ -4,7 +4,7 @@ echo MySQL 8.0 自动安装脚本
 echo ========================================
 
 echo.
-echo 正在为雀胜棋牌室系统安装MySQL...
+echo 正在为易享生活棋牌室系统安装MySQL...
 echo 这将下载并安装MySQL 8.0 Community Server
 
 echo.

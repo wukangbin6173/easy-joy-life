@@ -4,7 +4,7 @@
     <!-- Logo -->
     <view class="logo-section">
       <image class="logo" src="/images/logo.png" mode="aspectFit" />
-      <text class="app-name">雀胜棋牌室</text>
+      <text class="app-name">易享生活棋牌室</text>
       <text class="app-desc">24小时无人值守，智能预订</text>
     </view>
 

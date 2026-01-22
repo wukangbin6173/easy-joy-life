@@ -36,27 +36,27 @@ public class DataInitializer implements CommandLineRunner {
 
         try {
             // 创建门店数据
-            Store store1 = createStore("雀胜棋牌室(万达店)", "北京市朝阳区建国路93号万达广场3层", 
+            Store store1 = createStore("易享生活棋牌室(万达店)", "北京市朝阳区建国路93号万达广场3层", 
                 new BigDecimal("116.447587"), new BigDecimal("39.937075"), "010-12345678", 
                 "环境优雅，设施齐全的高端棋牌室", "/images/store-logo-1.jpg", 
                 "09:00-02:00", "智能门锁,中央空调,免费WiFi,茶水服务,停车位");
 
-            Store store2 = createStore("雀胜棋牌室(中心店)", "北京市海淀区中关村大街27号中关村大厦", 
+            Store store2 = createStore("易享生活棋牌室(中心店)", "北京市海淀区中关村大街27号中关村大厦", 
                 new BigDecimal("116.310316"), new BigDecimal("39.983424"), "010-87654321", 
                 "科技感十足的智能棋牌室", "/images/store-logo-2.jpg", 
                 "24小时营业", "智能门锁,新风系统,高速WiFi,咖啡机,充电桩");
 
-            Store store3 = createStore("雀胜棋牌室(西单店)", "北京市西城区西单北大街120号西单商场", 
+            Store store3 = createStore("易享生活棋牌室(西单店)", "北京市西城区西单北大街120号西单商场", 
                 new BigDecimal("116.366794"), new BigDecimal("39.906901"), "010-11223344", 
                 "交通便利，停车方便", "/images/store-logo-3.jpg", 
                 "10:00-24:00", "智能门锁,空气净化,免费WiFi,小食服务");
 
-            Store store4 = createStore("雀胜棋牌室(国贸店)", "北京市朝阳区建国门外大街1号国贸大厦", 
+            Store store4 = createStore("易享生活棋牌室(国贸店)", "北京市朝阳区建国门外大街1号国贸大厦", 
                 new BigDecimal("116.458564"), new BigDecimal("39.908347"), "010-55667788", 
                 "商务人士首选，高端大气", "/images/store-logo-4.jpg", 
                 "09:00-01:00", "智能门锁,商务设施,高速WiFi,会议室,秘书服务");
 
-            Store store5 = createStore("雀胜棋牌室(三里屯店)", "北京市朝阳区三里屯路19号三里屯太古里", 
+            Store store5 = createStore("易享生活棋牌室(三里屯店)", "北京市朝阳区三里屯路19号三里屯太古里", 
                 new BigDecimal("116.456621"), new BigDecimal("39.937456"), "010-99887766", 
                 "时尚潮流，年轻人聚集地", "/images/store-logo-5.jpg", 
                 "12:00-03:00", "智能门锁,音响系统,免费WiFi,调酒服务,夜宵");

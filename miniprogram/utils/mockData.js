@@ -2,7 +2,7 @@
 const mockStores = [
   {
     id: 1,
-    name: '雀胜棋牌室(万达店)',
+    name: '易享生活棋牌室(万达店)',
     address: '北京市朝阳区建国路93号万达广场3层',
     longitude: 116.447587,
     latitude: 39.937075,
@@ -16,7 +16,7 @@ const mockStores = [
   },
   {
     id: 2,
-    name: '雀胜棋牌室(中心店)',
+    name: '易享生活棋牌室(中心店)',
     address: '北京市海淀区中关村大街27号中关村大厦',
     longitude: 116.310316,
     latitude: 39.983424,
@@ -30,7 +30,7 @@ const mockStores = [
   },
   {
     id: 3,
-    name: '雀胜棋牌室(西单店)',
+    name: '易享生活棋牌室(西单店)',
     address: '北京市西城区西单北大街120号西单商场',
     longitude: 116.366794,
     latitude: 39.906901,
@@ -44,7 +44,7 @@ const mockStores = [
   },
   {
     id: 4,
-    name: '雀胜棋牌室(国贸店)',
+    name: '易享生活棋牌室(国贸店)',
     address: '北京市朝阳区建国门外大街1号国贸大厦',
     longitude: 116.458564,
     latitude: 39.908347,
@@ -58,7 +58,7 @@ const mockStores = [
   },
   {
     id: 5,
-    name: '雀胜棋牌室(三里屯店)',
+    name: '易享生活棋牌室(三里屯店)',
     address: '北京市朝阳区三里屯路19号三里屯太古里',
     longitude: 116.456621,
     latitude: 39.937456,

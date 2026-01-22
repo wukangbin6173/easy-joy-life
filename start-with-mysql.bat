@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo 雀胜棋牌室管理系统 - MySQL版本启动
+echo 易享生活棋牌室管理系统 - MySQL版本启动
 echo ========================================
 
 echo.
@@ -53,7 +53,7 @@ echo.
 echo 4. 启动后端服务...
 cd backend
 echo 正在编译和启动Spring Boot应用...
-start "雀胜棋牌室后端服务" cmd /k "./mvnw spring-boot:run"
+start "易享生活棋牌室后端服务" cmd /k "./mvnw spring-boot:run"
 
 echo.
 echo 5. 等待服务启动...

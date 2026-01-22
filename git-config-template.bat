@@ -13,6 +13,6 @@ echo git config --global user.email
 echo.
 echo 配置完成后，请运行以下命令继续：
 echo git add .
-echo git commit -m "Initial commit: 雀胜无人棋牌室管理系统"
+echo git commit -m "Initial commit: 易享生活无人棋牌室管理系统"
 echo.
 pause

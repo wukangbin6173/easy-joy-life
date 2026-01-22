@@ -17,7 +17,7 @@ public class TestController {
     @GetMapping("/hello")
     public Map<String, Object> hello() {
         Map<String, Object> result = new HashMap<>();
-        result.put("message", "Hello, 雀胜无人棋牌室管理系统!");
+        result.put("message", "Hello, 易享生活无人棋牌室管理系统!");
         result.put("status", "success");
         result.put("timestamp", System.currentTimeMillis());
         return result;

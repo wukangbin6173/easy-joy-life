@@ -1,4 +1,4 @@
-# 雀胜无人棋牌室管理系统部署指南
+# 易享生活无人棋牌室管理系统部署指南
 
 ## 环境要求
 
@@ -95,7 +95,7 @@ vim backend/src/main/resources/application-prod.yml
 #!/bin/bash
 # deploy.sh
 
-echo "开始部署雀胜无人棋牌室管理系统..."
+echo "开始部署易享生活无人棋牌室管理系统..."
 
 # 拉取最新代码
 git pull origin main

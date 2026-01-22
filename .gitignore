@@ -52,7 +52,10 @@ __pycache__/
 # 测试文件
 test_*.py
 *_test.py
+<<<<<<< HEAD
 
 # 构建文件
 dist/
 build/
+=======
+>>>>>>> bb69a9fd4bf37c8300dd78f4fd7c83663628f7d9

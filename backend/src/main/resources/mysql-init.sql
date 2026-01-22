@@ -1,11 +1,19 @@
+-- 易享生活棋牌室数据库初始化脚本
+
 -- 创建数据库
 CREATE DATABASE IF NOT EXISTS easy_joy_life_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- 使用数据库
 USE easy_joy_life_db;
 
--- 创建门店表
-CREATE TABLE IF NOT EXISTS store (
+-- 删除已存在的表（如果有）
+DROP TABLE IF EXISTS rooms;
+DROP TABLE IF EXISTS room;
+DROP TABLE IF EXISTS stores;
+DROP TABLE IF EXISTS store;
+
+-- 创建门店表（使用复数形式）
+CREATE TABLE stores (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL COMMENT '门店名称',
     address VARCHAR(255) NOT NULL COMMENT '门店地址',
@@ -13,7 +21,7 @@ CREATE TABLE IF NOT EXISTS store (
     latitude DECIMAL(10, 6) COMMENT '纬度',
     phone VARCHAR(20) COMMENT '联系电话',
     description TEXT COMMENT '门店描述',
-    images TEXT COMMENT '门店图片',
+    image VARCHAR(200) COMMENT '门店图片',
     business_hours VARCHAR(50) COMMENT '营业时间',
     facilities TEXT COMMENT '设施信息',
     status INT DEFAULT 1 COMMENT '状态：1-启用，0-禁用',
@@ -21,8 +29,8 @@ CREATE TABLE IF NOT EXISTS store (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='门店表';
 
--- 创建房间表
-CREATE TABLE IF NOT EXISTS room (
+-- 创建房间表（使用复数形式）
+CREATE TABLE rooms (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     store_id BIGINT NOT NULL COMMENT '所属门店ID',
     room_no VARCHAR(20) NOT NULL COMMENT '房间号',
@@ -30,17 +38,17 @@ CREATE TABLE IF NOT EXISTS room (
     type VARCHAR(50) NOT NULL COMMENT '房间类型',
     capacity INT NOT NULL COMMENT '容量',
     area DECIMAL(8, 2) COMMENT '面积(平方米)',
-    price_per_hour DECIMAL(10, 2) NOT NULL COMMENT '每小时价格',
-    images TEXT COMMENT '房间图片',
+    hourly_rate DECIMAL(10, 2) NOT NULL COMMENT '每小时价格',
+    image VARCHAR(200) COMMENT '房间图片',
     facilities TEXT COMMENT '设施信息',
     status INT DEFAULT 1 COMMENT '状态：1-启用，0-禁用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    FOREIGN KEY (store_id) REFERENCES store(id) ON DELETE CASCADE
+    FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='房间表';
 
 -- 插入门店测试数据
-INSERT INTO store (name, address, longitude, latitude, phone, description, images, business_hours, facilities, status) VALUES
+INSERT INTO stores (name, address, longitude, latitude, phone, description, image, business_hours, facilities, status) VALUES
 ('易享生活棋牌室(万达店)', '北京市朝阳区建国路93号万达广场3层', 116.447587, 39.937075, '010-12345678', '环境优雅，设施齐全的高端棋牌室', '/images/store-logo-1.jpg', '09:00-02:00', '智能门锁,中央空调,免费WiFi,茶水服务,停车位', 1),
 ('易享生活棋牌室(中心店)', '北京市海淀区中关村大街27号中关村大厦', 116.310316, 39.983424, '010-87654321', '科技感十足的智能棋牌室', '/images/store-logo-2.jpg', '24小时营业', '智能门锁,新风系统,高速WiFi,咖啡机,充电桩', 1),
 ('易享生活棋牌室(西单店)', '北京市西城区西单北大街120号西单商场', 116.366794, 39.906901, '010-11223344', '交通便利，停车方便', '/images/store-logo-3.jpg', '10:00-24:00', '智能门锁,空气净化,免费WiFi,小食服务', 1),
@@ -48,7 +56,7 @@ INSERT INTO store (name, address, longitude, latitude, phone, description, image
 ('易享生活棋牌室(三里屯店)', '北京市朝阳区三里屯路19号三里屯太古里', 116.456621, 39.937456, '010-99887766', '时尚潮流，年轻人聚集地', '/images/store-logo-5.jpg', '12:00-03:00', '智能门锁,音响系统,免费WiFi,调酒服务,夜宵', 1);
 
 -- 插入房间测试数据
-INSERT INTO room (store_id, room_no, name, type, capacity, price_per_hour, images, facilities, status) VALUES
+INSERT INTO rooms (store_id, room_no, name, type, capacity, hourly_rate, image, facilities, status) VALUES
 -- 万达店房间
 (1, '101', '梅花厅', '麻将房', 4, 80.00, '/images/room-default.jpg', '自动麻将机,空调,茶水', 1),
 (1, '102', '兰花厅', '麻将房', 4, 80.00, '/images/room-default.jpg', '自动麻将机,空调,茶水', 1),

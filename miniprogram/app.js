@@ -1,14 +1,25 @@
 // app.js
+const config = require('./utils/config.js');
+
 App({
   globalData: {
     userInfo: null,
-    baseUrl: 'http://192.168.110.28:8080',
+    baseUrl: '',
     token: null,
-    mockMode: false // 使用真实API，通过IP地址访问
+    mockMode: false
   },
 
   onLaunch() {
     console.log('小程序启动');
+    
+    // 获取环境配置
+    const envConfig = config.getCurrentConfig();
+    this.globalData.baseUrl = envConfig.baseUrl;
+    this.globalData.mockMode = envConfig.mockMode;
+    
+    console.log('API地址:', this.globalData.baseUrl);
+    console.log('模拟模式:', this.globalData.mockMode);
+    
     // 暂时注释掉可能有问题的代码
     // this.checkLogin();
   },

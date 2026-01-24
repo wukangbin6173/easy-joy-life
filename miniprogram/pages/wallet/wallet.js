@@ -20,16 +20,50 @@ Page({
 
   // 加载钱包信息
   loadWalletInfo() {
-    // 模拟钱包数据
-    const walletInfo = {
-      balance: 168.50,
-      frozen: 0.00,
-      totalRecharge: 500.00,
-      autoRecharge: true
-    };
-
-    this.setData({
-      wallet: walletInfo
+    const app = getApp();
+    const baseUrl = app.globalData.baseUrl;
+    const userId = 1; // 临时用户ID，实际应该从登录状态获取
+    
+    wx.request({
+      url: `${baseUrl}/api/payment/wallet/${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.statusCode === 200 && res.data.success) {
+          const wallet = res.data.wallet;
+          this.setData({
+            wallet: {
+              balance: wallet.balance || 0.00,
+              frozen: wallet.frozenAmount || 0.00,
+              totalRecharge: wallet.totalRecharge || 0.00,
+              autoRecharge: false
+            }
+          });
+        } else {
+          // 使用模拟数据作为后备
+          const walletInfo = {
+            balance: 168.50,
+            frozen: 0.00,
+            totalRecharge: 500.00,
+            autoRecharge: true
+          };
+          this.setData({
+            wallet: walletInfo
+          });
+        }
+      },
+      fail: (error) => {
+        console.error('加载钱包数据失败:', error);
+        // 使用模拟数据作为后备
+        const walletInfo = {
+          balance: 168.50,
+          frozen: 0.00,
+          totalRecharge: 500.00,
+          autoRecharge: true
+        };
+        this.setData({
+          wallet: walletInfo
+        });
+      }
     });
   },
 

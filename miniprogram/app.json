@@ -13,6 +13,8 @@
     "pages/wallet/wallet",
     "pages/recharge/recharge",
     "pages/transaction-records/transaction-records",
+    "pages/payment-webview/payment-webview",
+    "pages/payment-test/payment-test",
     "pages/test-simple/test-simple",
     "pages/network-test/network-test"
   ],

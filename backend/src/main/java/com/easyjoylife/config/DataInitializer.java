@@ -96,7 +96,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Store createStore(String name, String address, BigDecimal longitude, BigDecimal latitude, 
-                             String phone, String description, String images, String businessHours, String facilities) {
+                             String phone, String description, String image, String businessHours, String facilities) {
         Store store = new Store();
         store.setName(name);
         store.setAddress(address);
@@ -104,7 +104,7 @@ public class DataInitializer implements CommandLineRunner {
         store.setLatitude(latitude);
         store.setPhone(phone);
         store.setDescription(description);
-        store.setImages(images);
+        store.setImage(image);
         store.setBusinessHours(businessHours);
         store.setFacilities(facilities);
         store.setStatus(1);
@@ -112,15 +112,15 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createRoom(Long storeId, String roomNo, String name, String type, Integer capacity, 
-                           BigDecimal pricePerHour, String facilities) {
+                           BigDecimal hourlyRate, String facilities) {
         Room room = new Room();
         room.setStoreId(storeId);
         room.setRoomNo(roomNo);
         room.setName(name);
         room.setType(type);
         room.setCapacity(capacity);
-        room.setPricePerHour(pricePerHour);
-        room.setImages("/images/room-default.jpg");
+        room.setHourlyRate(hourlyRate);
+        room.setImage("/images/room-default.jpg");
         room.setFacilities(facilities);
         room.setStatus(1);
         roomRepository.save(room);

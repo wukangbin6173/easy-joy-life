@@ -84,9 +84,8 @@ Page({
     this.addResult('开始测试不同IP地址...');
     
     const ips = [
-      'http://localhost:8080',
-      'http://127.0.0.1:8080', 
-      'http://192.168.110.28:8080'
+      'https://xx.aieo.cn',
+      'http://xx.aieo.cn'
     ];
     
     ips.forEach((ip, index) => {

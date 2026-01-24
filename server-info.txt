@@ -8,7 +8,7 @@
 服务器IP地址: 121.43.96.127
 用户名: root
 密码: Easy8286173
-域名: easyjoylife.xin
+域名: xx.aieo.cn
 
 ========================================
 连接方式
@@ -35,9 +35,9 @@
 SSL脚本: ssl-auto-setup.sh
 
 部署后访问地址:
-- 网站: https://easyjoylife.xin
-- API: https://easyjoylife.xin/api/stores
-- 管理后台: https://easyjoylife.xin/admin.html
+- 网站: https://xx.aieo.cn
+- API: https://xx.aieo.cn/api/stores
+- 管理后台: https://xx.aieo.cn/admin.html
 
 ========================================
 重要提醒

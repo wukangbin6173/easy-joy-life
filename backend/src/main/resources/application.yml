@@ -37,6 +37,33 @@ spring:
         format_sql: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
+# 微信支付配置
+wechat:
+  pay:
+    app-id: wxe6ea8185cf046cfb  # 小程序AppID，需要替换为实际的
+    mch-id:  1554487931  # 商户号，需要替换为实际的
+    private-key-path: classpath:cert/apiclient_key.pem  # 商户私钥文件路径
+    merchant-serial-number: 68EFFAD8D54020146A1372141B6EEBA1B52D6B64  # 商户证书序列号
+    api-v3-key: idNmbaZ0EPgwbvYbJDGp2EGlwQDezU6d  # API v3密钥（32位）
+    notify-url: https://xx.aieo.cn/api/payment/wechat/notify  # 异步回调地址
+    sandbox: false  # 是否沙箱环境
+    domain: https://api.mch.weixin.qq.com  # 微信支付API域名
+  miniprogram:
+    app-secret: your-miniprogram-app-secret  # 小程序AppSecret
+
+# 支付宝配置
+alipay:
+  app-id: 2021006128663181 
+  private-key: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCU7XZ1jL/b16eyNM+4uJ0FOcdBkKyViyLWBuJi0ZjzbSUXvOkStbBMYJjLUx3hZQAufQxsvkYili4gW0eAIaOyKAALJqH0w0Kt6BeOUCDdBRAfY4OkgU7kMY0egmv6SJfPM0iLkxj37r+PtNOH++KGYNGPtSsBuBi6inXIf/xBUrUS2MJwdNSb4NpJG+Ye1WghiEQXddl3QD82Lwr2f0rL3oZGOUVpWLlbo6CAbKmZ/AKHLDuAK7JRAy6snOLOUzsjPsv4c6hPHcyjdYfQAabdsFi9l6vjmcPUZiLxytCbT+VSA4rAAPe6jStgpr8JLa9Dc9x3Qf49CFuVS3XwaEkpAgMBAAECggEAcuHXXohru+/YudyJXGp1HgHbFlW+/EDvZ4C6BBbBUQ6h7XTZqogjbleZpkcAps1d3X6zJfOFcMq+3FDtkAbjGtxGZFOx3Xj+p96AxVREdZqhPEVs2Gqza85ZmO5s0w5KpRhfXuPi/+bZOMb54k1JCfYH0j6j5ViZItUKVNd9xPkV3Fl9Dnbx0sJAr3iY+EttxSUv/pxGB3MN2t2uFZhnp8zi5QA6iTJHZobwQCBTwCdOd5VmbjbYQqXqhBEpAVoy0M42UtYaJSBXwA5C3Tk33b7hFoMaBgsT9D26o91IYV9wTI7u7xAmrxrB/3jOBPjB8D1WAFm8y1EALHYBDs9tgQKBgQDDXdfKl2jNdyj5K+Wv8x8F3d9khgarLOGY0uf3Q/cAXKHN1/ONf8kYhPQ8c9U2j04LMP8JSckrCnnVvS0fykSWznZADezOa3a2KLt9WSUGL41HYVsBOZJOP3mY2JDn4gQqgOA6a0Mw5l61QUgd3oOeIzyHq8pVyxmlEOTyjw6HcQKBgQDDJfmna3ydYzxHsqNErIsdCMcx0LMwer5jt+QR50Y8xXiHyd2WxIaBX4mV7qlizgUldUyd7SK/X/IbNnuzq4K9FooDXFAlpw6P3I3W5bKbnI6JmmYtSf0eelNTLHQtSMObR5gTyIT46ydXWUUhgSj7LewkkFLahpLSqhrC5XexOQKBgQCBcclL+3w+PwjP5+z84sqYWYTtlvwOKOOlHYECzW54N+ghekduZs+4RkeJUnpf9x2PvrwMzG3U7dEB9KFUYfGGNnAVSuSvdHaohV6M1Cb67UDfnbrtmda9r8MCqeOBMLjv7IolSvKvEMSJtiJxYAC3I8O0ZPfgVny8aPA5Yt4OkQKBgFpBqxjyzrzgU9X5Wif+AY1ZLP/uPaIzcvEd8P8Sz1p2Hov3ImSD2o3liPXuXytSi/DKMrhsIAEROCG77jSoI5ye2xA41tzDSinhYTy+GgB8xTQBVDaoHMjG3NkAG2+CUu3zi/PCbzXNVPHCWQXo/fJGSAyVL6zgRvHmOOBhTx2JAoGBAKwdV4FvJMmaWJqTQo8dxYpaAgJ380tnaNZccNXzEFfgja7sTB+oayuJGDhPK9XoGcmHj8I4ZFex7TsZDLwkbJGFMzXh7Yao82UDTDb8O9V2KrlxparfptssHJO3LDrlcELJmLmOEKasMxqPOSc9jWljXVDbNLf0JnY96KT1poih
+  public-key:  MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw1JzzyiTS3U8HE799I7twKlOMpqxIRJ+h3yyprnBWmlGLhcRFBNHz4ECsNL7SmeqwRaMYpQrk459mGh6ewTOy0smGmdTyDJ/zD/3n0qpWls4QtiwYQbunm0THwbjorRTcEKIdlMvDC7ECd6v552mpYNKPb9p1dERWNQVovH2G88XkonCHkZMVmuSxT442f8cNTWBvuHC5FaGrH7zETBCwmZaTSnUwJnHUV2QcgXBFrkuXS2X9g6livBrY1lKO4/sRhXQGx552VZqJBIsHrf5c5D7PTZmceb7szD3iNYb+UPrpZdEaLitXPU+/3sA7+i1oUnZbor3EXJoEQJzvRTdnwIDAQAB
+  gateway-url: https://openapi.alipaydev.com/gateway.do  # 沙箱网关
+  sign-type: RSA2
+  charset: UTF-8
+  format: json
+  return-url: https://xx.aieo.cn/payment/return  # 同步回调地址
+  notify-url: https://xx.aieo.cn/api/payment/alipay/notify  # 异步回调地址
+  sandbox: true  # 是否沙箱环境
+
 # 日志配置
 logging:
   level:

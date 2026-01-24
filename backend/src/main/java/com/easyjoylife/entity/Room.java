@@ -34,20 +34,14 @@ public class Room {
     @Column(precision = 5, scale = 2)
     private BigDecimal area;
     
-    @Column(name = "price_per_hour", nullable = false, precision = 8, scale = 2)
-    private BigDecimal pricePerHour;
+    @Column(name = "hourly_rate", nullable = false, precision = 10, scale = 2)
+    private BigDecimal hourlyRate;
     
-    @Column(length = 1000)
-    private String images;
+    @Column(name = "image", length = 200)
+    private String image;
     
     @Column(length = 1000)
     private String facilities;
-    
-    @Column(name = "device_id", length = 50)
-    private String deviceId;
-    
-    @Column(name = "lock_type", length = 20)
-    private String lockType = "wifi";
     
     @Column(nullable = false)
     private Integer status = 1;
@@ -128,20 +122,20 @@ public class Room {
         this.area = area;
     }
     
-    public BigDecimal getPricePerHour() {
-        return pricePerHour;
+    public BigDecimal getHourlyRate() {
+        return hourlyRate;
     }
     
-    public void setPricePerHour(BigDecimal pricePerHour) {
-        this.pricePerHour = pricePerHour;
+    public void setHourlyRate(BigDecimal hourlyRate) {
+        this.hourlyRate = hourlyRate;
     }
     
-    public String getImages() {
-        return images;
+    public String getImage() {
+        return image;
     }
     
-    public void setImages(String images) {
-        this.images = images;
+    public void setImage(String image) {
+        this.image = image;
     }
     
     public String getFacilities() {
@@ -150,22 +144,6 @@ public class Room {
     
     public void setFacilities(String facilities) {
         this.facilities = facilities;
-    }
-    
-    public String getDeviceId() {
-        return deviceId;
-    }
-    
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
-    }
-    
-    public String getLockType() {
-        return lockType;
-    }
-    
-    public void setLockType(String lockType) {
-        this.lockType = lockType;
     }
     
     public Integer getStatus() {

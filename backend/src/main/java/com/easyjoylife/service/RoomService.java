@@ -65,11 +65,9 @@ public class RoomService {
             room.setType(roomDetails.getType());
             room.setCapacity(roomDetails.getCapacity());
             room.setArea(roomDetails.getArea());
-            room.setPricePerHour(roomDetails.getPricePerHour());
-            room.setImages(roomDetails.getImages());
+            room.setHourlyRate(roomDetails.getHourlyRate());
+            room.setImage(roomDetails.getImage());
             room.setFacilities(roomDetails.getFacilities());
-            room.setDeviceId(roomDetails.getDeviceId());
-            room.setLockType(roomDetails.getLockType());
             room.setStatus(roomDetails.getStatus());
             return roomRepository.save(room);
         }

@@ -61,7 +61,7 @@ public class StoreService {
             store.setLatitude(storeDetails.getLatitude());
             store.setPhone(storeDetails.getPhone());
             store.setDescription(storeDetails.getDescription());
-            store.setImages(storeDetails.getImages());
+            store.setImage(storeDetails.getImage());
             store.setBusinessHours(storeDetails.getBusinessHours());
             store.setFacilities(storeDetails.getFacilities());
             store.setStatus(storeDetails.getStatus());

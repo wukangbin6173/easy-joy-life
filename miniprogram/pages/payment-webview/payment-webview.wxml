@@ -1,0 +1,13 @@
+<view class="payment-container">
+  <view class="payment-header">
+    <text class="payment-title">支付宝支付</text>
+    <text class="payment-tip">请在打开的页面中完成支付</text>
+  </view>
+  
+  <web-view src="{{paymentUrl}}" bindmessage="onWebViewMessage"></web-view>
+  
+  <view class="payment-footer">
+    <button class="cancel-btn" bindtap="cancelPayment">取消支付</button>
+    <button class="check-btn" bindtap="checkPaymentStatus">查看支付状态</button>
+  </view>
+</view>

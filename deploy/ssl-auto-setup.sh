@@ -7,9 +7,8 @@
 set -e
 
 # 配置变量
-DOMAIN="easyjoylife.xin"
-WWW_DOMAIN="www.easyjoylife.xin"
-EMAIL="admin@easyjoylife.xin"
+DOMAIN="xx.aieo.cn"
+EMAIL="admin@xx.aieo.cn"
 WEBROOT="/var/www/html"
 NGINX_CONF="/etc/nginx/sites-available/easy-joy-life"
 SSL_DIR="/etc/letsencrypt/live/$DOMAIN"

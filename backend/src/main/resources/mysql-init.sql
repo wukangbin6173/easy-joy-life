@@ -75,3 +75,111 @@ INSERT INTO rooms (store_id, room_no, name, type, capacity, hourly_rate, image, 
 -- 三里屯店房间
 (5, '501', '潮流包间', '麻将房', 4, 100.00, '/images/room-default.jpg', '智能麻将机,音响系统,调酒台', 1),
 (5, '502', '时尚包间', '麻将房', 4, 100.00, '/images/room-default.jpg', '智能麻将机,音响系统,调酒台', 1);
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    openid VARCHAR(50) NOT NULL UNIQUE COMMENT '微信openid',
+    unionid VARCHAR(50) COMMENT '微信unionid',
+    nickname VARCHAR(100) COMMENT '用户昵称',
+    avatar VARCHAR(200) COMMENT '头像URL',
+    gender INT DEFAULT 0 COMMENT '性别：0-未知，1-男，2-女',
+    phone VARCHAR(20) COMMENT '手机号',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '用户状态：ACTIVE-正常，DISABLED-禁用',
+    last_login_time DATETIME COMMENT '最后登录时间',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_openid (openid),
+    INDEX idx_phone (phone),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+-- 支付订单表
+CREATE TABLE IF NOT EXISTS payment_orders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_no VARCHAR(32) NOT NULL UNIQUE COMMENT '订单号',
+    trade_no VARCHAR(64) COMMENT '第三方支付订单号',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    payment_type VARCHAR(20) NOT NULL COMMENT '支付类型：RECHARGE-充值, BOOKING-预订',
+    payment_method VARCHAR(20) NOT NULL COMMENT '支付方式：ALIPAY-支付宝, WECHAT-微信',
+    amount DECIMAL(10,2) NOT NULL COMMENT '支付金额',
+    subject VARCHAR(100) NOT NULL COMMENT '订单标题',
+    body VARCHAR(500) COMMENT '订单描述',
+    status VARCHAR(20) NOT NULL COMMENT '订单状态：PENDING-待支付, PAID-已支付, CANCELLED-已取消, REFUNDED-已退款',
+    paid_time DATETIME COMMENT '支付时间',
+    expire_time DATETIME COMMENT '过期时间',
+    notify_status VARCHAR(20) COMMENT '回调通知状态：PENDING-待通知, SUCCESS-成功, FAILED-失败',
+    notify_count INT DEFAULT 0 COMMENT '回调通知次数',
+    extra_data TEXT COMMENT '扩展信息（JSON格式）',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_order_no (order_no),
+    INDEX idx_trade_no (trade_no),
+    INDEX idx_status (status),
+    INDEX idx_created_time (created_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付订单表';
+
+-- 用户钱包表
+CREATE TABLE IF NOT EXISTS user_wallets (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE COMMENT '用户ID',
+    balance DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '账户余额',
+    frozen_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '冻结金额',
+    total_recharge DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '累计充值金额',
+    total_consume DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '累计消费金额',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '钱包状态：ACTIVE-正常, FROZEN-冻结, DISABLED-禁用',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户钱包表';
+
+-- 钱包交易记录表
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    transaction_no VARCHAR(32) NOT NULL UNIQUE COMMENT '交易流水号',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    order_no VARCHAR(32) COMMENT '关联订单号',
+    transaction_type VARCHAR(20) NOT NULL COMMENT '交易类型：RECHARGE-充值, CONSUME-消费, REFUND-退款, FREEZE-冻结, UNFREEZE-解冻',
+    amount DECIMAL(10,2) NOT NULL COMMENT '交易金额（正数为收入，负数为支出）',
+    balance_before DECIMAL(10,2) NOT NULL COMMENT '交易前余额',
+    balance_after DECIMAL(10,2) NOT NULL COMMENT '交易后余额',
+    description VARCHAR(200) COMMENT '交易描述',
+    status VARCHAR(20) NOT NULL COMMENT '交易状态：SUCCESS-成功, FAILED-失败, PENDING-处理中',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_transaction_no (transaction_no),
+    INDEX idx_order_no (order_no),
+    INDEX idx_transaction_type (transaction_type),
+    INDEX idx_created_time (created_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='钱包交易记录表';
+
+-- 插入测试用户数据
+INSERT INTO users (openid, nickname, avatar, gender) VALUES 
+('test_openid_001', '测试用户1', '/images/avatar1.png', 1),
+('test_openid_002', '测试用户2', '/images/avatar2.png', 2),
+('test_openid_003', '测试用户3', '/images/avatar3.png', 0)
+ON DUPLICATE KEY UPDATE 
+nickname = VALUES(nickname);
+
+-- 插入测试用户钱包数据
+INSERT INTO user_wallets (user_id, balance, total_recharge) VALUES 
+(1, 168.50, 200.00),
+(2, 88.00, 100.00),
+(3, 256.80, 300.00)
+ON DUPLICATE KEY UPDATE 
+balance = VALUES(balance),
+total_recharge = VALUES(total_recharge);
+
+-- 插入测试交易记录
+INSERT INTO wallet_transactions (transaction_no, user_id, transaction_type, amount, balance_before, balance_after, description, status) VALUES 
+('TXN202601230001', 1, 'RECHARGE', 100.00, 68.50, 168.50, '钱包充值', 'SUCCESS'),
+('TXN202601230002', 1, 'RECHARGE', 100.00, 0.00, 100.00, '钱包充值', 'SUCCESS'),
+('TXN202601230003', 1, 'CONSUME', -31.50, 100.00, 68.50, '房间消费', 'SUCCESS'),
+('TXN202601230004', 2, 'RECHARGE', 100.00, 0.00, 100.00, '钱包充值', 'SUCCESS'),
+('TXN202601230005', 2, 'CONSUME', -12.00, 100.00, 88.00, '房间消费', 'SUCCESS'),
+('TXN202601230006', 3, 'RECHARGE', 200.00, 0.00, 200.00, '钱包充值', 'SUCCESS'),
+('TXN202601230007', 3, 'RECHARGE', 100.00, 200.00, 300.00, '钱包充值', 'SUCCESS'),
+('TXN202601230008', 3, 'CONSUME', -43.20, 300.00, 256.80, '房间消费', 'SUCCESS')
+ON DUPLICATE KEY UPDATE 
+transaction_no = VALUES(transaction_no);

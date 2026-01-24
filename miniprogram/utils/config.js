@@ -2,14 +2,14 @@
 const config = {
   // 开发环境
   development: {
-    baseUrl: 'http://192.168.110.28:8080',
+    baseUrl: 'https://xx.aieo.cn',
     mockMode: false,
     debug: true
   },
   
   // 生产环境
   production: {
-    baseUrl: 'https://easyjoylife.xin',  // 你的实际域名
+    baseUrl: 'https://xx.aieo.cn',  // 你的实际域名
     mockMode: false,
     debug: false
   }
@@ -25,8 +25,8 @@ function getEnvironment() {
   }
   
   // 方法2: 手动设置（推荐用于测试）
-  // return 'development';  // 开发时使用
-  return 'production';      // 发布时使用
+  return 'development';  // 开发时也使用服务器
+  // return 'production';      // 发布时使用
 }
 
 // 获取当前环境配置

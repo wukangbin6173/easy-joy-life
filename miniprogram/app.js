@@ -6,7 +6,8 @@ App({
     userInfo: null,
     baseUrl: '',
     token: null,
-    mockMode: false
+    mockMode: false,
+    openid: null  // 添加openid全局变量
   },
 
   onLaunch() {

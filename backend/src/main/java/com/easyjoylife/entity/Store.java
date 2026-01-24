@@ -34,8 +34,8 @@ public class Store {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @Column(length = 1000)
-    private String images;
+    @Column(name = "image", length = 200)
+    private String image;
     
     @Column(name = "business_hours", length = 500)
     private String businessHours;
@@ -122,12 +122,12 @@ public class Store {
         this.description = description;
     }
     
-    public String getImages() {
-        return images;
+    public String getImage() {
+        return image;
     }
     
-    public void setImages(String images) {
-        this.images = images;
+    public void setImage(String image) {
+        this.image = image;
     }
     
     public String getBusinessHours() {

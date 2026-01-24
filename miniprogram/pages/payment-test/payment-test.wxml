@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="header">
+    <text class="title">微信支付测试</text>
+    <text class="subtitle">测试微信支付功能是否正常</text>
+  </view>
+
+  <view class="test-section">
+    <view class="section-title">配置检查</view>
+    <view class="test-item">
+      <text class="test-name">API地址</text>
+      <text class="test-value">{{baseUrl}}</text>
+      <text class="test-status {{configStatus.api ? 'success' : 'error'}}">
+        {{configStatus.api ? '✅' : '❌'}}
+      </text>
+    </view>
+    <view class="test-item">
+      <text class="test-name">小程序AppID</text>
+      <text class="test-value">{{appId}}</text>
+      <text class="test-status {{configStatus.appId ? 'success' : 'error'}}">
+        {{configStatus.appId ? '✅' : '❌'}}
+      </text>
+    </view>
+  </view>
+
+  <view class="test-section">
+    <view class="section-title">功能测试</view>
+    
+    <button class="test-button" bindtap="testWechatLogin">
+      测试微信登录
+      <text class="test-result {{testResults.login}}">{{testResults.login}}</text>
+    </button>
+    
+    <button class="test-button" bindtap="testCreateOrder">
+      测试创建订单
+      <text class="test-result {{testResults.order}}">{{testResults.order}}</text>
+    </button>
+    
+    <button class="test-button" bindtap="testWechatPay" disabled="{{!canTestPay}}">
+      测试微信支付
+      <text class="test-result {{testResults.payment}}">{{testResults.payment}}</text>
+    </button>
+  </view>
+
+  <view class="test-section">
+    <view class="section-title">测试金额</view>
+    <view class="amount-selector">
+      <button 
+        class="amount-btn {{selectedAmount === 0.01 ? 'selected' : ''}}"
+        bindtap="selectAmount"
+        data-amount="0.01">
+        ¥0.01
+      </button>
+      <button 
+        class="amount-btn {{selectedAmount === 0.1 ? 'selected' : ''}}"
+        bindtap="selectAmount"
+        data-amount="0.1">
+        ¥0.10
+      </button>
+      <button 
+        class="amount-btn {{selectedAmount === 1 ? 'selected' : ''}}"
+        bindtap="selectAmount"
+        data-amount="1">
+        ¥1.00
+      </button>
+    </view>
+  </view>
+
+  <view class="test-section">
+    <view class="section-title">测试日志</view>
+    <scroll-view class="log-container" scroll-y="true">
+      <view class="log-item" wx:for="{{logs}}" wx:key="index">
+        <text class="log-time">{{item.time}}</text>
+        <text class="log-message">{{item.message}}</text>
+      </view>
+    </scroll-view>
+    <button class="clear-log-btn" bindtap="clearLogs">清空日志</button>
+  </view>
+</view>

@@ -28,6 +28,7 @@
         <fastjson.version>2.0.25</fastjson.version>
         <hutool.version>5.8.16</hutool.version>
         <swagger.version>3.0.0</swagger.version>
+        <alipay.version>4.38.200.ALL</alipay.version>
     </properties>
 
     <dependencies>
@@ -134,6 +135,20 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
+        </dependency>
+
+        <!-- Alipay SDK -->
+        <dependency>
+            <groupId>com.alipay.sdk</groupId>
+            <artifactId>alipay-sdk-java</artifactId>
+            <version>${alipay.version}</version>
+        </dependency>
+
+        <!-- WeChat Pay SDK -->
+        <dependency>
+            <groupId>com.github.wechatpay-apiv3</groupId>
+            <artifactId>wechatpay-java</artifactId>
+            <version>0.2.12</version>
         </dependency>
 
         <!-- Test -->

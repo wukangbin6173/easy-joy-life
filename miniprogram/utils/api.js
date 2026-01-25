@@ -2,21 +2,14 @@
 const config = require('./config.js');
 
 /**
- * 发起HTTP请求
+ * 发起HTTP请求 - 所有数据来自MySQL数据库
  */
 function request(url, options = {}) {
   return new Promise((resolve, reject) => {
     // 获取当前配置
     const currentConfig = config.getCurrentConfig();
     
-    // 如果开启模拟数据模式，使用本地数据
-    if (currentConfig.mockMode) {
-      console.log('使用模拟数据模式');
-      const mockData = require('./mockData.js');
-      return mockData.mockRequest(url, options).then(resolve).catch(reject);
-    }
-
-    // 真实API请求
+    // 真实API请求 - 直接连接MySQL数据库
     const baseUrl = currentConfig.baseUrl;
     const fullUrl = baseUrl + url;
     

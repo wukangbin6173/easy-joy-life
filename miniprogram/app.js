@@ -7,7 +7,6 @@ App({
     userInfo: null,
     baseUrl: '',
     token: null,
-    mockMode: false,
     openid: null,
     sessionKey: null
   },
@@ -18,10 +17,9 @@ App({
     // 获取环境配置
     const envConfig = config.getCurrentConfig();
     this.globalData.baseUrl = envConfig.baseUrl;
-    this.globalData.mockMode = envConfig.mockMode;
     
     console.log('API地址:', this.globalData.baseUrl);
-    console.log('模拟模式:', this.globalData.mockMode);
+    console.log('所有数据来源: MySQL数据库');
     
     // 检查登录状态
     this.checkLogin();

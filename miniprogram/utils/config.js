@@ -3,14 +3,12 @@ const config = {
   // 开发环境
   development: {
     baseUrl: 'https://xx.aieo.cn',
-    mockMode: true,  // 临时开启模拟数据
     debug: true
   },
   
   // 生产环境
   production: {
-    baseUrl: 'https://xx.aieo.cn',  // 你的实际域名
-    mockMode: false,
+    baseUrl: 'https://xx.aieo.cn',
     debug: false
   }
 };
@@ -25,7 +23,7 @@ function getEnvironment() {
   }
   
   // 方法2: 手动设置（推荐用于测试）
-  return 'development';  // 临时使用模拟数据调试
+  return 'development';
   // return 'production';      // 发布时使用
 }
 

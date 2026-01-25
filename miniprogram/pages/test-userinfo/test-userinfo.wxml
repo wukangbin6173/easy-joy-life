@@ -1,0 +1,40 @@
+<view class="container">
+  <view class="header">
+    <text class="title">用户信息获取测试</text>
+  </view>
+
+  <view class="section">
+    <text class="section-title">当前用户信息</text>
+    <view class="user-info" wx:if="{{appUserInfo}}">
+      <image class="avatar" src="{{appUserInfo.avatar}}" mode="aspectFill"></image>
+      <view class="info">
+        <text class="nickname">{{appUserInfo.nickname}}</text>
+        <text class="status">登录状态: {{appUserInfo.isLogin ? '已登录' : '未完整登录'}}</text>
+      </view>
+    </view>
+    <view class="no-info" wx:else>
+      <text>暂无用户信息</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section-title">授权状态</text>
+    <view class="auth-info" wx:if="{{authSettings}}">
+      <text class="auth-item">用户信息: {{authSettings['scope.userInfo'] ? '已授权' : '未授权'}}</text>
+      <text class="auth-item">位置信息: {{authSettings['scope.userLocation'] ? '已授权' : '未授权'}}</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section-title">测试结果</text>
+    <view class="test-results">
+      <text class="test-item" wx:for="{{testResults}}" wx:key="index">{{item}}</text>
+    </view>
+  </view>
+
+  <view class="actions">
+    <button class="action-btn" bindtap="manualGetUserInfo">手动获取用户信息</button>
+    <button class="action-btn" bindtap="clearUserInfo">清除用户信息</button>
+    <button class="action-btn" bindtap="rerunTests">重新测试</button>
+  </view>
+</view>

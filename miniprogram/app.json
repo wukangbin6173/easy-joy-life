@@ -16,7 +16,8 @@
     "pages/payment-webview/payment-webview",
     "pages/payment-test/payment-test",
     "pages/test-simple/test-simple",
-    "pages/network-test/network-test"
+    "pages/network-test/network-test",
+    "pages/test-userinfo/test-userinfo"
   ],
   "window": {
     "backgroundTextStyle": "light",

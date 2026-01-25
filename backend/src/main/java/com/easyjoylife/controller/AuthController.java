@@ -85,7 +85,7 @@ public class AuthController {
     }
 
     /**
-     * 微信小程序登录
+     * 微信小程序登录 - 使用更可靠的HTTP调用
      */
     @PostMapping("/wechat/login")
     public ResponseEntity<Map<String, Object>> wechatLogin(@RequestBody Map<String, Object> request) {
@@ -105,14 +105,43 @@ public class AuthController {
             
             log.info("调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
             
-            // 使用RestTemplate配置，设置接受所有内容类型
-            RestTemplate customRestTemplate = new RestTemplate();
-            
-            // 使用String接收响应
-            String wechatResponseStr;
+            String wechatResponseStr = null;
             try {
-                wechatResponseStr = customRestTemplate.getForObject(url, String.class);
+                // 使用更简单的HTTP调用方式
+                java.net.URL apiUrl = new java.net.URL(url);
+                java.net.HttpURLConnection connection = (java.net.HttpURLConnection) apiUrl.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                
+                int responseCode = connection.getResponseCode();
+                log.info("微信API响应码: {}", responseCode);
+                
+                if (responseCode == 200) {
+                    java.io.BufferedReader reader = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    StringBuilder result = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
+                    reader.close();
+                    wechatResponseStr = result.toString();
+                } else {
+                    java.io.BufferedReader reader = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(connection.getErrorStream(), "UTF-8"));
+                    StringBuilder result = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
+                    reader.close();
+                    wechatResponseStr = result.toString();
+                }
+                
                 log.info("微信API原始响应: {}", wechatResponseStr);
+                
             } catch (Exception e) {
                 log.error("调用微信API失败: {}", e.getMessage());
                 response.put("success", false);

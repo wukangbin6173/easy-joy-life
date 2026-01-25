@@ -21,11 +21,8 @@ App({
     console.log('API地址:', this.globalData.baseUrl);
     console.log('所有数据来源: MySQL数据库');
     
-    // 自动获取用户基本信息
-    this.autoGetUserInfo();
-    
-    // 检查登录状态
-    this.checkLogin();
+    // 自动静默登录获取openid
+    this.autoSilentLogin();
   },
 
   onShow() {
@@ -41,50 +38,135 @@ App({
   },
 
   /**
-   * 自动获取用户基本信息（头像和昵称）
+   * 自动静默登录 - 获取openid和用户基本信息
    */
-  autoGetUserInfo() {
-    // 先尝试从缓存获取
-    const cachedUserInfo = wx.getStorageSync('basicUserInfo');
-    if (cachedUserInfo) {
+  autoSilentLogin() {
+    console.log('开始自动静默登录...');
+    
+    // 先检查缓存中是否有openid
+    const cachedOpenid = wx.getStorageSync('openid');
+    const cachedUserInfo = wx.getStorageSync('userInfo');
+    
+    if (cachedOpenid && cachedUserInfo) {
+      // 有缓存，直接使用
+      this.globalData.openid = cachedOpenid;
       this.globalData.userInfo = cachedUserInfo;
-      console.log('从缓存获取用户信息:', cachedUserInfo);
+      console.log('从缓存恢复登录状态:', cachedUserInfo.nickname);
       return;
     }
-
-    // 检查是否已授权用户信息
-    wx.getSetting({
-      success: (res) => {
-        if (res.authSetting['scope.userInfo']) {
-          // 已授权，可以直接调用 getUserInfo 获取头像昵称
-          wx.getUserInfo({
-            success: (res) => {
-              const userInfo = {
-                nickname: res.userInfo.nickName,
-                avatar: res.userInfo.avatarUrl,
-                gender: res.userInfo.gender,
-                isLogin: false // 标记为未完整登录
+    
+    // 没有缓存，执行静默登录
+    wx.login({
+      success: (loginRes) => {
+        if (loginRes.code) {
+          console.log('获取微信登录code成功:', loginRes.code);
+          
+          // 调用后端API获取openid
+          api.request('/auth/wechat/login', {
+            method: 'POST',
+            data: { code: loginRes.code }
+          }).then(res => {
+            if (res.success) {
+              const { openid, sessionKey, user } = res;
+              
+              // 保存openid和基本用户信息
+              this.globalData.openid = openid;
+              this.globalData.sessionKey = sessionKey;
+              this.globalData.userInfo = user || {
+                nickname: '微信用户',
+                avatar: '/images/default-avatar.png',
+                isLogin: true
               };
               
-              this.globalData.userInfo = userInfo;
-              wx.setStorageSync('basicUserInfo', userInfo);
-              console.log('自动获取用户信息成功:', userInfo);
-            },
-            fail: (err) => {
-              console.log('获取用户信息失败:', err);
+              // 缓存到本地
+              wx.setStorageSync('openid', openid);
+              wx.setStorageSync('sessionKey', sessionKey);
+              wx.setStorageSync('userInfo', this.globalData.userInfo);
+              
+              console.log('静默登录成功，openid:', openid);
+              console.log('用户信息:', this.globalData.userInfo);
+              
+              // 尝试获取用户详细信息（如果已授权）
+              this.tryGetUserProfile();
+              
+            } else {
+              console.error('静默登录失败:', res.message);
               this.setDefaultUserInfo();
             }
+          }).catch(err => {
+            console.error('静默登录API调用失败:', err);
+            this.setDefaultUserInfo();
           });
+          
         } else {
-          // 未授权，使用默认信息
-          console.log('用户未授权获取用户信息，使用默认信息');
+          console.error('获取微信登录code失败:', loginRes.errMsg);
           this.setDefaultUserInfo();
         }
       },
       fail: (err) => {
-        console.log('获取设置失败:', err);
+        console.error('微信登录失败:', err);
         this.setDefaultUserInfo();
       }
+    });
+  },
+
+  /**
+   * 尝试获取用户详细信息（如果已授权）
+   */
+  tryGetUserProfile() {
+    wx.getSetting({
+      success: (res) => {
+        if (res.authSetting['scope.userInfo']) {
+          // 已授权，获取用户详细信息
+          wx.getUserInfo({
+            success: (userRes) => {
+              const detailedUserInfo = {
+                ...this.globalData.userInfo,
+                nickname: userRes.userInfo.nickName,
+                avatar: userRes.userInfo.avatarUrl,
+                gender: userRes.userInfo.gender,
+                isLogin: true
+              };
+              
+              this.globalData.userInfo = detailedUserInfo;
+              wx.setStorageSync('userInfo', detailedUserInfo);
+              
+              // 更新后端用户信息
+              this.updateUserInfoToBackend(detailedUserInfo);
+              
+              console.log('获取用户详细信息成功:', detailedUserInfo);
+            },
+            fail: (err) => {
+              console.log('获取用户详细信息失败:', err);
+            }
+          });
+        } else {
+          console.log('用户未授权详细信息，使用基本信息');
+        }
+      }
+    });
+  },
+
+  /**
+   * 更新用户信息到后端
+   */
+  updateUserInfoToBackend(userInfo) {
+    if (!this.globalData.openid) return;
+    
+    api.request('/auth/user/update', {
+      method: 'POST',
+      data: {
+        openid: this.globalData.openid,
+        nickname: userInfo.nickname,
+        avatar: userInfo.avatar,
+        gender: userInfo.gender
+      }
+    }).then(res => {
+      if (res.success) {
+        console.log('用户信息更新到后端成功');
+      }
+    }).catch(err => {
+      console.log('用户信息更新到后端失败:', err);
     });
   },
 
@@ -99,24 +181,8 @@ App({
       isLogin: false
     };
     this.globalData.userInfo = defaultUserInfo;
-    wx.setStorageSync('basicUserInfo', defaultUserInfo);
+    wx.setStorageSync('userInfo', defaultUserInfo);
     console.log('使用默认用户信息:', defaultUserInfo);
-  },
-
-  /**
-   * 检查登录状态
-   */
-  checkLogin() {
-    const openid = wx.getStorageSync('openid');
-    const userInfo = wx.getStorageSync('userInfo');
-    
-    if (openid && userInfo) {
-      this.globalData.openid = openid;
-      this.globalData.userInfo = userInfo;
-      console.log('用户已登录:', userInfo.nickname);
-    } else {
-      console.log('用户未登录');
-    }
   },
 
   /**
@@ -242,9 +308,9 @@ App({
   },
 
   /**
-   * 检查是否已登录
+   * 检查是否已登录（有openid就算登录）
    */
   isLoggedIn() {
-    return !!this.globalData.openid && !!this.globalData.userInfo;
+    return !!this.globalData.openid;
   }
 });

@@ -8,39 +8,60 @@ Page({
   },
 
   onLoad() {
-    // 检查是否已经登录
-    if (app.isLoggedIn()) {
+    // 检查是否已经有详细的用户信息
+    const app = getApp();
+    if (app.globalData.userInfo && app.globalData.userInfo.nickname !== '微信用户') {
       wx.switchTab({
         url: '/pages/index/index'
       });
     }
   },
 
-  // 微信登录
+  // 微信登录（获取详细用户信息）
   onWechatLogin() {
     this.setData({ loading: true });
     
-    app.wechatLogin().then(userInfo => {
-      wx.showToast({
-        title: '登录成功',
-        icon: 'success'
-      });
-      
-      console.log('登录成功，用户信息:', userInfo);
-      
-      setTimeout(() => {
-        wx.switchTab({
-          url: '/pages/index/index'
+    // 获取用户详细信息
+    wx.getUserProfile({
+      desc: '用于完善个人资料',
+      success: (res) => {
+        const app = getApp();
+        const userInfo = {
+          ...app.globalData.userInfo,
+          nickname: res.userInfo.nickName,
+          avatar: res.userInfo.avatarUrl,
+          gender: res.userInfo.gender,
+          isLogin: true
+        };
+        
+        // 更新app中的用户信息
+        app.globalData.userInfo = userInfo;
+        wx.setStorageSync('userInfo', userInfo);
+        
+        // 更新后端用户信息
+        app.updateUserInfoToBackend(userInfo);
+        
+        wx.showToast({
+          title: '信息完善成功',
+          icon: 'success'
         });
-      }, 1500);
-    }).catch(err => {
-      console.error('登录失败:', err);
-      wx.showToast({
-        title: err.message || '登录失败',
-        icon: 'none'
-      });
-    }).finally(() => {
-      this.setData({ loading: false });
+        
+        setTimeout(() => {
+          wx.switchTab({
+            url: '/pages/index/index'
+          });
+        }, 1500);
+      },
+      fail: (err) => {
+        console.error('获取用户信息失败:', err);
+        wx.showToast({
+          title: '需要授权才能完善信息',
+          icon: 'none'
+        });
+      },
+      complete: () => {
+        this.setData({ loading: false });
+      }
     });
   },
 

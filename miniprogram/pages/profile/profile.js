@@ -41,7 +41,7 @@ Page({
       // 有用户信息，显示头像和昵称
       this.setData({
         userInfo: {
-          isLogin: appUserInfo.isLogin || false,
+          isLogin: !!app.globalData.openid, // 有openid就算登录
           nickname: appUserInfo.nickname || '微信用户',
           avatar: appUserInfo.avatar || '/images/default-avatar.png',
           phone: appUserInfo.phone || '未绑定手机',
@@ -49,8 +49,8 @@ Page({
         }
       });
 
-      // 如果已完整登录，加载用户统计数据
-      if (appUserInfo.isLogin) {
+      // 如果已登录，加载用户统计数据
+      if (app.globalData.openid) {
         this.loadUserStats();
       }
     } else {
@@ -71,7 +71,8 @@ Page({
         if (retryUserInfo && retryUserInfo.nickname !== '微信用户') {
           this.setData({
             'userInfo.nickname': retryUserInfo.nickname,
-            'userInfo.avatar': retryUserInfo.avatar
+            'userInfo.avatar': retryUserInfo.avatar,
+            'userInfo.isLogin': !!app.globalData.openid
           });
         }
       }, 1000);
@@ -105,10 +106,11 @@ Page({
   // 点击头像区域完善信息
   onAvatarTap: function() {
     const app = getApp();
-    if (!app.isLoggedIn()) {
+    // 检查是否已经获取了详细的用户信息
+    if (!app.globalData.userInfo || app.globalData.userInfo.nickname === '微信用户') {
       wx.showModal({
         title: '完善个人信息',
-        content: '是否要完善个人信息以使用更多功能？',
+        content: '是否要获取您的微信头像和昵称以完善个人信息？',
         confirmText: '去完善',
         success: (res) => {
           if (res.confirm) {
@@ -122,14 +124,12 @@ Page({
   },
 
   goToOrders: function() {
-    if (!this.checkLogin()) return;
     wx.switchTab({
       url: '/pages/orders/orders'
     });
   },
 
   goToFavorites: function() {
-    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -137,7 +137,6 @@ Page({
   },
 
   goToCoupons: function() {
-    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -145,14 +144,12 @@ Page({
   },
 
   goToWallet: function() {
-    if (!this.checkLogin()) return;
     wx.navigateTo({
       url: '/pages/wallet/wallet'
     });
   },
 
   goToAddress: function() {
-    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -160,7 +157,6 @@ Page({
   },
 
   goToSettings: function() {
-    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -184,7 +180,8 @@ Page({
   },
 
   logout: function() {
-    if (!this.data.userInfo.isLogin) return;
+    const app = getApp();
+    if (!app.globalData.openid) return;
     
     wx.showModal({
       title: '确认退出',
@@ -196,9 +193,9 @@ Page({
           this.setData({
             userInfo: {
               isLogin: false,
-              nickname: '未登录',
+              nickname: '微信用户',
               avatar: '/images/default-avatar.png',
-              phone: '点击登录',
+              phone: '点击完善信息',
               isVip: false
             },
             stats: {
@@ -221,25 +218,5 @@ Page({
         }
       }
     });
-  },
-
-  // 检查登录状态
-  checkLogin: function() {
-    if (!app.isLoggedIn()) {
-      wx.showModal({
-        title: '请先登录',
-        content: '使用此功能需要先登录',
-        confirmText: '去登录',
-        success: (res) => {
-          if (res.confirm) {
-            wx.navigateTo({
-              url: '/pages/login/login'
-            });
-          }
-        }
-      });
-      return false;
-    }
-    return true;
   }
 });

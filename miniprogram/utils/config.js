@@ -3,7 +3,7 @@ const config = {
   // 开发环境
   development: {
     baseUrl: 'https://xx.aieo.cn',
-    mockMode: false,
+    mockMode: true,  // 临时开启模拟数据
     debug: true
   },
   
@@ -25,7 +25,7 @@ function getEnvironment() {
   }
   
   // 方法2: 手动设置（推荐用于测试）
-  return 'development';  // 开发时也使用服务器
+  return 'development';  // 临时使用模拟数据调试
   // return 'production';      // 发布时使用
 }
 

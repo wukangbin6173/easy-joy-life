@@ -1,21 +1,23 @@
 // API服务模块
-const app = getApp();
+const config = require('./config.js');
 
 /**
  * 发起HTTP请求
  */
 function request(url, options = {}) {
   return new Promise((resolve, reject) => {
+    // 获取当前配置
+    const currentConfig = config.getCurrentConfig();
+    
     // 如果开启模拟数据模式，使用本地数据
-    if (app.globalData.mockMode) {
+    if (currentConfig.mockMode) {
       console.log('使用模拟数据模式');
       const mockData = require('./mockData.js');
       return mockData.mockRequest(url, options).then(resolve).catch(reject);
     }
 
     // 真实API请求
-    const baseUrl = app.globalData.baseUrl;
-    const token = app.globalData.token;
+    const baseUrl = currentConfig.baseUrl;
     const fullUrl = baseUrl + url;
     
     console.log('发起API请求:', fullUrl);
@@ -49,9 +51,14 @@ function request(url, options = {}) {
       }
     };
 
-    // 添加token到header
-    if (token) {
-      requestOptions.header.Authorization = `Bearer ${token}`;
+    // 尝试获取token（如果app已初始化）
+    try {
+      const app = getApp();
+      if (app && app.globalData && app.globalData.token) {
+        requestOptions.header.Authorization = `Bearer ${app.globalData.token}`;
+      }
+    } catch (e) {
+      console.log('获取app实例失败，跳过token设置');
     }
 
     console.log('wx.request配置:', requestOptions);

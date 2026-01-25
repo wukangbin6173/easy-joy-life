@@ -21,6 +21,9 @@ App({
     console.log('API地址:', this.globalData.baseUrl);
     console.log('所有数据来源: MySQL数据库');
     
+    // 自动获取用户基本信息
+    this.autoGetUserInfo();
+    
     // 检查登录状态
     this.checkLogin();
   },
@@ -35,6 +38,69 @@ App({
 
   onError(msg) {
     console.error('小程序错误:', msg);
+  },
+
+  /**
+   * 自动获取用户基本信息（头像和昵称）
+   */
+  autoGetUserInfo() {
+    // 先尝试从缓存获取
+    const cachedUserInfo = wx.getStorageSync('basicUserInfo');
+    if (cachedUserInfo) {
+      this.globalData.userInfo = cachedUserInfo;
+      console.log('从缓存获取用户信息:', cachedUserInfo);
+      return;
+    }
+
+    // 检查是否已授权用户信息
+    wx.getSetting({
+      success: (res) => {
+        if (res.authSetting['scope.userInfo']) {
+          // 已授权，可以直接调用 getUserInfo 获取头像昵称
+          wx.getUserInfo({
+            success: (res) => {
+              const userInfo = {
+                nickname: res.userInfo.nickName,
+                avatar: res.userInfo.avatarUrl,
+                gender: res.userInfo.gender,
+                isLogin: false // 标记为未完整登录
+              };
+              
+              this.globalData.userInfo = userInfo;
+              wx.setStorageSync('basicUserInfo', userInfo);
+              console.log('自动获取用户信息成功:', userInfo);
+            },
+            fail: (err) => {
+              console.log('获取用户信息失败:', err);
+              this.setDefaultUserInfo();
+            }
+          });
+        } else {
+          // 未授权，使用默认信息
+          console.log('用户未授权获取用户信息，使用默认信息');
+          this.setDefaultUserInfo();
+        }
+      },
+      fail: (err) => {
+        console.log('获取设置失败:', err);
+        this.setDefaultUserInfo();
+      }
+    });
+  },
+
+  /**
+   * 设置默认用户信息
+   */
+  setDefaultUserInfo() {
+    const defaultUserInfo = {
+      nickname: '微信用户',
+      avatar: '/images/default-avatar.png',
+      gender: 0,
+      isLogin: false
+    };
+    this.globalData.userInfo = defaultUserInfo;
+    wx.setStorageSync('basicUserInfo', defaultUserInfo);
+    console.log('使用默认用户信息:', defaultUserInfo);
   },
 
   /**

@@ -54,37 +54,55 @@ Page({
 
   onShow() {
     console.log('首页显示');
-    if (app.globalData.userInfo) {
-      this.setData({
-        userInfo: app.globalData.userInfo
-      });
+    // 安全获取app实例
+    try {
+      const app = getApp();
+      if (app && app.globalData && app.globalData.userInfo) {
+        this.setData({
+          userInfo: app.globalData.userInfo
+        });
+      }
+    } catch (e) {
+      console.log('获取app实例失败:', e);
     }
   },
 
   // 检查登录状态
   checkLogin() {
-    if (!app.globalData.token) {
+    try {
+      const app = getApp();
+      if (!app || !app.globalData || !app.globalData.token) {
+        wx.navigateTo({
+          url: '/pages/login/login'
+        });
+      } else {
+        this.setData({
+          userInfo: app.globalData.userInfo
+        });
+      }
+    } catch (e) {
+      console.error('检查登录状态失败:', e);
       wx.navigateTo({
         url: '/pages/login/login'
-      });
-    } else {
-      this.setData({
-        userInfo: app.globalData.userInfo
       });
     }
   },
 
   // 加载附近门店
   loadNearbyStores() {
+    console.log('开始加载附近门店...');
+    
     // 使用API获取门店数据
     storeApi.getStores().then(response => {
+      console.log('门店API响应:', response);
+      
       let stores = response.data || [];
       
       // 只取前3个门店作为附近门店
       stores = stores.slice(0, 3).map(store => {
         // 处理图片路径
-        if (store.images && typeof store.images === 'string') {
-          store.images = [store.images];
+        if (store.image && typeof store.image === 'string') {
+          store.images = [store.image];
         } else if (!store.images) {
           store.images = ['/images/default-store.jpg'];
         }
@@ -95,12 +113,21 @@ Page({
         return store;
       });
 
+      console.log('处理后的门店数据:', stores);
+      
       this.setData({
         nearbyStores: stores
       });
+      
+      console.log('附近门店加载成功，数量:', stores.length);
     }).catch(error => {
       console.error('加载附近门店失败:', error);
-      // 如果API失败，使用默认数据
+      wx.showToast({
+        title: '加载门店失败',
+        icon: 'none'
+      });
+      
+      // 如果API失败，使用空数据
       this.setData({
         nearbyStores: []
       });

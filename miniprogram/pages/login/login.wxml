@@ -5,7 +5,7 @@
     <view class="logo-section">
       <image class="logo" src="/images/logo.png" mode="aspectFit" />
       <text class="app-name">易享生活棋牌室</text>
-      <text class="app-desc">24小时无人值守，智能预订</text>
+      <text class="app-desc">完善个人信息，享受更多服务</text>
     </view>
 
     <!-- 登录按钮 -->
@@ -16,11 +16,11 @@
         loading="{{loading}}"
         disabled="{{loading}}">
         <image class="wechat-icon" src="/images/wechat-pay-icon.png" />
-        微信快速登录
+        完善个人信息
       </button>
       
       <view class="login-tips">
-        <text>登录即表示同意</text>
+        <text>完善信息即表示同意</text>
         <text class="link">《用户协议》</text>
         <text>和</text>
         <text class="link">《隐私政策》</text>

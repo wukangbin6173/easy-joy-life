@@ -33,35 +33,48 @@ Page({
   },
 
   loadUserInfo: function() {
-    // 检查登录状态
-    if (!app.isLoggedIn()) {
+    // 获取app中的用户信息
+    const app = getApp();
+    const appUserInfo = app.getUserInfo();
+    
+    if (appUserInfo) {
+      // 有用户信息，显示头像和昵称
       this.setData({
         userInfo: {
-          isLogin: false,
-          nickname: '未登录',
-          avatar: '/images/default-avatar.png',
-          phone: '点击登录',
+          isLogin: appUserInfo.isLogin || false,
+          nickname: appUserInfo.nickname || '微信用户',
+          avatar: appUserInfo.avatar || '/images/default-avatar.png',
+          phone: appUserInfo.phone || '未绑定手机',
           isVip: false
         }
       });
-      return;
-    }
 
-    // 获取用户信息
-    const userInfo = app.getUserInfo();
-    if (userInfo) {
+      // 如果已完整登录，加载用户统计数据
+      if (appUserInfo.isLogin) {
+        this.loadUserStats();
+      }
+    } else {
+      // 没有用户信息，设置默认信息并等待app获取
       this.setData({
         userInfo: {
-          isLogin: true,
-          nickname: userInfo.nickname || '棋牌爱好者',
-          avatar: userInfo.avatar || '/images/default-avatar.png',
-          phone: userInfo.phone || '未绑定手机',
-          isVip: false // 可以根据用户等级判断
+          isLogin: false,
+          nickname: '微信用户',
+          avatar: '/images/default-avatar.png',
+          phone: '点击完善信息',
+          isVip: false
         }
       });
 
-      // 加载用户统计数据
-      this.loadUserStats();
+      // 延迟重试获取用户信息
+      setTimeout(() => {
+        const retryUserInfo = app.getUserInfo();
+        if (retryUserInfo && retryUserInfo.nickname !== '微信用户') {
+          this.setData({
+            'userInfo.nickname': retryUserInfo.nickname,
+            'userInfo.avatar': retryUserInfo.avatar
+          });
+        }
+      }, 1000);
     }
   },
 
@@ -89,11 +102,21 @@ Page({
     });
   },
 
-  // 点击头像区域登录
+  // 点击头像区域完善信息
   onAvatarTap: function() {
-    if (!this.data.userInfo.isLogin) {
-      wx.navigateTo({
-        url: '/pages/login/login'
+    const app = getApp();
+    if (!app.isLoggedIn()) {
+      wx.showModal({
+        title: '完善个人信息',
+        content: '是否要完善个人信息以使用更多功能？',
+        confirmText: '去完善',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          }
+        }
       });
     }
   },

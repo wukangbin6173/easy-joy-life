@@ -105,23 +105,42 @@ public class AuthController {
             
             log.info("调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
             
-            // 使用String接收响应，然后手动解析JSON
-            String wechatResponseStr = restTemplate.getForObject(url, String.class);
-            log.info("微信API原始响应: {}", wechatResponseStr);
+            // 使用RestTemplate配置，设置接受所有内容类型
+            RestTemplate customRestTemplate = new RestTemplate();
+            
+            // 使用String接收响应
+            String wechatResponseStr;
+            try {
+                wechatResponseStr = customRestTemplate.getForObject(url, String.class);
+                log.info("微信API原始响应: {}", wechatResponseStr);
+            } catch (Exception e) {
+                log.error("调用微信API失败: {}", e.getMessage());
+                response.put("success", false);
+                response.put("message", "调用微信API失败: " + e.getMessage());
+                return ResponseEntity.internalServerError().body(response);
+            }
+            
+            // 检查响应是否为空
+            if (wechatResponseStr == null || wechatResponseStr.trim().isEmpty()) {
+                log.error("微信API返回空响应");
+                response.put("success", false);
+                response.put("message", "微信API返回空响应");
+                return ResponseEntity.internalServerError().body(response);
+            }
             
             Map<String, Object> wechatResponse = null;
             try {
                 // 尝试解析JSON
                 ObjectMapper objectMapper = new ObjectMapper();
                 wechatResponse = objectMapper.readValue(wechatResponseStr, Map.class);
+                log.info("微信API解析后响应: {}", wechatResponse);
             } catch (Exception e) {
-                log.error("解析微信API响应失败: {}", e.getMessage());
+                log.error("解析微信API响应失败: {}, 原始响应: {}", e.getMessage(), wechatResponseStr);
                 response.put("success", false);
-                response.put("message", "微信API响应格式错误: " + wechatResponseStr);
+                response.put("message", "微信API响应格式错误");
+                response.put("rawResponse", wechatResponseStr);
                 return ResponseEntity.internalServerError().body(response);
             }
-            
-            log.info("微信API解析后响应: {}", wechatResponse);
             
             if (wechatResponse != null && wechatResponse.containsKey("openid")) {
                 String openid = wechatResponse.get("openid").toString();
@@ -139,7 +158,7 @@ public class AuthController {
                     // 创建新用户
                     user = new User();
                     user.setOpenid(openid);
-                    user.setNickname("用户" + openid.substring(openid.length() - 6));
+                    user.setNickname("微信用户" + openid.substring(openid.length() - 6));
                     user.setAvatar("/images/default-avatar.png");
                     user.setStatus(User.Status.ACTIVE);
                     user.setLastLoginTime(LocalDateTime.now());
@@ -164,6 +183,7 @@ public class AuthController {
                 log.info("微信登录成功: openid={}, userId={}", openid, user.getId());
                 
             } else {
+                // 处理微信API错误响应
                 String errcode = wechatResponse != null && wechatResponse.containsKey("errcode") ? 
                     wechatResponse.get("errcode").toString() : "unknown";
                 String errmsg = wechatResponse != null && wechatResponse.containsKey("errmsg") ? 

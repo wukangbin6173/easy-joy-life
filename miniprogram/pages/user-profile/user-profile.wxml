@@ -1,0 +1,53 @@
+<view class="container">
+  <view class="header">
+    <text class="title">完善个人信息</text>
+    <text class="subtitle">设置您的头像和昵称</text>
+  </view>
+
+  <view class="profile-section">
+    <!-- 头像选择 - 使用微信新版组件 -->
+    <view class="avatar-section">
+      <text class="label">头像</text>
+      <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <image class="avatar" src="{{avatarUrl}}" mode="aspectFill"></image>
+        <view class="avatar-overlay">
+          <text class="avatar-text">点击更换</text>
+        </view>
+      </button>
+    </view>
+
+    <!-- 昵称输入 - 使用微信新版组件 -->
+    <view class="nickname-section">
+      <text class="label">昵称</text>
+      <input 
+        class="nickname-input" 
+        type="nickname" 
+        placeholder="请输入昵称"
+        value="{{nickname}}"
+        bindinput="onNicknameInput"
+        bindconfirm="onNicknameConfirm"
+        maxlength="20"
+      />
+    </view>
+  </view>
+
+  <view class="actions">
+    <button 
+      class="save-btn" 
+      bindtap="saveUserInfo"
+      loading="{{loading}}"
+      disabled="{{loading}}"
+    >
+      保存信息
+    </button>
+    
+    <button class="skip-btn" bindtap="skipSetting">
+      跳过设置
+    </button>
+  </view>
+
+  <view class="tips">
+    <text class="tip-text">• 头像和昵称将用于个人中心展示</text>
+    <text class="tip-text">• 您可以随时在个人中心修改这些信息</text>
+  </view>
+</view>

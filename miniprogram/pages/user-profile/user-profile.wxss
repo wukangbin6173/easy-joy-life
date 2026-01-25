@@ -1,0 +1,154 @@
+.container {
+  padding: 40rpx 30rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.profile-section {
+  background-color: white;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 50rpx;
+}
+
+.label {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 30rpx;
+  font-weight: 500;
+}
+
+.avatar-btn {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  border: 4rpx solid #e0e0e0;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.avatar-btn:active .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-text {
+  color: white;
+  font-size: 24rpx;
+}
+
+.nickname-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.nickname-input {
+  background-color: #f8f8f8;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  font-size: 32rpx;
+  color: #333;
+}
+
+.nickname-input:focus {
+  border-color: #1890ff;
+}
+
+.actions {
+  margin-bottom: 40rpx;
+}
+
+.save-btn {
+  width: 100%;
+  background-color: #1890ff;
+  color: white;
+  border-radius: 50rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+  margin-bottom: 20rpx;
+}
+
+.save-btn:disabled {
+  background-color: #ccc;
+}
+
+.skip-btn {
+  width: 100%;
+  background-color: transparent;
+  color: #666;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 50rpx;
+  height: 88rpx;
+  line-height: 84rpx;
+  font-size: 28rpx;
+}
+
+.skip-btn::after {
+  border: none;
+}
+
+.tips {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 10rpx;
+  text-align: center;
+}

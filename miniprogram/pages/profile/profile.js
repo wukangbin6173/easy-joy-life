@@ -105,22 +105,9 @@ Page({
 
   // 点击头像区域完善信息
   onAvatarTap: function() {
-    const app = getApp();
-    // 检查是否已经获取了详细的用户信息
-    if (!app.globalData.userInfo || app.globalData.userInfo.nickname === '微信用户') {
-      wx.showModal({
-        title: '完善个人信息',
-        content: '是否要获取您的微信头像和昵称以完善个人信息？',
-        confirmText: '去完善',
-        success: (res) => {
-          if (res.confirm) {
-            wx.navigateTo({
-              url: '/pages/login/login'
-            });
-          }
-        }
-      });
-    }
+    wx.navigateTo({
+      url: '/pages/user-profile/user-profile'
+    });
   },
 
   goToOrders: function() {

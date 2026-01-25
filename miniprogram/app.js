@@ -62,7 +62,7 @@ App({
           console.log('获取微信登录code成功:', loginRes.code);
           
           // 调用后端API获取openid
-          api.request('/auth/wechat/login', {
+          api.request('/api/auth/wechat/login', {
             method: 'POST',
             data: { code: loginRes.code }
           }).then(res => {
@@ -153,13 +153,13 @@ App({
   updateUserInfoToBackend(userInfo) {
     if (!this.globalData.openid) return;
     
-    api.request('/auth/user/update', {
+    api.request('/api/auth/user/update', {
       method: 'POST',
       data: {
         openid: this.globalData.openid,
         nickname: userInfo.nickname,
         avatar: userInfo.avatar,
-        gender: userInfo.gender
+        gender: userInfo.gender || 0
       }
     }).then(res => {
       if (res.success) {

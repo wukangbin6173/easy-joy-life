@@ -17,51 +17,10 @@ Page({
     }
   },
 
-  // 微信登录（获取详细用户信息）
+  // 微信登录（跳转到用户信息完善页面）
   onWechatLogin() {
-    this.setData({ loading: true });
-    
-    // 获取用户详细信息
-    wx.getUserProfile({
-      desc: '用于完善个人资料',
-      success: (res) => {
-        const app = getApp();
-        const userInfo = {
-          ...app.globalData.userInfo,
-          nickname: res.userInfo.nickName,
-          avatar: res.userInfo.avatarUrl,
-          gender: res.userInfo.gender,
-          isLogin: true
-        };
-        
-        // 更新app中的用户信息
-        app.globalData.userInfo = userInfo;
-        wx.setStorageSync('userInfo', userInfo);
-        
-        // 更新后端用户信息
-        app.updateUserInfoToBackend(userInfo);
-        
-        wx.showToast({
-          title: '信息完善成功',
-          icon: 'success'
-        });
-        
-        setTimeout(() => {
-          wx.switchTab({
-            url: '/pages/index/index'
-          });
-        }, 1500);
-      },
-      fail: (err) => {
-        console.error('获取用户信息失败:', err);
-        wx.showToast({
-          title: '需要授权才能完善信息',
-          icon: 'none'
-        });
-      },
-      complete: () => {
-        this.setData({ loading: false });
-      }
+    wx.navigateTo({
+      url: '/pages/user-profile/user-profile'
     });
   },
 

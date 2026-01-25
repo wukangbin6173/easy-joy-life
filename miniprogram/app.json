@@ -10,6 +10,7 @@
     "pages/unlock/unlock",
     "pages/profile/profile",
     "pages/login/login",
+    "pages/user-profile/user-profile",
     "pages/wallet/wallet",
     "pages/recharge/recharge",
     "pages/transaction-records/transaction-records",

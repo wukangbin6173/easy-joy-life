@@ -12,11 +12,10 @@
     <view class="login-section">
       <button 
         class="login-btn" 
-        open-type="getUserInfo" 
-        bindgetuserinfo="onGetUserInfo"
+        bindtap="onWechatLogin"
         loading="{{loading}}"
         disabled="{{loading}}">
-        <image class="wechat-icon" src="/images/wechat.png" />
+        <image class="wechat-icon" src="/images/wechat-pay-icon.png" />
         微信快速登录
       </button>
       
@@ -31,16 +30,16 @@
     <!-- 特色介绍 -->
     <view class="features">
       <view class="feature-item">
-        <image class="feature-icon" src="/images/icon-fast.png" />
-        <text class="feature-text">快速预订</text>
+        <image class="feature-icon" src="/images/feature-24h.png" />
+        <text class="feature-text">24小时营业</text>
       </view>
       <view class="feature-item">
-        <image class="feature-icon" src="/images/icon-smart.png" />
+        <image class="feature-icon" src="/images/feature-smart.png" />
         <text class="feature-text">智能开门</text>
       </view>
       <view class="feature-item">
-        <image class="feature-icon" src="/images/icon-safe.png" />
-        <text class="feature-text">安全可靠</text>
+        <image class="feature-icon" src="/images/feature-clean.png" />
+        <text class="feature-text">环境整洁</text>
       </view>
     </view>
   </view>

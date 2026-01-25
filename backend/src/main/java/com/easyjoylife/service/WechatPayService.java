@@ -6,6 +6,10 @@ import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
 import com.wechat.pay.java.service.payments.jsapi.model.*;
+import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
+import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
+import com.wechat.pay.java.service.payments.jsapi.model.Amount;
+import com.wechat.pay.java.service.payments.jsapi.model.Payer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -73,15 +77,19 @@ public class WechatPayService {
             payer.setOpenid(openid);
             request.setPayer(payer);
 
-            // 调用微信支付API
-            PrepayResponse response = jsapiService.prepay(request);
+            // 调用微信支付API - 使用prepayWithRequestPayment方法直接获取支付参数
+            PrepayWithRequestPaymentResponse response = jsapiService.prepayWithRequestPayment(request);
             
-            if (response != null && response.getPrepayId() != null) {
-                // 生成小程序支付参数
-                Map<String, Object> payParams = generateMiniProgramPayParams(response.getPrepayId());
+            if (response != null) {
+                // 直接返回SDK生成的支付参数
+                Map<String, Object> payParams = new HashMap<>();
+                payParams.put("timeStamp", response.getTimeStamp());
+                payParams.put("nonceStr", response.getNonceStr());
+                payParams.put("package", response.getPackageVal());
+                payParams.put("signType", response.getSignType());
+                payParams.put("paySign", response.getPaySign());
                 
-                log.info("微信支付订单创建成功: orderNo={}, prepayId={}", 
-                        order.getOrderNo(), response.getPrepayId());
+                log.info("微信支付订单创建成功: orderNo={}", order.getOrderNo());
                 
                 return payParams;
             } else {
@@ -95,50 +103,10 @@ public class WechatPayService {
     }
 
     /**
-     * 生成小程序支付参数
-     */
-    private Map<String, Object> generateMiniProgramPayParams(String prepayId) {
-        try {
-            // 使用JSAPI服务生成小程序支付参数
-            PrepayWithRequestPaymentResponse payParams = jsapiService.prepayWithRequestPayment(
-                    new PrepayRequest() {{
-                        // 这里需要重新设置请求参数，但实际上我们只需要prepayId
-                    }}
-            );
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("timeStamp", String.valueOf(System.currentTimeMillis() / 1000));
-            result.put("nonceStr", generateNonceStr());
-            result.put("package", "prepay_id=" + prepayId);
-            result.put("signType", "RSA");
-            
-            // 生成签名
-            String paySign = generatePaySign(result);
-            result.put("paySign", paySign);
-
-            return result;
-
-        } catch (Exception e) {
-            log.error("生成小程序支付参数失败", e);
-            throw new RuntimeException("生成支付参数失败: " + e.getMessage());
-        }
-    }
-
-    /**
      * 生成随机字符串
      */
     private String generateNonceStr() {
         return java.util.UUID.randomUUID().toString().replace("-", "");
-    }
-
-    /**
-     * 生成支付签名
-     */
-    private String generatePaySign(Map<String, Object> params) {
-        // 这里需要实现RSA签名逻辑
-        // 由于微信支付SDK会自动处理签名，这里返回空字符串
-        // 实际使用时应该使用SDK提供的签名方法
-        return "";
     }
 
     /**

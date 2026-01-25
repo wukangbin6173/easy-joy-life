@@ -1,3 +1,7 @@
+// pages/profile/profile.js
+const app = getApp();
+const api = require('../../utils/api.js');
+
 Page({
   data: {
     userInfo: {
@@ -29,15 +33,41 @@ Page({
   },
 
   loadUserInfo: function() {
-    // 模拟用户数据
-    const userInfo = {
-      isLogin: true,
-      nickname: '棋牌爱好者',
-      avatar: '/images/default-avatar.png',
-      phone: '138****8888',
-      isVip: true
-    };
+    // 检查登录状态
+    if (!app.isLoggedIn()) {
+      this.setData({
+        userInfo: {
+          isLogin: false,
+          nickname: '未登录',
+          avatar: '/images/default-avatar.png',
+          phone: '点击登录',
+          isVip: false
+        }
+      });
+      return;
+    }
 
+    // 获取用户信息
+    const userInfo = app.getUserInfo();
+    if (userInfo) {
+      this.setData({
+        userInfo: {
+          isLogin: true,
+          nickname: userInfo.nickname || '棋牌爱好者',
+          avatar: userInfo.avatar || '/images/default-avatar.png',
+          phone: userInfo.phone || '未绑定手机',
+          isVip: false // 可以根据用户等级判断
+        }
+      });
+
+      // 加载用户统计数据
+      this.loadUserStats();
+    }
+  },
+
+  loadUserStats: function() {
+    // 这里可以调用API获取用户统计数据
+    // 暂时使用模拟数据
     const stats = {
       totalOrders: 15,
       totalHours: 48,
@@ -53,20 +83,30 @@ Page({
     };
 
     this.setData({
-      userInfo: userInfo,
       stats: stats,
       wallet: wallet,
       coupons: coupons
     });
   },
 
+  // 点击头像区域登录
+  onAvatarTap: function() {
+    if (!this.data.userInfo.isLogin) {
+      wx.navigateTo({
+        url: '/pages/login/login'
+      });
+    }
+  },
+
   goToOrders: function() {
+    if (!this.checkLogin()) return;
     wx.switchTab({
       url: '/pages/orders/orders'
     });
   },
 
   goToFavorites: function() {
+    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -74,6 +114,7 @@ Page({
   },
 
   goToCoupons: function() {
+    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -81,12 +122,14 @@ Page({
   },
 
   goToWallet: function() {
+    if (!this.checkLogin()) return;
     wx.navigateTo({
       url: '/pages/wallet/wallet'
     });
   },
 
   goToAddress: function() {
+    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -94,6 +137,7 @@ Page({
   },
 
   goToSettings: function() {
+    if (!this.checkLogin()) return;
     wx.showToast({
       title: '功能开发中',
       icon: 'none'
@@ -117,17 +161,21 @@ Page({
   },
 
   logout: function() {
+    if (!this.data.userInfo.isLogin) return;
+    
     wx.showModal({
       title: '确认退出',
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
+          app.logout();
+          
           this.setData({
             userInfo: {
               isLogin: false,
-              nickname: '',
-              avatar: '',
-              phone: '',
+              nickname: '未登录',
+              avatar: '/images/default-avatar.png',
+              phone: '点击登录',
               isVip: false
             },
             stats: {
@@ -150,5 +198,25 @@ Page({
         }
       }
     });
+  },
+
+  // 检查登录状态
+  checkLogin: function() {
+    if (!app.isLoggedIn()) {
+      wx.showModal({
+        title: '请先登录',
+        content: '使用此功能需要先登录',
+        confirmText: '去登录',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          }
+        }
+      });
+      return false;
+    }
+    return true;
   }
 });

@@ -9,7 +9,7 @@ Page({
 
   onLoad() {
     // 检查是否已经登录
-    if (app.globalData.token) {
+    if (app.isLoggedIn()) {
       wx.switchTab({
         url: '/pages/index/index'
       });
@@ -26,12 +26,15 @@ Page({
         icon: 'success'
       });
       
+      console.log('登录成功，用户信息:', userInfo);
+      
       setTimeout(() => {
         wx.switchTab({
           url: '/pages/index/index'
         });
       }, 1500);
     }).catch(err => {
+      console.error('登录失败:', err);
       wx.showToast({
         title: err.message || '登录失败',
         icon: 'none'
@@ -41,7 +44,7 @@ Page({
     });
   },
 
-  // 获取用户信息授权
+  // 兼容旧版本的getUserInfo授权方式
   onGetUserInfo(e) {
     if (e.detail.userInfo) {
       this.onWechatLogin();

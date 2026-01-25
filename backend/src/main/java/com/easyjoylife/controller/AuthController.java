@@ -2,6 +2,7 @@ package com.easyjoylife.controller;
 
 import com.easyjoylife.entity.User;
 import com.easyjoylife.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,43 @@ public class AuthController {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final UserRepository userRepository;
+
+    /**
+     * 测试微信API调用
+     */
+    @PostMapping("/wechat/test")
+    public ResponseEntity<Map<String, Object>> testWechatApi(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String code = request.get("code").toString();
+            
+            // 调用微信接口获取openid
+            String url = String.format(
+                "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+                appId, appSecret, code
+            );
+            
+            log.info("测试调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
+            
+            // 使用String接收响应
+            String wechatResponseStr = restTemplate.getForObject(url, String.class);
+            
+            response.put("success", true);
+            response.put("rawResponse", wechatResponseStr);
+            response.put("appId", appId);
+            response.put("codeLength", code.length());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("测试微信API异常", e);
+            response.put("success", false);
+            response.put("message", "测试失败: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
 
     /**
      * 测试微信配置
@@ -67,9 +105,23 @@ public class AuthController {
             
             log.info("调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
             
-            Map<String, Object> wechatResponse = restTemplate.getForObject(url, Map.class);
+            // 使用String接收响应，然后手动解析JSON
+            String wechatResponseStr = restTemplate.getForObject(url, String.class);
+            log.info("微信API原始响应: {}", wechatResponseStr);
             
-            log.info("微信API响应: {}", wechatResponse);
+            Map<String, Object> wechatResponse = null;
+            try {
+                // 尝试解析JSON
+                ObjectMapper objectMapper = new ObjectMapper();
+                wechatResponse = objectMapper.readValue(wechatResponseStr, Map.class);
+            } catch (Exception e) {
+                log.error("解析微信API响应失败: {}", e.getMessage());
+                response.put("success", false);
+                response.put("message", "微信API响应格式错误: " + wechatResponseStr);
+                return ResponseEntity.internalServerError().body(response);
+            }
+            
+            log.info("微信API解析后响应: {}", wechatResponse);
             
             if (wechatResponse != null && wechatResponse.containsKey("openid")) {
                 String openid = wechatResponse.get("openid").toString();
@@ -112,8 +164,10 @@ public class AuthController {
                 log.info("微信登录成功: openid={}, userId={}", openid, user.getId());
                 
             } else {
-                String errcode = wechatResponse != null ? wechatResponse.get("errcode").toString() : "unknown";
-                String errmsg = wechatResponse != null ? wechatResponse.get("errmsg").toString() : "unknown error";
+                String errcode = wechatResponse != null && wechatResponse.containsKey("errcode") ? 
+                    wechatResponse.get("errcode").toString() : "unknown";
+                String errmsg = wechatResponse != null && wechatResponse.containsKey("errmsg") ? 
+                    wechatResponse.get("errmsg").toString() : "unknown error";
                 
                 log.error("微信登录失败: errcode={}, errmsg={}", errcode, errmsg);
                 
@@ -121,6 +175,7 @@ public class AuthController {
                 response.put("message", "微信登录失败: " + errmsg);
                 response.put("errcode", errcode);
                 response.put("errmsg", errmsg);
+                response.put("rawResponse", wechatResponseStr);
             }
             
             return ResponseEntity.ok(response);

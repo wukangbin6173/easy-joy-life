@@ -49,7 +49,7 @@ wechat:
     sandbox: false  # 是否沙箱环境
     domain: https://api.mch.weixin.qq.com  # 微信支付API域名
   miniprogram:
-    app-secret: your-miniprogram-app-secret  # 小程序AppSecret，需要替换为实际的
+    app-secret: b5919b96d9065dadbf43082ad65aaf56  # 小程序AppSecret
 
 # 支付宝配置
 alipay:

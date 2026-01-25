@@ -33,6 +33,20 @@ public class AuthController {
     private final UserRepository userRepository;
 
     /**
+     * 测试微信配置
+     */
+    @GetMapping("/wechat/config")
+    public ResponseEntity<Map<String, Object>> testWechatConfig() {
+        Map<String, Object> response = new HashMap<>();
+        
+        response.put("appId", appId);
+        response.put("appSecretLength", appSecret != null ? appSecret.length() : 0);
+        response.put("appSecretPrefix", appSecret != null ? appSecret.substring(0, Math.min(8, appSecret.length())) + "..." : "null");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * 微信小程序登录
      */
     @PostMapping("/wechat/login")
@@ -42,13 +56,20 @@ public class AuthController {
         try {
             String code = request.get("code").toString();
             
+            log.info("收到微信登录请求，code: {}", code);
+            log.info("使用AppId: {}, AppSecret: {}", appId, appSecret.substring(0, 8) + "...");
+            
             // 调用微信接口获取openid
             String url = String.format(
                 "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
                 appId, appSecret, code
             );
             
+            log.info("调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
+            
             Map<String, Object> wechatResponse = restTemplate.getForObject(url, Map.class);
+            
+            log.info("微信API响应: {}", wechatResponse);
             
             if (wechatResponse != null && wechatResponse.containsKey("openid")) {
                 String openid = wechatResponse.get("openid").toString();
@@ -61,6 +82,7 @@ public class AuthController {
                 if (existingUser.isPresent()) {
                     user = existingUser.get();
                     user.setLastLoginTime(LocalDateTime.now());
+                    log.info("找到已存在用户: {}", user.getId());
                 } else {
                     // 创建新用户
                     user = new User();
@@ -69,6 +91,7 @@ public class AuthController {
                     user.setAvatar("/images/default-avatar.png");
                     user.setStatus(User.Status.ACTIVE);
                     user.setLastLoginTime(LocalDateTime.now());
+                    log.info("创建新用户，openid: {}", openid);
                 }
                 
                 userRepository.save(user);
@@ -82,7 +105,8 @@ public class AuthController {
                     "nickname", user.getNickname(),
                     "avatar", user.getAvatar(),
                     "phone", user.getPhone() != null ? user.getPhone() : "",
-                    "status", user.getStatus()
+                    "status", user.getStatus(),
+                    "isLogin", true
                 ));
                 
                 log.info("微信登录成功: openid={}, userId={}", openid, user.getId());
@@ -95,6 +119,8 @@ public class AuthController {
                 
                 response.put("success", false);
                 response.put("message", "微信登录失败: " + errmsg);
+                response.put("errcode", errcode);
+                response.put("errmsg", errmsg);
             }
             
             return ResponseEntity.ok(response);
@@ -103,6 +129,7 @@ public class AuthController {
             log.error("微信登录异常", e);
             response.put("success", false);
             response.put("message", "登录失败: " + e.getMessage());
+            response.put("error", e.getClass().getSimpleName());
             return ResponseEntity.internalServerError().body(response);
         }
     }

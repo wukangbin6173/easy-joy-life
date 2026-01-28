@@ -30,7 +30,7 @@ public class AuthController {
     @Value("${wechat.miniprogram.app-secret:your-app-secret}")
     private String appSecret;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;  // 使用注入的 RestTemplate
     private final UserRepository userRepository;
 
     /**
@@ -85,7 +85,7 @@ public class AuthController {
     }
 
     /**
-     * 微信小程序登录 - 使用更可靠的HTTP调用
+     * 微信小程序登录 - 使用配置好的 RestTemplate
      */
     @PostMapping("/wechat/login")
     public ResponseEntity<Map<String, Object>> wechatLogin(@RequestBody Map<String, Object> request) {
@@ -105,78 +105,28 @@ public class AuthController {
             
             log.info("调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
             
-            String wechatResponseStr = null;
+            // 使用 RestTemplate 直接获取响应（已配置支持 text/plain）
+            Map<String, Object> wechatResponse = null;
             try {
-                // 使用更简单的HTTP调用方式
-                java.net.URL apiUrl = new java.net.URL(url);
-                java.net.HttpURLConnection connection = (java.net.HttpURLConnection) apiUrl.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(10000);
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-                connection.setRequestProperty("Accept", "application/json");
-                
-                int responseCode = connection.getResponseCode();
-                log.info("微信API响应码: {}", responseCode);
-                
-                java.io.InputStream inputStream = null;
-                try {
-                    if (responseCode == 200) {
-                        inputStream = connection.getInputStream();
-                    } else {
-                        inputStream = connection.getErrorStream();
-                    }
-                    
-                    if (inputStream != null) {
-                        java.io.BufferedReader reader = new java.io.BufferedReader(
-                            new java.io.InputStreamReader(inputStream, "UTF-8"));
-                        StringBuilder result = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            result.append(line);
-                        }
-                        reader.close();
-                        wechatResponseStr = result.toString();
-                    }
-                } finally {
-                    if (inputStream != null) {
-                        inputStream.close();
-                    }
-                    connection.disconnect();
-                }
-                
-                log.info("微信API原始响应: {}", wechatResponseStr);
-                
+                wechatResponse = restTemplate.getForObject(url, Map.class);
+                log.info("微信API响应: {}", wechatResponse);
             } catch (Exception e) {
                 log.error("调用微信API失败: {}", e.getMessage(), e);
                 response.put("success", false);
                 response.put("message", "调用微信API失败: " + e.getMessage());
+                response.put("error", e.getClass().getSimpleName());
                 return ResponseEntity.ok(response);
             }
             
-            // 检查响应是否为空
-            if (wechatResponseStr == null || wechatResponseStr.trim().isEmpty()) {
+            // 检查响应
+            if (wechatResponse == null) {
                 log.error("微信API返回空响应");
                 response.put("success", false);
                 response.put("message", "微信API返回空响应");
                 return ResponseEntity.ok(response);
             }
             
-            Map<String, Object> wechatResponse = null;
-            try {
-                // 尝试解析JSON
-                ObjectMapper objectMapper = new ObjectMapper();
-                wechatResponse = objectMapper.readValue(wechatResponseStr, Map.class);
-                log.info("微信API解析后响应: {}", wechatResponse);
-            } catch (Exception e) {
-                log.error("解析微信API响应失败: {}, 原始响应: {}", e.getMessage(), wechatResponseStr);
-                response.put("success", false);
-                response.put("message", "微信API响应格式错误: " + e.getMessage());
-                response.put("rawResponse", wechatResponseStr);
-                return ResponseEntity.ok(response);
-            }
-            
-            if (wechatResponse != null && wechatResponse.containsKey("openid")) {
+            if (wechatResponse.containsKey("openid")) {
                 String openid = wechatResponse.get("openid").toString();
                 String sessionKey = wechatResponse.get("session_key").toString();
                 
@@ -218,9 +168,9 @@ public class AuthController {
                 
             } else {
                 // 处理微信API错误响应
-                String errcode = wechatResponse != null && wechatResponse.containsKey("errcode") ? 
+                String errcode = wechatResponse.containsKey("errcode") ? 
                     wechatResponse.get("errcode").toString() : "unknown";
-                String errmsg = wechatResponse != null && wechatResponse.containsKey("errmsg") ? 
+                String errmsg = wechatResponse.containsKey("errmsg") ? 
                     wechatResponse.get("errmsg").toString() : "unknown error";
                 
                 log.error("微信登录失败: errcode={}, errmsg={}", errcode, errmsg);
@@ -229,7 +179,6 @@ public class AuthController {
                 response.put("message", "微信登录失败: " + errmsg);
                 response.put("errcode", errcode);
                 response.put("errmsg", errmsg);
-                response.put("rawResponse", wechatResponseStr);
             }
             
             return ResponseEntity.ok(response);

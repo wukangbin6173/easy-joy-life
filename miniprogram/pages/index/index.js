@@ -41,7 +41,8 @@ Page({
         title: '客服咨询',
         action: 'customerService'
       }
-    ]
+    ],
+    showUserCard: true // 始终显示用户卡片
   },
 
   onLoad() {
@@ -64,16 +65,61 @@ Page({
   getUserInfo() {
     try {
       const app = getApp();
-      if (app && app.globalData && app.globalData.userInfo) {
-        this.setData({
-          userInfo: app.globalData.userInfo
-        });
-        console.log('用户信息已加载:', app.globalData.userInfo);
+      console.log('=== 开始获取用户信息 ===');
+      console.log('app 实例:', app ? '存在' : '不存在');
+      
+      if (app && app.globalData) {
+        console.log('app.globalData:', app.globalData);
+        console.log('app.globalData.userInfo:', app.globalData.userInfo);
+        
+        if (app.globalData.userInfo) {
+          this.setData({
+            userInfo: app.globalData.userInfo
+          });
+          console.log('✓ 用户信息已加载:', app.globalData.userInfo);
+        } else {
+          console.log('⚠ app.globalData.userInfo 为空，尝试从缓存获取');
+          
+          // 尝试从缓存获取
+          const cachedUserInfo = wx.getStorageSync('userInfo');
+          if (cachedUserInfo) {
+            console.log('✓ 从缓存获取到用户信息:', cachedUserInfo);
+            this.setData({
+              userInfo: cachedUserInfo
+            });
+          } else {
+            console.log('⚠ 缓存中也没有用户信息，设置默认信息');
+            // 设置默认用户信息，让卡片显示出来
+            this.setData({
+              userInfo: {
+                nickname: '微信用户',
+                avatar: '/images/default-avatar.png'
+              }
+            });
+          }
+        }
       } else {
-        console.log('未找到用户信息');
+        console.log('❌ app 或 app.globalData 不存在');
+        // 设置默认用户信息
+        this.setData({
+          userInfo: {
+            nickname: '微信用户',
+            avatar: '/images/default-avatar.png'
+          }
+        });
       }
+      
+      console.log('=== 用户信息获取完成 ===');
+      console.log('当前 userInfo:', this.data.userInfo);
     } catch (e) {
-      console.error('获取用户信息失败:', e);
+      console.error('❌ 获取用户信息失败:', e);
+      // 设置默认用户信息
+      this.setData({
+        userInfo: {
+          nickname: '微信用户',
+          avatar: '/images/default-avatar.png'
+        }
+      });
     }
   },
 

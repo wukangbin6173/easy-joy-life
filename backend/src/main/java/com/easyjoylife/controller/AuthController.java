@@ -95,7 +95,7 @@ public class AuthController {
             String code = request.get("code").toString();
             
             log.info("收到微信登录请求，code: {}", code);
-            log.info("使用AppId: {}, AppSecret: {}", appId, appSecret.substring(0, 8) + "...");
+            log.info("使用AppId: {}, AppSecret: {}", appId, appSecret != null ? appSecret.substring(0, 8) + "..." : "null");
             
             // 调用微信接口获取openid
             String url = String.format(
@@ -114,39 +114,44 @@ public class AuthController {
                 connection.setConnectTimeout(10000);
                 connection.setReadTimeout(10000);
                 connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                connection.setRequestProperty("Accept", "application/json");
                 
                 int responseCode = connection.getResponseCode();
                 log.info("微信API响应码: {}", responseCode);
                 
-                if (responseCode == 200) {
-                    java.io.BufferedReader reader = new java.io.BufferedReader(
-                        new java.io.InputStreamReader(connection.getInputStream(), "UTF-8"));
-                    StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        result.append(line);
+                java.io.InputStream inputStream = null;
+                try {
+                    if (responseCode == 200) {
+                        inputStream = connection.getInputStream();
+                    } else {
+                        inputStream = connection.getErrorStream();
                     }
-                    reader.close();
-                    wechatResponseStr = result.toString();
-                } else {
-                    java.io.BufferedReader reader = new java.io.BufferedReader(
-                        new java.io.InputStreamReader(connection.getErrorStream(), "UTF-8"));
-                    StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        result.append(line);
+                    
+                    if (inputStream != null) {
+                        java.io.BufferedReader reader = new java.io.BufferedReader(
+                            new java.io.InputStreamReader(inputStream, "UTF-8"));
+                        StringBuilder result = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            result.append(line);
+                        }
+                        reader.close();
+                        wechatResponseStr = result.toString();
                     }
-                    reader.close();
-                    wechatResponseStr = result.toString();
+                } finally {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+                    connection.disconnect();
                 }
                 
                 log.info("微信API原始响应: {}", wechatResponseStr);
                 
             } catch (Exception e) {
-                log.error("调用微信API失败: {}", e.getMessage());
+                log.error("调用微信API失败: {}", e.getMessage(), e);
                 response.put("success", false);
                 response.put("message", "调用微信API失败: " + e.getMessage());
-                return ResponseEntity.internalServerError().body(response);
+                return ResponseEntity.ok(response);
             }
             
             // 检查响应是否为空
@@ -154,7 +159,7 @@ public class AuthController {
                 log.error("微信API返回空响应");
                 response.put("success", false);
                 response.put("message", "微信API返回空响应");
-                return ResponseEntity.internalServerError().body(response);
+                return ResponseEntity.ok(response);
             }
             
             Map<String, Object> wechatResponse = null;
@@ -166,9 +171,9 @@ public class AuthController {
             } catch (Exception e) {
                 log.error("解析微信API响应失败: {}, 原始响应: {}", e.getMessage(), wechatResponseStr);
                 response.put("success", false);
-                response.put("message", "微信API响应格式错误");
+                response.put("message", "微信API响应格式错误: " + e.getMessage());
                 response.put("rawResponse", wechatResponseStr);
-                return ResponseEntity.internalServerError().body(response);
+                return ResponseEntity.ok(response);
             }
             
             if (wechatResponse != null && wechatResponse.containsKey("openid")) {
@@ -205,7 +210,7 @@ public class AuthController {
                     "nickname", user.getNickname(),
                     "avatar", user.getAvatar(),
                     "phone", user.getPhone() != null ? user.getPhone() : "",
-                    "status", user.getStatus(),
+                    "status", user.getStatus().toString(),
                     "isLogin", true
                 ));
                 
@@ -234,7 +239,8 @@ public class AuthController {
             response.put("success", false);
             response.put("message", "登录失败: " + e.getMessage());
             response.put("error", e.getClass().getSimpleName());
-            return ResponseEntity.internalServerError().body(response);
+            response.put("stackTrace", e.toString());
+            return ResponseEntity.ok(response);
         }
     }
 
@@ -252,7 +258,7 @@ public class AuthController {
             if (!userOpt.isPresent()) {
                 response.put("success", false);
                 response.put("message", "用户不存在");
-                return ResponseEntity.badRequest().body(response);
+                return ResponseEntity.ok(response);
             }
             
             User user = userOpt.get();
@@ -278,7 +284,7 @@ public class AuthController {
                 "avatar", user.getAvatar(),
                 "phone", user.getPhone() != null ? user.getPhone() : "",
                 "gender", user.getGender(),
-                "status", user.getStatus()
+                "status", user.getStatus().toString()
             ));
             
             log.info("用户信息更新成功: userId={}", user.getId());
@@ -289,7 +295,7 @@ public class AuthController {
             log.error("更新用户信息失败", e);
             response.put("success", false);
             response.put("message", "更新失败: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            return ResponseEntity.ok(response);
         }
     }
 
@@ -305,7 +311,7 @@ public class AuthController {
             if (!userOpt.isPresent()) {
                 response.put("success", false);
                 response.put("message", "用户不存在");
-                return ResponseEntity.badRequest().body(response);
+                return ResponseEntity.ok(response);
             }
             
             User user = userOpt.get();
@@ -318,9 +324,9 @@ public class AuthController {
                 "avatar", user.getAvatar(),
                 "phone", user.getPhone() != null ? user.getPhone() : "",
                 "gender", user.getGender(),
-                "status", user.getStatus(),
-                "createdTime", user.getCreatedTime(),
-                "lastLoginTime", user.getLastLoginTime()
+                "status", user.getStatus().toString(),
+                "createdTime", user.getCreatedTime().toString(),
+                "lastLoginTime", user.getLastLoginTime() != null ? user.getLastLoginTime().toString() : ""
             ));
             
             return ResponseEntity.ok(response);
@@ -329,7 +335,7 @@ public class AuthController {
             log.error("获取用户信息失败", e);
             response.put("success", false);
             response.put("message", "获取用户信息失败: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            return ResponseEntity.ok(response);
         }
     }
 }

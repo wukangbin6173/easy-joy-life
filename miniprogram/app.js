@@ -55,6 +55,7 @@ App({
       return;
     }
     
+    
     // 没有缓存，执行静默登录
     wx.login({
       success: (loginRes) => {
@@ -78,6 +79,7 @@ App({
                 isLogin: true
               };
               
+              console.log('--------获取到微信的OpenId=:', openid);
               // 缓存到本地
               wx.setStorageSync('openid', openid);
               wx.setStorageSync('sessionKey', sessionKey);

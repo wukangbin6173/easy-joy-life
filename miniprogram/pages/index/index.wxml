@@ -13,6 +13,15 @@
     </swiper-item>
   </swiper>
 
+  <!-- 用户信息 -->
+  <view class="user-info-card" wx:if="{{userInfo}}">
+    <image class="user-avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+    <view class="user-details">
+      <text class="user-nickname">{{userInfo.nickName || '微信用户'}}</text>
+      <text class="user-welcome">欢迎使用无人值守棋牌室</text>
+    </view>
+  </view>
+
   <!-- 快捷操作 -->
   <view class="quick-actions">
     <view class="action-item" wx:for="{{quickActions}}" wx:key="title" 

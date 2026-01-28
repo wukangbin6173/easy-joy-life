@@ -46,6 +46,8 @@ Page({
 
   onLoad() {
     console.log('首页加载');
+    // 获取用户信息
+    this.getUserInfo();
     // 延迟加载，避免阻塞
     setTimeout(() => {
       this.loadNearbyStores();
@@ -54,16 +56,24 @@ Page({
 
   onShow() {
     console.log('首页显示');
-    // 安全获取app实例
+    // 刷新用户信息
+    this.getUserInfo();
+  },
+
+  // 获取用户信息
+  getUserInfo() {
     try {
       const app = getApp();
       if (app && app.globalData && app.globalData.userInfo) {
         this.setData({
           userInfo: app.globalData.userInfo
         });
+        console.log('用户信息已加载:', app.globalData.userInfo);
+      } else {
+        console.log('未找到用户信息');
       }
     } catch (e) {
-      console.log('获取app实例失败:', e);
+      console.error('获取用户信息失败:', e);
     }
   },
 

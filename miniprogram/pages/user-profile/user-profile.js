@@ -77,7 +77,10 @@ Page({
 
     // 更新后端用户信息
     if (app.globalData.openid) {
+      console.log('📤 从用户资料页面更新后端信息...');
       app.updateUserInfoToBackend(userInfo);
+    } else {
+      console.log('⚠️ 没有openid，无法更新后端信息');
     }
 
     wx.showToast({

@@ -10,6 +10,7 @@ Page({
   onLoad() {
     // 检查是否已经有详细的用户信息
     const app = getApp();
+    this.onWechatLogin() ;
     if (app.globalData.userInfo && app.globalData.userInfo.nickname !== '微信用户') {
       wx.switchTab({
         url: '/pages/index/index'

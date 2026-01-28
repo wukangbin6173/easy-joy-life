@@ -79,7 +79,25 @@
 
 .user-welcome {
   font-size: 26rpx;
-  color: #999;
+  color: #666;
+}
+
+.complete-profile-tip {
+  margin-top: 8rpx;
+  padding: 8rpx 16rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20rpx;
+  align-self: flex-start;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: white;
+}
+
+.user-welcome {
+  font-size: 26rpx;
+  color: #666;
 }
 
 /* 快捷操作 */

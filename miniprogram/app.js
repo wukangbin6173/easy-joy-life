@@ -67,7 +67,10 @@ App({
             method: 'POST',
             data: { code: loginRes.code }
           }).then(res => {
-            if (res.success) {
+            console.log('微信登录API响应:', res);
+            
+            // 检查是否成功获取到openid
+            if (res.success && res.openid) {
               const { openid, sessionKey, user } = res;
               
               // 保存openid和基本用户信息
@@ -92,7 +95,15 @@ App({
               this.tryGetUserProfile();
               
             } else {
-              console.error('静默登录失败:', res.message);
+              // 登录失败，但不是网络错误
+              console.log('微信登录失败:', res.message || res.errmsg);
+              console.log('错误码:', res.errcode);
+              
+              if (res.errcode === '40029') {
+                console.log('这是正常的，code已过期或无效');
+              }
+              
+              // 设置默认用户信息，让应用继续运行
               this.setDefaultUserInfo();
             }
           }).catch(err => {
@@ -116,12 +127,19 @@ App({
    * 尝试获取用户详细信息（如果已授权）
    */
   tryGetUserProfile() {
+    console.log('🔍 检查用户授权状态...');
+    
     wx.getSetting({
       success: (res) => {
+        console.log('📋 授权设置:', res.authSetting);
+        
         if (res.authSetting['scope.userInfo']) {
+          console.log('✅ 用户已授权 scope.userInfo，获取详细信息');
           // 已授权，获取用户详细信息
           wx.getUserInfo({
             success: (userRes) => {
+              console.log('📥 获取到用户详细信息:', userRes.userInfo);
+              
               const detailedUserInfo = {
                 ...this.globalData.userInfo,
                 nickname: userRes.userInfo.nickName,
@@ -136,16 +154,75 @@ App({
               // 更新后端用户信息
               this.updateUserInfoToBackend(detailedUserInfo);
               
-              console.log('获取用户详细信息成功:', detailedUserInfo);
+              console.log('✅ 获取用户详细信息成功:', detailedUserInfo);
             },
             fail: (err) => {
-              console.log('获取用户详细信息失败:', err);
+              console.log('❌ 获取用户详细信息失败:', err);
             }
           });
         } else {
-          console.log('用户未授权详细信息，使用基本信息');
+          console.log('⚠️ 用户未授权详细信息，使用基本信息');
+          console.log('💡 提示：用户可以在个人中心页面授权获取详细信息');
+          
+          // 检查用户是否已经通过新版组件设置过信息
+          const cachedUserInfo = wx.getStorageSync('userInfo');
+          if (cachedUserInfo && cachedUserInfo.nickname && cachedUserInfo.nickname !== '微信用户') {
+            console.log('✅ 发现用户已通过新版组件设置过信息:', cachedUserInfo);
+            this.globalData.userInfo = cachedUserInfo;
+          } else {
+            console.log('💡 用户尚未设置详细信息，建议引导用户完善');
+            // 设置一个标记，表示需要完善信息
+            this.globalData.needCompleteProfile = true;
+          }
+          
+          // 即使没有详细信息，也尝试更新基本信息到后端
+          if (this.globalData.userInfo && this.globalData.openid) {
+            console.log('📤 尝试更新基本用户信息到后端');
+            this.updateUserInfoToBackend(this.globalData.userInfo);
+          }
         }
+      },
+      fail: (err) => {
+        console.log('❌ 获取授权设置失败:', err);
       }
+    });
+  },
+
+  /**
+   * 获取用户详细信息（需要用户主动授权）
+   */
+  getUserProfileWithAuth() {
+    return new Promise((resolve, reject) => {
+      console.log('🔐 请求用户授权获取详细信息...');
+      
+      wx.getUserProfile({
+        desc: '用于完善用户资料',
+        success: (res) => {
+          console.log('✅ 用户授权成功，获取到详细信息:', res.userInfo);
+          
+          const detailedUserInfo = {
+            ...this.globalData.userInfo,
+            nickname: res.userInfo.nickName,
+            avatar: res.userInfo.avatarUrl,
+            gender: res.userInfo.gender,
+            isLogin: true
+          };
+          
+          // 更新全局数据
+          this.globalData.userInfo = detailedUserInfo;
+          wx.setStorageSync('userInfo', detailedUserInfo);
+          
+          // 更新后端用户信息
+          this.updateUserInfoToBackend(detailedUserInfo);
+          
+          console.log('✅ 用户详细信息更新完成:', detailedUserInfo);
+          resolve(detailedUserInfo);
+        },
+        fail: (err) => {
+          console.log('❌ 用户拒绝授权或获取失败:', err);
+          reject(err);
+        }
+      });
     });
   },
 
@@ -153,7 +230,14 @@ App({
    * 更新用户信息到后端
    */
   updateUserInfoToBackend(userInfo) {
-    if (!this.globalData.openid) return;
+    if (!this.globalData.openid) {
+      console.log('⚠️ 没有openid，跳过用户信息更新');
+      return;
+    }
+    
+    console.log('📤 开始更新用户信息到后端...');
+    console.log('🔑 使用openid:', this.globalData.openid);
+    console.log('👤 用户信息:', userInfo);
     
     api.request('/api/auth/user/update', {
       method: 'POST',
@@ -164,11 +248,81 @@ App({
         gender: userInfo.gender || 0
       }
     }).then(res => {
+      console.log('📥 后端响应:', res);
       if (res.success) {
-        console.log('用户信息更新到后端成功');
+        console.log('✅ 用户信息更新到后端成功');
+        console.log('👤 更新后的用户信息:', res.user);
+        
+        // 更新本地用户信息
+        this.globalData.userInfo = {
+          ...this.globalData.userInfo,
+          ...res.user,
+          isLogin: true
+        };
+        wx.setStorageSync('userInfo', this.globalData.userInfo);
+        
+      } else {
+        console.log('⚠️ 用户信息更新失败:', res.message);
+        if (res.message === '用户不存在') {
+          console.log('💡 用户不存在，可能需要先进行完整登录');
+          // 尝试重新登录创建用户
+          this.retryCreateUser();
+        }
       }
     }).catch(err => {
-      console.log('用户信息更新到后端失败:', err);
+      console.error('❌ 用户信息更新到后端失败:', err);
+      console.error('📄 错误详情:', {
+        message: err.message,
+        openid: this.globalData.openid,
+        userInfo: userInfo
+      });
+      
+      // 显示更友好的错误信息
+      if (err.message.includes('用户不存在')) {
+        console.log('💡 提示：用户需要先完成微信登录');
+      } else if (err.message.includes('请求失败')) {
+        console.log('💡 提示：网络请求失败，请检查网络连接');
+      }
+    });
+  },
+
+  /**
+   * 重试创建用户
+   */
+  retryCreateUser() {
+    console.log('🔄 尝试重新创建用户...');
+    
+    // 重新执行登录流程
+    wx.login({
+      success: (loginRes) => {
+        if (loginRes.code) {
+          console.log('🔑 重新获取登录code:', loginRes.code);
+          
+          api.request('/api/auth/wechat/login', {
+            method: 'POST',
+            data: { code: loginRes.code }
+          }).then(res => {
+            console.log('📥 重新登录响应:', res);
+            if (res.success && res.openid) {
+              console.log('✅ 重新登录成功，用户已创建');
+              this.globalData.openid = res.openid;
+              wx.setStorageSync('openid', res.openid);
+              
+              // 重新尝试更新用户信息
+              if (this.globalData.userInfo) {
+                this.updateUserInfoToBackend(this.globalData.userInfo);
+              }
+            } else {
+              console.log('❌ 重新登录失败:', res.message);
+            }
+          }).catch(err => {
+            console.error('❌ 重新登录请求失败:', err);
+          });
+        }
+      },
+      fail: (err) => {
+        console.error('❌ 重新获取登录code失败:', err);
+      }
     });
   },
 

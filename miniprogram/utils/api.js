@@ -26,11 +26,29 @@ function request(url, options = {}) {
       },
       success: (res) => {
         console.log('API请求成功:', fullUrl, res);
-        if (res.data && res.data.code === 200) {
-          resolve(res.data);
+        
+        // 检查HTTP状态码
+        if (res.statusCode === 200) {
+          // 对于微信登录API，即使业务逻辑失败也应该resolve，让调用方处理
+          if (url.includes('/auth/wechat/login') || url.includes('/auth/wechat/test')) {
+            resolve(res.data);
+          } else if (res.data && (res.data.success || res.data.code === 200)) {
+            // 支持两种API响应格式：
+            // 1. {success: true, data: ...} - 用户API格式
+            // 2. {code: 200, data: ...} - 门店API格式
+            resolve(res.data);
+          } else {
+            console.error('API返回业务错误:', res.data);
+            // 提供更详细的错误信息
+            const errorMessage = res.data?.message || '请求失败';
+            const error = new Error(errorMessage);
+            error.code = res.data?.code;
+            error.data = res.data;
+            reject(error);
+          }
         } else {
-          console.error('API返回错误:', res.data);
-          reject(new Error(res.data?.message || '请求失败'));
+          console.error('HTTP状态码错误:', res.statusCode, res.data);
+          reject(new Error(`HTTP ${res.statusCode}: ${res.data?.message || '请求失败'}`));
         }
       },
       fail: (err) => {
@@ -167,8 +185,8 @@ const userApi = {
 
   // 更新用户信息
   updateUserProfile(userData) {
-    return request('/api/user/profile', {
-      method: 'PUT',
+    return request('/api/auth/user/update', {
+      method: 'POST',
       data: userData
     });
   }

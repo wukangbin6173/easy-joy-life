@@ -70,7 +70,7 @@ Page({
       
       if (app && app.globalData) {
         console.log('app.globalData:', app.globalData);
-        console.log('app.globalData.userInfo:', app.globalData.userInfo);
+        console.log('全局用户信息app.globalData.userInfo:', app.globalData.userInfo);
         
         if (app.globalData.userInfo) {
           this.setData({
@@ -82,7 +82,8 @@ Page({
           
           // 尝试从缓存获取
           const cachedUserInfo = wx.getStorageSync('userInfo');
-          if (cachedUserInfo) {
+          //cachedUserInfo = null //先暂时不使用缓存数据
+          if (false) {
             console.log('✓ 从缓存获取到用户信息:', cachedUserInfo);
             this.setData({
               userInfo: cachedUserInfo
@@ -268,5 +269,12 @@ Page({
   onBannerTap(e) {
     const banner = e.currentTarget.dataset.banner;
     console.log('点击轮播图:', banner);
+  },
+
+  // 跳转到完善个人信息页面
+  goToCompleteProfile() {
+    wx.navigateTo({
+      url: '/pages/user-profile/user-profile'
+    });
   }
 });

@@ -19,6 +19,10 @@
     <view class="user-details">
       <text class="user-nickname">{{userInfo.nickname || userInfo.nickName || '微信用户'}}</text>
       <text class="user-welcome">欢迎使用无人值守棋牌室</text>
+      <!-- 如果用户信息不完整，显示完善提示 -->
+      <view wx:if="{{!userInfo.nickname || userInfo.nickname === '微信用户'}}" class="complete-profile-tip" bindtap="goToCompleteProfile">
+        <text class="tip-text">点击完善头像和昵称 ></text>
+      </view>
     </view>
   </view>
 

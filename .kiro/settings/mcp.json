@@ -24,6 +24,25 @@
         "press_key",
         "fill"
       ]
+    },
+    "github": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-github@latest"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "get_repository",
+        "list_repositories",
+        "get_file_contents",
+        "list_directory_contents",
+        "search_repositories",
+        "get_issues",
+        "get_pull_requests"
+      ]
     }
   }
 }

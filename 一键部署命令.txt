@@ -1,0 +1,100 @@
+========================================
+易享生活棋牌室 - 一键部署命令
+========================================
+
+服务器信息：
+- IP: 121.43.96.127
+- 用户: root
+- 密码: Easy8286173
+
+========================================
+部署步骤
+========================================
+
+1. 使用 PuTTY 或其他 SSH 工具连接服务器
+
+2. 复制以下命令并粘贴到服务器终端（一次性执行）：
+
+cd /opt/easy-joy-life && git pull origin main && cd backend && ./mvnw clean package -DskipTests && cd ../deploy && docker-compose -f docker-compose.prod.yml restart backend && docker-compose -f docker-compose.prod.yml logs --tail=50 backend
+
+========================================
+分步执行（如果一键命令失败）
+========================================
+
+步骤 1: 更新代码
+cd /opt/easy-joy-life
+git pull origin main
+
+步骤 2: 编译后端
+cd backend
+./mvnw clean package -DskipTests
+
+步骤 3: 重启服务
+cd ../deploy
+docker-compose -f docker-compose.prod.yml restart backend
+
+步骤 4: 查看日志
+docker-compose -f docker-compose.prod.yml logs -f backend
+
+========================================
+验证部署
+========================================
+
+1. 查看服务状态：
+docker-compose -f docker-compose.prod.yml ps
+
+2. 测试 API：
+curl https://xx.aieo.cn/api/stores
+
+3. 查看最新日志：
+docker-compose -f docker-compose.prod.yml logs --tail=100 backend | grep "微信登录"
+
+========================================
+本次更新内容
+========================================
+
+1. 添加 RestTemplateConfig.java
+   - 配置 Jackson 转换器支持 text/plain 媒体类型
+   - 解决微信 API 响应格式问题
+
+2. 优化 AuthController.java
+   - 使用依赖注入的 RestTemplate
+   - 简化代码逻辑
+
+3. 优化首页用户信息显示
+   - 始终显示用户卡片
+   - 兼容多种字段名
+   - 多重兜底机制
+
+========================================
+预期结果
+========================================
+
+部署成功后，应该看到：
+✓ Git pull 成功
+✓ Maven 编译成功
+✓ Docker 容器重启成功
+✓ 后端日志显示正常启动
+
+真机调试时：
+✓ 登录不再报 HttpMessageConverter 错误
+✓ 成功获取 openid 和用户信息
+✓ 首页显示用户头像和昵称
+
+========================================
+故障排查
+========================================
+
+如果编译失败：
+- 检查 Java 版本: java -version
+- 清理缓存: ./mvnw clean
+
+如果服务启动失败：
+- 查看详细日志: docker-compose -f docker-compose.prod.yml logs backend
+- 检查端口占用: netstat -tlnp | grep 8080
+
+如果 Git pull 失败：
+- 配置 Git: git config --global http.postBuffer 524288000
+- 或重新克隆: rm -rf /opt/easy-joy-life && git clone https://github.com/wukangbin6173/easy-joy-life.git /opt/easy-joy-life
+
+========================================

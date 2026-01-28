@@ -51,13 +51,14 @@ public class AuthController {
             
             log.info("测试调用微信API: {}", url.replaceAll("secret=[^&]*", "secret=***"));
             
-            // 使用String接收响应
-            String wechatResponseStr = restTemplate.getForObject(url, String.class);
+            // 使用Map接收响应，利用我们配置的RestTemplate
+            Map<String, Object> wechatResponse = restTemplate.getForObject(url, Map.class);
             
             response.put("success", true);
-            response.put("rawResponse", wechatResponseStr);
+            response.put("wechatResponse", wechatResponse);
             response.put("appId", appId);
             response.put("codeLength", code.length());
+            response.put("message", "微信API调用成功，RestTemplate配置正常");
             
             return ResponseEntity.ok(response);
             
@@ -66,6 +67,7 @@ public class AuthController {
             response.put("success", false);
             response.put("message", "测试失败: " + e.getMessage());
             response.put("error", e.getClass().getSimpleName());
+            response.put("appId", appId);
             return ResponseEntity.internalServerError().body(response);
         }
     }

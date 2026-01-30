@@ -48,6 +48,11 @@ spring:
   h2:
     console:
       enabled: true
+      
+  # 禁用数据初始化脚本
+  sql:
+    init:
+      mode: never
 
 # 微信支付配置
 wechat:

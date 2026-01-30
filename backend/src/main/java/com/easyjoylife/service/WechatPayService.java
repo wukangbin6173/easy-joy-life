@@ -33,6 +33,26 @@ public class WechatPayService {
     @PostConstruct
     public void init() {
         try {
+            log.info("开始初始化微信支付服务...");
+            log.info("商户号: {}", wechatPayConfig.getMchId());
+            log.info("私钥路径: {}", wechatPayConfig.getPrivateKeyPath());
+            log.info("商户证书序列号: {}", wechatPayConfig.getMerchantSerialNumber());
+            log.info("API v3密钥长度: {}", wechatPayConfig.getApiV3Key() != null ? wechatPayConfig.getApiV3Key().length() : "null");
+            
+            // 检查配置参数
+            if (wechatPayConfig.getMchId() == null || wechatPayConfig.getMchId().isEmpty()) {
+                throw new RuntimeException("商户号未配置");
+            }
+            if (wechatPayConfig.getPrivateKeyPath() == null || wechatPayConfig.getPrivateKeyPath().isEmpty()) {
+                throw new RuntimeException("私钥路径未配置");
+            }
+            if (wechatPayConfig.getMerchantSerialNumber() == null || wechatPayConfig.getMerchantSerialNumber().isEmpty()) {
+                throw new RuntimeException("商户证书序列号未配置");
+            }
+            if (wechatPayConfig.getApiV3Key() == null || wechatPayConfig.getApiV3Key().isEmpty()) {
+                throw new RuntimeException("API v3密钥未配置");
+            }
+
             // 使用RSAAutoCertificateConfig自动管理证书
             // 这个配置会自动下载和更新微信支付平台证书
             this.config = new RSAAutoCertificateConfig.Builder()
@@ -42,6 +62,8 @@ public class WechatPayService {
                     .apiV3Key(wechatPayConfig.getApiV3Key())
                     .build();
 
+            log.info("微信支付配置创建成功");
+
             // 初始化JSAPI服务
             this.jsapiService = new JsapiServiceExtension.Builder()
                     .config(config)
@@ -49,7 +71,10 @@ public class WechatPayService {
 
             log.info("微信支付服务初始化成功 - 使用自动证书管理");
         } catch (Exception e) {
-            log.error("微信支付服务初始化失败", e);
+            log.error("微信支付服务初始化失败: {}", e.getMessage(), e);
+            // 不抛出异常，允许应用启动，但标记服务不可用
+            this.config = null;
+            this.jsapiService = null;
         }
     }
 
@@ -58,6 +83,13 @@ public class WechatPayService {
      */
     public Map<String, Object> createJsapiOrder(PaymentOrder order, String openid) {
         try {
+            log.info("开始创建微信支付订单: orderNo={}, openid={}", order.getOrderNo(), openid);
+            
+            // 检查服务是否已初始化
+            if (jsapiService == null) {
+                throw new RuntimeException("微信支付服务未正确初始化，请检查配置");
+            }
+            
             // 构建请求参数
             PrepayRequest request = new PrepayRequest();
             request.setAppid(wechatPayConfig.getAppId());
@@ -66,21 +98,32 @@ public class WechatPayService {
             request.setOutTradeNo(order.getOrderNo());
             request.setNotifyUrl(wechatPayConfig.getNotifyUrl());
 
+            log.info("微信支付请求参数: appId={}, mchId={}, description={}, outTradeNo={}, notifyUrl={}", 
+                    wechatPayConfig.getAppId(), wechatPayConfig.getMchId(), order.getSubject(), 
+                    order.getOrderNo(), wechatPayConfig.getNotifyUrl());
+
             // 设置订单金额（微信支付金额单位为分）
             Amount amount = new Amount();
             amount.setTotal(order.getAmount().multiply(new java.math.BigDecimal("100")).intValue());
             amount.setCurrency("CNY");
             request.setAmount(amount);
 
+            log.info("订单金额: {} 元 = {} 分", order.getAmount(), amount.getTotal());
+
             // 设置支付者信息
             Payer payer = new Payer();
             payer.setOpenid(openid);
             request.setPayer(payer);
 
+            log.info("支付者openid: {}", openid);
+
             // 调用微信支付API - 使用prepayWithRequestPayment方法直接获取支付参数
+            log.info("调用微信支付API...");
             PrepayWithRequestPaymentResponse response = jsapiService.prepayWithRequestPayment(request);
             
             if (response != null) {
+                log.info("微信支付API调用成功");
+                
                 // 直接返回SDK生成的支付参数
                 Map<String, Object> payParams = new HashMap<>();
                 payParams.put("timeStamp", response.getTimeStamp());
@@ -89,15 +132,16 @@ public class WechatPayService {
                 payParams.put("signType", response.getSignType());
                 payParams.put("paySign", response.getPaySign());
                 
-                log.info("微信支付订单创建成功: orderNo={}", order.getOrderNo());
+                log.info("微信支付订单创建成功: orderNo={}, payParams={}", order.getOrderNo(), payParams);
                 
                 return payParams;
             } else {
-                throw new RuntimeException("微信支付预下单失败");
+                log.error("微信支付API返回null响应");
+                throw new RuntimeException("微信支付预下单失败：API返回空响应");
             }
 
         } catch (Exception e) {
-            log.error("创建微信支付订单失败: {}", order.getOrderNo(), e);
+            log.error("创建微信支付订单失败: orderNo={}, error={}", order.getOrderNo(), e.getMessage(), e);
             throw new RuntimeException("创建微信支付订单失败: " + e.getMessage());
         }
     }

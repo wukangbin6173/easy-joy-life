@@ -32,10 +32,11 @@ function request(url, options = {}) {
           // 对于微信登录API，即使业务逻辑失败也应该resolve，让调用方处理
           if (url.includes('/auth/wechat/login') || url.includes('/auth/wechat/test')) {
             resolve(res.data);
-          } else if (res.data && (res.data.success || res.data.code === 200)) {
+          } else if (res.data && (res.data.success || res.data.code == 200)) {
             // 支持两种API响应格式：
             // 1. {success: true, data: ...} - 用户API格式
             // 2. {code: 200, data: ...} - 门店API格式
+            // 使用 == 而不是 === 来处理字符串和数字的比较
             resolve(res.data);
           } else {
             console.error('API返回业务错误:', res.data);

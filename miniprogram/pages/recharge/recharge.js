@@ -1,7 +1,11 @@
+// pages/recharge/recharge.js
+const app = getApp();
+const { userApi } = require('../../utils/api.js');
+
 Page({
   data: {
     currentBalance: 168.50,
-    amountOptions: [50, 100, 200, 300, 500, 1000],
+    amountOptions: [1, 50, 100, 200, 500, 1000],
     selectedAmount: 0,
     customAmount: '',
     finalAmount: 0,
@@ -182,32 +186,15 @@ Page({
 
   // 创建充值订单
   createRechargeOrder(amount, paymentMethod) {
-    const app = getApp();
-    const baseUrl = app.globalData.baseUrl;
+    const { request } = require('../../utils/api.js');
     
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${baseUrl}/api/payment/recharge/create`,
-        method: 'POST',
-        header: {
-          'Content-Type': 'application/json'
-        },
-        data: {
-          userId: 1, // 临时用户ID，实际应该从登录状态获取
-          amount: amount,
-          paymentMethod: paymentMethod.toUpperCase()
-        },
-        success: (res) => {
-          if (res.statusCode === 200) {
-            resolve(res.data);
-          } else {
-            reject(new Error(`HTTP ${res.statusCode}: ${res.data.message || '请求失败'}`));
-          }
-        },
-        fail: (error) => {
-          reject(new Error('网络请求失败: ' + error.errMsg));
-        }
-      });
+    return request('/api/payment/recharge/create', {
+      method: 'POST',
+      data: {
+        userId: 1, // 临时用户ID，实际应该从登录状态获取
+        amount: amount,
+        paymentMethod: paymentMethod.toUpperCase()
+      }
     });
   },
 
@@ -321,20 +308,15 @@ Page({
 
   // 处理微信支付
   processWechatPayment(orderNo) {
-    const app = getApp();
-    const baseUrl = app.globalData.baseUrl;
+    const { request } = require('../../utils/api.js');
     
     return new Promise((resolve, reject) => {
-      // 先获取用户openid（这里需要实现微信登录获取openid）
+      // 先获取用户openid
       this.getUserOpenid()
         .then(openid => {
           // 创建微信支付订单
-          return wx.request({
-            url: `${baseUrl}/api/payment/wechat/pay`,
+          return request('/api/payment/wechat/pay', {
             method: 'POST',
-            header: {
-              'Content-Type': 'application/json'
-            },
             data: {
               orderNo: orderNo,
               openid: openid
@@ -342,8 +324,8 @@ Page({
           });
         })
         .then(res => {
-          if (res.statusCode === 200 && res.data.success) {
-            const payParams = res.data.payParams;
+          if (res.success) {
+            const payParams = res.payParams;
             
             // 调用微信支付
             return wx.requestPayment({
@@ -354,7 +336,7 @@ Page({
               paySign: payParams.paySign
             });
           } else {
-            throw new Error(res.data.message || '创建支付失败');
+            throw new Error(res.message || '创建支付失败');
           }
         })
         .then(() => {
@@ -362,6 +344,7 @@ Page({
           resolve({ success: true, message: '支付成功' });
         })
         .catch(error => {
+          console.error('微信支付处理失败:', error);
           if (error.errMsg && error.errMsg.includes('cancel')) {
             reject(new Error('用户取消支付'));
           } else {
@@ -385,26 +368,25 @@ Page({
       wx.login({
         success: (loginRes) => {
           if (loginRes.code) {
-            // 发送code到后端获取openid
-            const baseUrl = app.globalData.baseUrl;
-            wx.request({
-              url: `${baseUrl}/api/auth/wechat/login`,
+            // 使用统一的API模块发送code到后端获取openid
+            const { request } = require('../../utils/api.js');
+            
+            request('/api/auth/wechat/login', {
               method: 'POST',
               data: {
                 code: loginRes.code
-              },
-              success: (res) => {
-                if (res.statusCode === 200 && res.data.success) {
-                  const openid = res.data.openid;
-                  app.globalData.openid = openid;
-                  resolve(openid);
-                } else {
-                  reject(new Error('获取openid失败'));
-                }
-              },
-              fail: () => {
-                reject(new Error('网络请求失败'));
               }
+            }).then(res => {
+              if (res.success && res.openid) {
+                const openid = res.openid;
+                app.globalData.openid = openid;
+                resolve(openid);
+              } else {
+                reject(new Error('获取openid失败'));
+              }
+            }).catch(error => {
+              console.error('获取openid失败:', error);
+              reject(new Error(error.message || '网络请求失败'));
             });
           } else {
             reject(new Error('微信登录失败'));

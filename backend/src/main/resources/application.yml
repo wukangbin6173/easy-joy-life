@@ -37,18 +37,18 @@ spring:
         format_sql: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
-# 微信支付配置 - 暂时禁用
+# 微信支付配置
 wechat:
   pay:
     app-id: wx9f4a33e5f2b31a6d  # 小程序AppID
-    mch-id:  1554487931  # 商户号，需要替换为实际的
-    private-key-path: ""  # 暂时禁用
+    mch-id: 1554487931  # 商户号
+    private-key-path: classpath:cert/apiclient_key.pem  # 商户私钥路径
     merchant-serial-number: 68EFFAD8D54020146A1372141B6EEBA1B52D6B64  # 商户证书序列号
     api-v3-key: idNmbaZ0EPgwbvYbJDGp2EGlwQDezU6d  # API v3密钥（32位）
     notify-url: https://xx.aieo.cn/api/payment/wechat/notify  # 异步回调地址
     sandbox: false  # 是否沙箱环境
     domain: https://api.mch.weixin.qq.com  # 微信支付API域名
-    enabled: false  # 暂时禁用微信支付
+    enabled: true  # 启用微信支付
   miniprogram:
     app-secret: b5919b96d9065dadbf43082ad65aaf56  # 小程序AppSecret
 

@@ -5,37 +5,49 @@ spring:
   application:
     name: easy-joy-life-system
   
-  # MySQL数据源配置
+  # H2数据源配置（临时用于测试）
   datasource:
-    url: jdbc:mysql://localhost:3306/easy_joy_life_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: root
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid:
-      initial-size: 5
-      min-idle: 5
-      max-active: 20
-      max-wait: 60000
-      time-between-eviction-runs-millis: 60000
-      min-evictable-idle-time-millis: 300000
-      validation-query: SELECT 1 FROM DUAL
-      test-while-idle: true
-      test-on-borrow: false
-      test-on-return: false
-      pool-prepared-statements: true
-      max-pool-prepared-statement-per-connection-size: 20
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    
+  # MySQL数据源配置（暂时注释）
+  # datasource:
+  #   url: jdbc:mysql://localhost:3306/easy_joy_life_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
+  #   username: root
+  #   password: root
+  #   type: com.alibaba.druid.pool.DruidDataSource
+  #   druid:
+  #     initial-size: 5
+  #     min-idle: 5
+  #     max-active: 20
+  #     max-wait: 60000
+  #     time-between-eviction-runs-millis: 60000
+  #     min-evictable-idle-time-millis: 300000
+  #     validation-query: SELECT 1 FROM DUAL
+  #     test-while-idle: true
+  #     test-on-borrow: false
+  #     test-on-return: false
+  #     pool-prepared-statements: true
+  #     max-pool-prepared-statement-per-connection-size: 20
   
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.H2Dialect
+    
+  # H2控制台配置
+  h2:
+    console:
+      enabled: true
 
 # 微信支付配置
 wechat:

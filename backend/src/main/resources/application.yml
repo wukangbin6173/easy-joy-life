@@ -61,7 +61,12 @@ wechat:
     mch-id: 1554487931  # 商户号
     private-key-path: classpath:cert/apiclient_key.pem  # 商户私钥路径
     merchant-serial-number: 68EFFAD8D54020146A1372141B6EEBA1B52D6B64  # 商户证书序列号
-    api-v3-key: idNmbaZ0EPgwbvYbJDGp2EGlwQDezU6d  # API v3密钥（32位）
+    api-v3-key: 7Bf2k9Qd4Gh1Pz6Rt3Sw5Xy8Ac0VeMjU  # API v3密钥（32位）
+    # 微信支付公钥配置（推荐使用，避免证书过期问题）
+    # 请将从商户平台下载的真实公钥文件放到 backend/src/main/resources/cert/wechatpay_public_key.pem
+    # 并将下面的配置取消注释，填入真实的公钥ID
+    public-key-path: classpath:cert/wechatpay_public_key.pem  # 微信支付公钥路径
+    public-key-id: PUB_KEY_ID_0115544879312026012300191784001402  # 微信支付公钥ID，从商户平台获取
     notify-url: https://xx.aieo.cn/api/payment/wechat/notify  # 异步回调地址
     sandbox: false  # 是否沙箱环境
     domain: https://api.mch.weixin.qq.com  # 微信支付API域名

@@ -38,6 +38,16 @@ public class WechatPayConfig {
     private String apiV3Key;
 
     /**
+     * 微信支付公钥路径（推荐使用，避免证书过期问题）
+     */
+    private String publicKeyPath;
+
+    /**
+     * 微信支付公钥ID（推荐使用，避免证书过期问题）
+     */
+    private String publicKeyId;
+
+    /**
      * 异步回调地址
      */
     private String notifyUrl;

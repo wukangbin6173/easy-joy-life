@@ -5,54 +5,47 @@ spring:
   application:
     name: easy-joy-life-system
   
-  # H2数据源配置（临时用于测试）
+  # MySQL数据源配置
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
-    
-  # MySQL数据源配置（暂时注释）
-  # datasource:
-  #   url: jdbc:mysql://localhost:3306/easy_joy_life_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
-  #   username: root
-  #   password: root
-  #   type: com.alibaba.druid.pool.DruidDataSource
-  #   druid:
-  #     initial-size: 5
-  #     min-idle: 5
-  #     max-active: 20
-  #     max-wait: 60000
-  #     time-between-eviction-runs-millis: 60000
-  #     min-evictable-idle-time-millis: 300000
-  #     validation-query: SELECT 1 FROM DUAL
-  #     test-while-idle: true
-  #     test-on-borrow: false
-  #     test-on-return: false
-  #     pool-prepared-statements: true
-  #     max-pool-prepared-statement-per-connection-size: 20
+    url: jdbc:mysql://localhost:3306/easy_joy_life_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1 FROM DUAL
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
   
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: validate  # 使用validate，不自动创建表
+    show-sql: false       # 生产环境关闭SQL日志
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: false
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     
-  # H2控制台配置
-  h2:
-    console:
-      enabled: true
+  # 禁用H2控制台
+  # h2:
+  #   console:
+  #     enabled: false
       
-  # 禁用数据初始化脚本
+  # 启用数据初始化脚本
   sql:
     init:
-      mode: never
+      mode: always
 
 # 微信支付配置
 wechat:
@@ -60,7 +53,7 @@ wechat:
     app-id: wx9f4a33e5f2b31a6d  # 小程序AppID
     mch-id: 1554487931  # 商户号
     private-key-path: classpath:cert/apiclient_key.pem  # 商户私钥路径
-    merchant-serial-number: 68EFFAD8D54020146A1372141B6EEBA1B52D6B64  # 商户证书序列号
+    merchant-serial-number: 5D34600479751B1A27F9CC5AE3B64D5509C49A8F  # 商户证书序列号
     api-v3-key: 7Bf2k9Qd4Gh1Pz6Rt3Sw5Xy8Ac0VeMjU  # API v3密钥（32位）
     # 微信支付公钥配置（推荐使用，避免证书过期问题）
     # 请将从商户平台下载的真实公钥文件放到 backend/src/main/resources/cert/wechatpay_public_key.pem

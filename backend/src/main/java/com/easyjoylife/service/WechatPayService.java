@@ -4,7 +4,6 @@ import com.easyjoylife.config.WechatPayConfig;
 import com.easyjoylife.entity.PaymentOrder;
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
-import com.wechat.pay.java.core.RSAPublicKeyConfig;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
 import com.wechat.pay.java.service.payments.jsapi.model.*;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
@@ -54,38 +53,28 @@ public class WechatPayService {
                 throw new RuntimeException("API v3密钥未配置");
             }
 
-            // 优先尝试使用微信支付公钥模式（推荐方式，避免证书过期问题）
+            // 检查是否配置了微信支付公钥
             if (wechatPayConfig.getPublicKeyPath() != null && !wechatPayConfig.getPublicKeyPath().isEmpty() &&
                 wechatPayConfig.getPublicKeyId() != null && !wechatPayConfig.getPublicKeyId().isEmpty()) {
                 
-                log.info("使用微信支付公钥模式初始化...");
+                log.info("检测到微信支付公钥配置:");
                 log.info("公钥路径: {}", wechatPayConfig.getPublicKeyPath());
                 log.info("公钥ID: {}", wechatPayConfig.getPublicKeyId());
-                
-                this.config = new RSAPublicKeyConfig.Builder()
-                        .merchantId(wechatPayConfig.getMchId())
-                        .privateKeyFromPath(wechatPayConfig.getPrivateKeyPath())
-                        .publicKeyFromPath(wechatPayConfig.getPublicKeyPath())
-                        .publicKeyId(wechatPayConfig.getPublicKeyId())
-                        .merchantSerialNumber(wechatPayConfig.getMerchantSerialNumber())
-                        .apiV3Key(wechatPayConfig.getApiV3Key())
-                        .build();
-                
-                log.info("微信支付公钥模式配置创建成功");
-                
-            } else {
-                // 回退到自动证书管理模式（可能遇到证书过期问题）
-                log.warn("未配置微信支付公钥，使用自动证书管理模式（可能遇到证书过期问题）");
-                
-                this.config = new RSAAutoCertificateConfig.Builder()
-                        .merchantId(wechatPayConfig.getMchId())
-                        .privateKeyFromPath(wechatPayConfig.getPrivateKeyPath())
-                        .merchantSerialNumber(wechatPayConfig.getMerchantSerialNumber())
-                        .apiV3Key(wechatPayConfig.getApiV3Key())
-                        .build();
-                
-                log.info("微信支付自动证书配置创建成功");
+                log.warn("当前SDK版本暂不支持公钥模式，将使用自动证书管理模式");
+                log.warn("建议升级到最新SDK版本以支持公钥模式，避免证书过期问题");
             }
+
+            // 使用RSAAutoCertificateConfig自动管理证书
+            // 注意：这个配置会自动下载和更新微信支付平台证书
+            // 如果遇到证书过期问题，需要升级SDK并使用公钥模式
+            this.config = new RSAAutoCertificateConfig.Builder()
+                    .merchantId(wechatPayConfig.getMchId())
+                    .privateKeyFromPath(wechatPayConfig.getPrivateKeyPath())
+                    .merchantSerialNumber(wechatPayConfig.getMerchantSerialNumber())
+                    .apiV3Key(wechatPayConfig.getApiV3Key())
+                    .build();
+
+            log.info("微信支付配置创建成功 - 使用自动证书管理模式");
 
             // 初始化JSAPI服务
             this.jsapiService = new JsapiServiceExtension.Builder()

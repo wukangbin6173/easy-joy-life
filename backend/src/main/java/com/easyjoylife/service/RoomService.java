@@ -3,6 +3,8 @@ package com.easyjoylife.service;
 import com.easyjoylife.entity.Room;
 import com.easyjoylife.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,13 +21,16 @@ public class RoomService {
     
     /**
      * 根据门店ID获取有效房间
+     * 缓存房间列表，提高查询性能
      */
+    @Cacheable(value = "rooms", key = "'store_' + #storeId")
     public List<Room> getRoomsByStoreId(Long storeId) {
         return roomRepository.findByStoreIdAndStatus(storeId, 1);
     }
     
     /**
      * 根据门店ID获取所有房间（包括禁用的）- 用于管理后台
+     * 管理后台数据不缓存，保证实时性
      */
     public List<Room> getAllRoomsByStoreId(Long storeId) {
         return roomRepository.findByStoreId(storeId);
@@ -33,28 +38,36 @@ public class RoomService {
     
     /**
      * 根据ID获取房间
+     * 缓存单个房间信息
      */
+    @Cacheable(value = "rooms", key = "'room_' + #id")
     public Optional<Room> getRoomById(Long id) {
         return roomRepository.findById(id);
     }
     
     /**
      * 获取所有有效房间
+     * 缓存所有房间列表
      */
+    @Cacheable(value = "rooms", key = "'all_active'")
     public List<Room> getAllActiveRooms() {
         return roomRepository.findByStatus(1);
     }
     
     /**
      * 创建房间
+     * 清除相关缓存
      */
+    @CacheEvict(value = "rooms", allEntries = true)
     public Room createRoom(Room room) {
         return roomRepository.save(room);
     }
     
     /**
      * 更新房间
+     * 清除相关缓存
      */
+    @CacheEvict(value = "rooms", allEntries = true)
     public Room updateRoom(Long id, Room roomDetails) {
         Optional<Room> optionalRoom = roomRepository.findById(id);
         if (optionalRoom.isPresent()) {
@@ -76,7 +89,9 @@ public class RoomService {
     
     /**
      * 删除房间（软删除）
+     * 清除相关缓存
      */
+    @CacheEvict(value = "rooms", allEntries = true)
     public boolean deleteRoom(Long id) {
         Optional<Room> optionalRoom = roomRepository.findById(id);
         if (optionalRoom.isPresent()) {
@@ -90,6 +105,7 @@ public class RoomService {
     
     /**
      * 获取所有房间（包括禁用的）- 用于管理后台
+     * 管理后台数据不缓存，保证实时性
      */
     public List<Room> getAllRooms() {
         return roomRepository.findAll();

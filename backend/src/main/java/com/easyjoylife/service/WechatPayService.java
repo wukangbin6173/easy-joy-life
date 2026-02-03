@@ -76,17 +76,27 @@ public class WechatPayService {
 
             log.info("微信支付配置创建成功 - 使用自动证书管理模式");
 
-            // 初始化JSAPI服务
+            // 初始化JSAPI服务 - 使用最新SDK版本
             this.jsapiService = new JsapiServiceExtension.Builder()
                     .config(config)
                     .build();
 
-            log.info("微信支付服务初始化成功");
+            log.info("微信支付JSAPI服务初始化成功");
+            
+            // 验证服务是否可用
+            if (this.jsapiService != null) {
+                log.info("✅ 微信支付服务初始化完成，SDK版本: 0.2.18");
+            } else {
+                log.error("❌ 微信支付JSAPI服务初始化失败");
+                throw new RuntimeException("JSAPI服务初始化失败");
+            }
+
         } catch (Exception e) {
             log.error("微信支付服务初始化失败: {}", e.getMessage(), e);
             // 不抛出异常，允许应用启动，但标记服务不可用
             this.config = null;
             this.jsapiService = null;
+            log.error("❌ 微信支付功能将不可用，请检查配置后重启服务");
         }
     }
 
@@ -102,29 +112,44 @@ public class WechatPayService {
                 throw new RuntimeException("微信支付服务未正确初始化，请检查配置");
             }
             
+            // 验证必要参数
+            if (order == null || order.getOrderNo() == null || order.getAmount() == null) {
+                throw new RuntimeException("订单信息不完整");
+            }
+            
+            if (openid == null || openid.trim().isEmpty()) {
+                throw new RuntimeException("用户openid不能为空");
+            }
+            
             // 构建请求参数
             PrepayRequest request = new PrepayRequest();
             request.setAppid(wechatPayConfig.getAppId());
             request.setMchid(wechatPayConfig.getMchId());
-            request.setDescription(order.getSubject());
+            request.setDescription(order.getSubject() != null ? order.getSubject() : "易享生活充值");
             request.setOutTradeNo(order.getOrderNo());
             request.setNotifyUrl(wechatPayConfig.getNotifyUrl());
 
             log.info("微信支付请求参数: appId={}, mchId={}, description={}, outTradeNo={}, notifyUrl={}", 
-                    wechatPayConfig.getAppId(), wechatPayConfig.getMchId(), order.getSubject(), 
+                    wechatPayConfig.getAppId(), wechatPayConfig.getMchId(), request.getDescription(), 
                     order.getOrderNo(), wechatPayConfig.getNotifyUrl());
 
             // 设置订单金额（微信支付金额单位为分）
+            // 确保金额转换正确，避免精度问题
+            int totalFee = order.getAmount().multiply(new java.math.BigDecimal("100")).intValue();
+            if (totalFee <= 0) {
+                throw new RuntimeException("订单金额必须大于0");
+            }
+            
             Amount amount = new Amount();
-            amount.setTotal(order.getAmount().multiply(new java.math.BigDecimal("100")).intValue());
+            amount.setTotal(totalFee);  // 这里是新版API的total参数，不是旧版的total_fee
             amount.setCurrency("CNY");
             request.setAmount(amount);
 
-            log.info("订单金额: {} 元 = {} 分", order.getAmount(), amount.getTotal());
+            log.info("订单金额: {} 元 = {} 分", order.getAmount(), totalFee);
 
             // 设置支付者信息
             Payer payer = new Payer();
-            payer.setOpenid(openid);
+            payer.setOpenid(openid.trim());
             request.setPayer(payer);
 
             log.info("支付者openid: {}", openid);
@@ -136,12 +161,21 @@ public class WechatPayService {
             if (response != null) {
                 log.info("微信支付API调用成功");
                 
+                // 验证返回的支付参数
+                if (response.getTimeStamp() == null || response.getNonceStr() == null || 
+                    response.getPackageVal() == null || response.getPaySign() == null) {
+                    log.error("微信支付返回参数不完整: timeStamp={}, nonceStr={}, package={}, paySign={}", 
+                            response.getTimeStamp(), response.getNonceStr(), 
+                            response.getPackageVal(), response.getPaySign());
+                    throw new RuntimeException("微信支付返回参数不完整");
+                }
+                
                 // 直接返回SDK生成的支付参数
                 Map<String, Object> payParams = new HashMap<>();
                 payParams.put("timeStamp", response.getTimeStamp());
                 payParams.put("nonceStr", response.getNonceStr());
                 payParams.put("package", response.getPackageVal());
-                payParams.put("signType", response.getSignType());
+                payParams.put("signType", response.getSignType() != null ? response.getSignType() : "RSA");
                 payParams.put("paySign", response.getPaySign());
                 
                 log.info("微信支付订单创建成功: orderNo={}, payParams={}", order.getOrderNo(), payParams);
@@ -149,12 +183,27 @@ public class WechatPayService {
                 return payParams;
             } else {
                 log.error("微信支付API返回null响应");
-                throw new RuntimeException("微信支付预下单失败：API返回空响应");
+                throw new RuntimeException("微信支付预下单失败：API返回空响应，请检查微信支付配置");
             }
 
         } catch (Exception e) {
             log.error("创建微信支付订单失败: orderNo={}, error={}", order.getOrderNo(), e.getMessage(), e);
-            throw new RuntimeException("创建微信支付订单失败: " + e.getMessage());
+            
+            // 提供更详细的错误信息
+            String errorMessage = e.getMessage();
+            if (errorMessage != null) {
+                if (errorMessage.contains("total_fee")) {
+                    errorMessage = "微信支付参数错误：请检查SDK版本和配置";
+                } else if (errorMessage.contains("APPID")) {
+                    errorMessage = "微信支付APPID配置错误";
+                } else if (errorMessage.contains("MCH_ID")) {
+                    errorMessage = "微信支付商户号配置错误";
+                } else if (errorMessage.contains("签名")) {
+                    errorMessage = "微信支付签名验证失败，请检查证书配置";
+                }
+            }
+            
+            throw new RuntimeException("创建微信支付订单失败: " + errorMessage);
         }
     }
 

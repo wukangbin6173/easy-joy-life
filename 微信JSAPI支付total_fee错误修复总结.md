@@ -20,11 +20,11 @@
 
 ### 1. 更新SDK版本
 ```xml
-<!-- 从 0.2.12 更新到 0.2.18 -->
+<!-- 从 0.2.12 更新到 0.2.17 -->
 <dependency>
     <groupId>com.github.wechatpay-apiv3</groupId>
     <artifactId>wechatpay-java</artifactId>
-    <version>0.2.18</version>
+    <version>0.2.17</version>
 </dependency>
 ```
 
@@ -171,4 +171,4 @@ POST /api/payment/wechat/pay
 
 **修复完成时间**: 2026年2月3日  
 **修复版本**: v1.0.1  
-**SDK版本**: wechatpay-java 0.2.18
+**SDK版本**: wechatpay-java 0.2.17

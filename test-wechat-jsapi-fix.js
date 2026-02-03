@@ -151,7 +151,7 @@ async function testWechatJSAPIFix() {
   }
 
   console.log('\n📝 修复说明:');
-  console.log('1. 更新微信支付SDK到最新版本 (0.2.18)');
+  console.log('1. 更新微信支付SDK到最新版本 (0.2.17)');
   console.log('2. 增强参数验证和错误处理');
   console.log('3. 修复total_fee参数问题 (使用amount.total)');
   console.log('4. 添加详细的日志输出');

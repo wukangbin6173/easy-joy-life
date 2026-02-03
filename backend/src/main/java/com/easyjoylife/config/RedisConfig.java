@@ -44,7 +44,29 @@ public class RedisConfig {
         // 设置可见性
         mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         
-        // 启用默认类型
+        // 忽略未知属性
+        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        
+        return mapper;
+    }
+
+    /**
+     * 配置Redis专用的ObjectMapper，包含类型信息用于缓存
+     */
+    @Bean("redisObjectMapper")
+    public ObjectMapper redisObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // 注册Java 8时间模块
+        mapper.registerModule(new JavaTimeModule());
+        
+        // 禁用时间戳格式，使用ISO格式
+        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        
+        // 设置可见性
+        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        
+        // 启用默认类型（仅用于Redis缓存）
         mapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
         
         // 忽略未知属性
@@ -61,9 +83,9 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // 使用配置好的ObjectMapper创建Jackson序列化器
+        // 使用Redis专用的ObjectMapper创建Jackson序列化器
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
-        jackson2JsonRedisSerializer.setObjectMapper(objectMapper());
+        jackson2JsonRedisSerializer.setObjectMapper(redisObjectMapper());
 
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
@@ -85,9 +107,9 @@ public class RedisConfig {
      */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // 创建Jackson序列化器
+        // 创建Redis专用的Jackson序列化器
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
-        jackson2JsonRedisSerializer.setObjectMapper(objectMapper());
+        jackson2JsonRedisSerializer.setObjectMapper(redisObjectMapper());
         
         // 配置序列化
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()

@@ -36,7 +36,7 @@ public class WechatPayService {
             log.info("开始初始化微信支付服务...");
             log.info("商户号: {}", wechatPayConfig.getMchId());
             log.info("私钥路径: {}", wechatPayConfig.getPrivateKeyPath());
-            log.info("商户证书序列号: {}", wechatPayConfig.getMerchantSerialNumber());
+            log.info("商户证书序列号: {}", wechatPayConfig.getMerchantSerialNumber());更新
             log.info("API v3密钥长度: {}", wechatPayConfig.getApiV3Key() != null ? wechatPayConfig.getApiV3Key().length() : "null");
             
             // 检查配置参数
@@ -85,7 +85,7 @@ public class WechatPayService {
             
             // 验证服务是否可用
             if (this.jsapiService != null) {
-                log.info("✅ 微信支付服务初始化完成，SDK版本: 0.2.18");
+                log.info("✅ 微信支付服务初始化完成，SDK版本: 0.2.17");
             } else {
                 log.error("❌ 微信支付JSAPI服务初始化失败");
                 throw new RuntimeException("JSAPI服务初始化失败");

@@ -36,7 +36,7 @@ public class WechatPayService {
             log.info("开始初始化微信支付服务...");
             log.info("商户号: {}", wechatPayConfig.getMchId());
             log.info("私钥路径: {}", wechatPayConfig.getPrivateKeyPath());
-            log.info("商户证书序列号: {}", wechatPayConfig.getMerchantSerialNumber());更新
+            log.info("商户证书序列号: {}", wechatPayConfig.getMerchantSerialNumber());
             log.info("API v3密钥长度: {}", wechatPayConfig.getApiV3Key() != null ? wechatPayConfig.getApiV3Key().length() : "null");
             
             // 检查配置参数

@@ -39,29 +39,37 @@ Page({
             }
           });
         } else {
-          // 使用模拟数据作为后备
-          const walletInfo = {
-            balance: 168.50,
-            frozen: 0.00,
-            totalRecharge: 500.00,
-            autoRecharge: true
-          };
+          // API返回失败，显示错误
+          console.error('获取钱包数据失败:', res.data);
+          wx.showToast({
+            title: '获取钱包数据失败',
+            icon: 'none'
+          });
           this.setData({
-            wallet: walletInfo
+            wallet: {
+              balance: 0.00,
+              frozen: 0.00,
+              totalRecharge: 0.00,
+              autoRecharge: false
+            }
           });
         }
       },
       fail: (error) => {
         console.error('加载钱包数据失败:', error);
-        // 使用模拟数据作为后备
-        const walletInfo = {
-          balance: 168.50,
-          frozen: 0.00,
-          totalRecharge: 500.00,
-          autoRecharge: true
-        };
+        // 显示错误提示
+        wx.showToast({
+          title: '加载钱包数据失败',
+          icon: 'none'
+        });
+        // 使用默认值
         this.setData({
-          wallet: walletInfo
+          wallet: {
+            balance: 0.00,
+            frozen: 0.00,
+            totalRecharge: 0.00,
+            autoRecharge: false
+          }
         });
       }
     });

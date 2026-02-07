@@ -45,9 +45,9 @@ public class PaymentController {
             String paymentMethod = request.get("paymentMethod").toString();
 
             // 参数验证
-            if (amount.compareTo(BigDecimal.ONE) < 0) {
+            if (amount.compareTo(new BigDecimal("0.1")) < 0) {
                 response.put("success", false);
-                response.put("message", "充值金额不能少于1元");
+                response.put("message", "充值金额不能少于0.1元");
                 return ResponseEntity.badRequest().body(response);
             }
 

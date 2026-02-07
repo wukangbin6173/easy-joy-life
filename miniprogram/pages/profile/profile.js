@@ -80,16 +80,46 @@ Page({
   },
 
   loadUserStats: function() {
-    // 这里可以调用API获取用户统计数据
+    const app = getApp();
+    const baseUrl = app.globalData.baseUrl;
+    const userId = 1; // 临时用户ID，实际应该从登录状态获取
+    
+    // 获取钱包余额
+    wx.request({
+      url: `${baseUrl}/api/payment/wallet/${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.statusCode === 200 && res.data.success) {
+          const wallet = res.data.wallet;
+          this.setData({
+            wallet: {
+              balance: wallet.balance || 0.00
+            }
+          });
+        } else {
+          console.error('获取钱包数据失败:', res.data);
+          this.setData({
+            wallet: {
+              balance: 0.00
+            }
+          });
+        }
+      },
+      fail: (error) => {
+        console.error('加载钱包数据失败:', error);
+        this.setData({
+          wallet: {
+            balance: 0.00
+          }
+        });
+      }
+    });
+    
     // 暂时使用模拟数据
     const stats = {
       totalOrders: 15,
       totalHours: 48,
       totalAmount: 2400
-    };
-
-    const wallet = {
-      balance: 168.50
     };
 
     const coupons = {
@@ -98,7 +128,6 @@ Page({
 
     this.setData({
       stats: stats,
-      wallet: wallet,
       coupons: coupons
     });
   },

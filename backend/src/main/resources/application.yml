@@ -74,14 +74,14 @@ spring:
     modules:
       - com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 
-# 微信支付配置
+# 微信支付配置  // 使用上海信辉联智信息咨询有限公司 的企业微信支付接口
 wechat:
   pay:
     app-id: wx9f4a33e5f2b31a6d  # 小程序AppID
-    mch-id: 1554487931  # 商户号
+    mch-id: 1671050768  # 商户号
     private-key-path: classpath:cert/apiclient_key.pem  # 商户私钥路径
-    merchant-serial-number: 5D34600479751B1A27F9CC5AE3B64D5509C49A8F  # 商户证书序列号
-    api-v3-key: 7Bf2k9Qd4Gh1Pz6Rt3Sw5Xy8Ac0VeMjU  # API v3密钥（32位）
+    merchant-serial-number: 1A24641C1CD3C0034643DEB9467B246F57A1AF37  # 商户证书序列号
+    api-v3-key: SAgZHyBzjNwaqUWtp6shLinmuCMYPfXd  # API v3密钥（32位）
     # 微信支付公钥配置（推荐使用，避免证书过期问题）
     public-key-path: classpath:cert/wechatpay_public_key.pem  # 微信支付公钥路径
     public-key-id: PUB_KEY_ID_0115544879312026012300191784001402  # 微信支付公钥ID，从商户平台获取

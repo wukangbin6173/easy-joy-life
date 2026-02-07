@@ -34,11 +34,32 @@ Page({
 
   // 加载当前余额
   loadCurrentBalance() {
-    // 从全局数据或接口获取当前余额
     const app = getApp();
-    // 这里可以从app.globalData或发起请求获取
-    this.setData({
-      currentBalance: 168.50
+    const baseUrl = app.globalData.baseUrl;
+    const userId = 1; // 临时用户ID，实际应该从登录状态获取
+    
+    wx.request({
+      url: `${baseUrl}/api/payment/wallet/${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.statusCode === 200 && res.data.success) {
+          const wallet = res.data.wallet;
+          this.setData({
+            currentBalance: wallet.balance || 0.00
+          });
+        } else {
+          console.error('获取钱包数据失败:', res.data);
+          this.setData({
+            currentBalance: 0.00
+          });
+        }
+      },
+      fail: (error) => {
+        console.error('加载钱包数据失败:', error);
+        this.setData({
+          currentBalance: 0.00
+        });
+      }
     });
   },
 

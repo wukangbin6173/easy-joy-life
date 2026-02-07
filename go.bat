@@ -187,17 +187,52 @@ if "!msg_option!"=="2" (
     for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set COMMIT_MSG=部署: %%a-%%b-%%c
     for /f "tokens=1-2 delims=: " %%a in ('time /t') do set COMMIT_MSG=!COMMIT_MSG! %%a:%%b
 ) else (
-    REM 使用 AI 生成（需要 jq 和 curl）
-    where jq >nul 2>&1
-    if errorlevel 1 (
-        echo 警告: 未安装 jq，使用默认消息
+    REM 使用 AI 生成
+    echo 使用 DeepSeek AI 生成提交消息...
+    
+    REM 获取 git diff
+    git diff --cached --stat > "%TEMP%\git_diff.txt" 2>&1
+    
+    REM 检查是否有暂存的更改
+    for /f %%i in ('git diff --cached --stat ^| find /c /v ""') do set DIFF_LINES=%%i
+    if !DIFF_LINES! EQU 0 (
+        echo 警告: 没有暂存的更改
         for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set COMMIT_MSG=部署: %%a-%%b-%%c
         for /f "tokens=1-2 delims=: " %%a in ('time /t') do set COMMIT_MSG=!COMMIT_MSG! %%a:%%b
     ) else (
-        echo 使用 DeepSeek AI 生成提交消息...
-        echo 此功能需要 curl 和 jq，暂时使用默认消息
-        for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set COMMIT_MSG=部署: %%a-%%b-%%c
-        for /f "tokens=1-2 delims=: " %%a in ('time /t') do set COMMIT_MSG=!COMMIT_MSG! %%a:%%b
+        REM 调用 PowerShell 来处理 API 请求
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "$diff = Get-Content '%TEMP%\git_diff.txt' -Raw; $prompt = 'Based on the following git changes, generate a concise commit message in Chinese. Format: <type>: <description>. Types: feat(新功能), fix(修复), docs(文档), style(格式), refactor(重构), perf(性能), test(测试), chore(构建). Git changes: ' + $diff + '. Provide ONLY the commit message.'; $body = @{ model = 'deepseek-chat'; messages = @(@{ role = 'user'; content = $prompt }); temperature = 0.7; max_tokens = 100 } | ConvertTo-Json -Depth 10; try { $response = Invoke-RestMethod -Uri 'https://api.deepseek.com/v1/chat/completions' -Method Post -Headers @{ 'Content-Type' = 'application/json'; 'Authorization' = 'Bearer %DEEPSEEK_API_KEY%' } -Body $body -TimeoutSec 10; $msg = $response.choices[0].message.content.Trim(); Write-Output $msg } catch { Write-Output 'API_ERROR' }" > "%TEMP%\ai_commit_msg.txt" 2>&1
+        
+        REM 读取 AI 生成的消息
+        set /p AI_MSG=<"%TEMP%\ai_commit_msg.txt"
+        
+        if "!AI_MSG!"=="API_ERROR" (
+            echo 警告: AI 生成失败，使用默认消息
+            for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set COMMIT_MSG=部署: %%a-%%b-%%c
+            for /f "tokens=1-2 delims=: " %%a in ('time /t') do set COMMIT_MSG=!COMMIT_MSG! %%a:%%b
+        ) else if "!AI_MSG!"=="" (
+            echo 警告: AI 返回空消息，使用默认消息
+            for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set COMMIT_MSG=部署: %%a-%%b-%%c
+            for /f "tokens=1-2 delims=: " %%a in ('time /t') do set COMMIT_MSG=!COMMIT_MSG! %%a:%%b
+        ) else (
+            echo AI 生成的消息: !AI_MSG!
+            echo.
+            set /p use_ai="使用此提交消息? (y/n, 默认 y): "
+            if "!use_ai!"=="" set use_ai=y
+            if /i "!use_ai!"=="y" (
+                set COMMIT_MSG=!AI_MSG!
+            ) else (
+                set /p COMMIT_MSG="请输入自定义提交消息: "
+                if "!COMMIT_MSG!"=="" (
+                    for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set COMMIT_MSG=部署: %%a-%%b-%%c
+                    for /f "tokens=1-2 delims=: " %%a in ('time /t') do set COMMIT_MSG=!COMMIT_MSG! %%a:%%b
+                )
+            )
+        )
+        
+        REM 清理临时文件
+        del "%TEMP%\git_diff.txt" 2>nul
+        del "%TEMP%\ai_commit_msg.txt" 2>nul
     )
 )
 

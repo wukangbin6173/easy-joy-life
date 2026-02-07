@@ -125,9 +125,9 @@ Page({
       return;
     }
 
-    if (finalAmount < 1) {
+    if (finalAmount < 0.1) {
       wx.showToast({
-        title: '充值金额不能少于1元',
+        title: '充值金额不能少于0.1元',
         icon: 'none'
       });
       return;

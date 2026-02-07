@@ -78,3 +78,7 @@ backup/
 # 文档临时文件
 ~$*
 *.tmp.md
+
+# Shell 脚本（Windows 项目不需要）
+*.sh
+!deploy/*.sh

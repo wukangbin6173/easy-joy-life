@@ -2,9 +2,11 @@
 
 ## 概述
 
-本项目提供两套部署脚本：
-- **go.bat** - Windows 原生批处理脚本（本地开发使用）
-- **go.sh** - Linux Shell 脚本（服务器端使用）
+本项目使用 Windows 原生批处理脚本进行部署和管理。
+
+**主要文件：**
+- **go.bat** - Windows 部署脚本（包含所有功能）
+- **generate-commit-msg.ps1** - AI 提交消息生成脚本
 
 ## Windows 用户快速开始
 
@@ -65,9 +67,11 @@ go.bat 1
 
 **提交消息选项：**
 - **选项 1（推荐）**：使用 DeepSeek AI 自动生成
+  - 使用 `deepseek-reasoner` 模型（思考模型）
+  - 流式输出思考过程（黄色文字）
   - 自动分析代码变更
   - 生成符合规范的中文提交消息
-  - 需要安装 `jq` 工具
+  - 实时显示 AI 的推理过程
   
 - **选项 2**：手动输入提交消息
   - 自己编写提交消息
@@ -161,13 +165,27 @@ Java 环境正常
 选择方式 (1-3, 默认: 1):
 ```
 
-**选择后：**
+**选择选项 1 后，会看到：**
 ```
-提交到 Git...
-代码已提交: feat: 添加新功能
-推送到 GitHub...
-代码已推送到 GitHub
+使用 DeepSeek AI 生成提交消息...
+
+思考过程:
+[AI 的推理过程会实时流式显示，黄色文字]
+用户修改了 readme.md 文件，将版本号从 v1.0.1 更新到 v1.1.2...
+这是一个版本号更新，应该使用 chore 类型...
+
+生成的提交消息:
+chore: 更新版本号至 v1.1.2
+
+使用此提交消息? (y/n, 默认 y):
 ```
+
+**特点：**
+- ✅ 使用 `deepseek-reasoner` 思考模型
+- ✅ 实时显示 AI 的推理过程
+- ✅ 更准确的提交消息生成
+- ✅ 支持中文输出
+- ✅ 无需安装额外工具
 
 ### 步骤 5：部署到服务器
 ```
@@ -237,15 +255,10 @@ set DEEPSEEK_API_KEY=sk-a1374a0606a744c3888ee224b5b8252c
 ## 常见问题
 
 ### Q: 如何安装 jq？
-**Windows (使用 Scoop):**
-```powershell
-scoop install jq
-```
+**不需要了！** 新版本使用 PowerShell 原生支持，无需安装 jq。
 
-**或运行项目中的安装脚本:**
-```powershell
-.\install-jq.ps1
-```
+### Q: AI 生成的提交消息是乱码怎么办？
+已修复！新版本使用 UTF-8 编码，支持中文显示。
 
 ### Q: Maven Wrapper 找不到怎么办？
 确保 `backend\mvnw.cmd` 文件存在。如果不存在，安装系统 Maven：
@@ -379,15 +392,11 @@ ssh root@121.43.96.127 'ps aux | grep easy-joy-life'
 
 ## 相关文件
 
-- `go.bat` - Windows 部署脚本
-- `go.sh` - Linux 部署脚本（服务器端）
-- `go.lib.sh` - Shell 脚本库函数
-- `go.0.sh` - 本地开发环境脚本
-- `go.1.sh` - 部署脚本
-- `go.2.sh` - 构建脚本
-- `go.3.sh` - 清理脚本
+- `go.bat` - Windows 部署脚本（主脚本，包含所有功能）
+- `generate-commit-msg.ps1` - AI 提交消息生成脚本
 - `backend\mvnw.cmd` - Maven Wrapper (Windows)
-- `backend\mvnw` - Maven Wrapper (Linux)
+- `.gitignore` - Git 忽略文件配置
+- `.deployignore` - 部署排除文件配置（如果存在）
 
 ## 联系支持
 

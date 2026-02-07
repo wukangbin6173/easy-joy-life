@@ -1,0 +1,44 @@
+version: '3.8'
+
+# 只部署Spring Boot后端应用
+# MySQL和Redis使用系统服务
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: easy-joy-life-backend-prod
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      MYSQL_HOST: host.docker.internal
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: easy_joy_life_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      REDIS_HOST: host.docker.internal
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      WECHAT_APPID: ${WECHAT_APPID}
+      WECHAT_SECRET: ${WECHAT_SECRET}
+      WECHAT_MCH_ID: ${WECHAT_MCH_ID}
+      WECHAT_API_KEY: ${WECHAT_API_KEY}
+      SERVER_DOMAIN: ${SERVER_DOMAIN}
+    volumes:
+      - app_logs:/opt/easy-joy-life/logs
+      - app_uploads:/opt/easy-joy-life/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    network_mode: bridge
+
+volumes:
+  app_logs:
+  app_uploads:

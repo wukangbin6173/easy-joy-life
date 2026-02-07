@@ -77,47 +77,83 @@ Page({
 
   // 加载交易记录
   loadTransactions() {
-    // 模拟交易记录
-    const transactions = [
-      {
-        id: 1,
-        type: 'expense',
-        title: '房间消费 - 梅花厅',
-        time: '2025-01-19 14:30',
-        amount: '80.00'
-      },
-      {
-        id: 2,
-        type: 'income',
-        title: '钱包充值',
-        time: '2025-01-19 10:15',
-        amount: '200.00'
-      },
-      {
-        id: 3,
-        type: 'expense',
-        title: '房间消费 - VIP包间A',
-        time: '2025-01-18 20:45',
-        amount: '120.00'
-      },
-      {
-        id: 4,
-        type: 'income',
-        title: '退款',
-        time: '2025-01-18 16:20',
-        amount: '60.00'
-      },
-      {
-        id: 5,
-        type: 'expense',
-        title: '房间消费 - 兰花厅',
-        time: '2025-01-17 19:30',
-        amount: '80.00'
-      }
-    ];
+    const app = getApp();
+    const userId = app.globalData.userId;
 
-    this.setData({
-      transactions: transactions.slice(0, 5) // 只显示最近5条
+    if (!userId) {
+      console.log('用户未登录，无法加载交易记录');
+      this.setData({ transactions: [] });
+      return;
+    }
+
+    // 从后端获取真实交易记录
+    wx.request({
+      url: `${app.globalData.apiBaseUrl}/payment/transactions/${userId}`,
+      method: 'GET',
+      success: (res) => {
+        console.log('交易记录响应:', res.data);
+        
+        if (res.data.success && res.data.transactions) {
+          const transactions = res.data.transactions.map(tx => {
+            // 判断交易类型
+            const isIncome = tx.transactionType === 'RECHARGE' || tx.transactionType === 'REFUND' || tx.transactionType === 'UNFREEZE';
+            const type = isIncome ? 'income' : 'expense';
+            
+            // 格式化标题
+            let title = '';
+            switch(tx.transactionType) {
+              case 'RECHARGE':
+                title = '钱包充值';
+                break;
+              case 'CONSUME':
+                title = tx.description || '房间消费';
+                break;
+              case 'REFUND':
+                title = '订单退款';
+                break;
+              case 'FREEZE':
+                title = '金额冻结';
+                break;
+              case 'UNFREEZE':
+                title = '解冻金额';
+                break;
+              default:
+                title = tx.description || tx.transactionType;
+            }
+            
+            // 处理时间格式
+            const createdTime = tx.createdTime || '';
+            let time = createdTime;
+            if (createdTime.includes('T')) {
+              const parts = createdTime.split('T');
+              const timePart = parts[1].split('.')[0];
+              time = `${parts[0]} ${timePart.substring(0, 5)}`; // 只保留到分钟
+            } else if (createdTime.includes(' ')) {
+              time = createdTime.substring(0, 16); // 只保留到分钟
+            }
+            
+            return {
+              id: tx.id,
+              type: type,
+              title: title,
+              time: time,
+              amount: Math.abs(tx.amount).toFixed(2)
+            };
+          });
+          
+          // 只显示最近5条
+          this.setData({
+            transactions: transactions.slice(0, 5)
+          });
+        } else {
+          console.error('获取交易记录失败:', res.data);
+          this.setData({ transactions: [] });
+        }
+      },
+      fail: (err) => {
+        console.error('请求交易记录失败:', err);
+        this.setData({ transactions: [] });
+      }
     });
   },
 

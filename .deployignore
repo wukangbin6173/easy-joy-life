@@ -1,0 +1,105 @@
+# ================================================================
+# Deployment Exclusion Rules
+# Files and directories to exclude when deploying to server
+# ================================================================
+
+# Git and version control
+.git
+.gitignore
+
+# Environment configuration (server has its own)
+.env
+.user.ini
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE and editor configuration
+.claude
+.kiro
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Build artifacts (will be built on server)
+backend/target
+backend/.mvn
+
+# Dependencies (will be installed on server)
+node_modules
+miniprogram/node_modules
+
+# Test files
+backend/src/test
+backend/src/test-backup
+*Test.java
+*test*.js
+
+# Debug and temporary files
+debug-*.js
+test-*.js
+temp_*.sql
+fix_*.sql
+validate-*.js
+check-*.js
+download*.py
+create*.py
+install-*.bat
+
+# Logs
+*.log
+logs
+backend/logs
+
+# Documentation (optional, keep if needed)
+docs
+*.md
+!README.md
+
+# Deployment scripts (already on server)
+deploy
+docker
+go.bat
+go.sh
+go.*.sh
+*.bat
+
+# WeChat certificates (sensitive, manage separately)
+backend/src/main/resources/cert/*.pem
+
+# Database scripts (run manually)
+*.sql
+!backend/src/main/resources/schema.sql
+!backend/src/main/resources/data.sql
+
+# Project management
+PROJECT.md
+一键部署使用指南.md
+修复*.md
+充值*.md
+前端*.md
+后端*.md
+域名*.md
+小程序*.md
+微信*.md
+支付宝*.md
+数据库*.md
+无人值守*.md
+服务器*.md
+用户*.md
+部署*.md
+门店*.md
+静默*.md
+首页*.md
+
+# Cache directories
+cache
+tmp
+.cache
+
+# Media files (if generated on server)
+# media/cache
+# media/uploads

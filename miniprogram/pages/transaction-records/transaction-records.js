@@ -23,117 +23,150 @@ Page({
   loadRecords() {
     this.setData({ loading: true });
 
-    // 模拟交易记录数据
-    const mockRecords = [
-      {
-        id: 1,
-        type: 'expense',
-        title: '房间消费',
-        desc: '梅花厅 - 4小时',
-        amount: '320.00',
-        time: '2025-01-19 14:30:25',
-        status: 'success',
-        statusText: '已完成',
-        date: '2025-01-19'
-      },
-      {
-        id: 2,
-        type: 'income',
-        title: '钱包充值',
-        desc: '微信支付',
-        amount: '500.00',
-        time: '2025-01-19 10:15:30',
-        status: 'success',
-        statusText: '已到账',
-        date: '2025-01-19'
-      },
-      {
-        id: 3,
-        type: 'expense',
-        title: '房间消费',
-        desc: 'VIP包间A - 2小时',
-        amount: '240.00',
-        time: '2025-01-18 20:45:15',
-        status: 'success',
-        statusText: '已完成',
-        date: '2025-01-18'
-      },
-      {
-        id: 4,
-        type: 'income',
-        title: '订单退款',
-        desc: '取消预订退款',
-        amount: '160.00',
-        time: '2025-01-18 16:20:10',
-        status: 'success',
-        statusText: '已到账',
-        date: '2025-01-18'
-      },
-      {
-        id: 5,
-        type: 'expense',
-        title: '房间消费',
-        desc: '兰花厅 - 3小时',
-        amount: '240.00',
-        time: '2025-01-17 19:30:45',
-        status: 'success',
-        statusText: '已完成',
-        date: '2025-01-17'
-      },
-      {
-        id: 6,
-        type: 'income',
-        title: '钱包充值',
-        desc: '支付宝支付',
-        amount: '200.00',
-        time: '2025-01-17 15:20:30',
-        status: 'success',
-        statusText: '已到账',
-        date: '2025-01-17'
-      },
-      {
-        id: 7,
-        type: 'expense',
-        title: '房间消费',
-        desc: '竹叶厅 - 2小时',
-        amount: '200.00',
-        time: '2025-01-16 21:15:20',
-        status: 'success',
-        statusText: '已完成',
-        date: '2025-01-16'
-      },
-      {
-        id: 8,
-        type: 'expense',
-        title: '房间消费',
-        desc: '菊花厅 - 4小时',
-        amount: '240.00',
-        time: '2025-01-15 18:30:15',
-        status: 'success',
-        statusText: '已完成',
-        date: '2025-01-15'
-      }
-    ];
+    const app = getApp();
+    const userId = app.globalData.userId;
 
-    setTimeout(() => {
-      this.setData({
-        allRecords: mockRecords,
-        loading: false,
-        hasMore: false
+    if (!userId) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
       });
-      this.filterRecords();
-    }, 500);
+      this.setData({ loading: false });
+      return;
+    }
+
+    // 从后端获取真实交易记录
+    wx.request({
+      url: `${app.globalData.apiBaseUrl}/payment/transactions/${userId}`,
+      method: 'GET',
+      success: (res) => {
+        console.log('交易记录响应:', res.data);
+        
+        if (res.data.success && res.data.transactions) {
+          const records = res.data.transactions.map(tx => {
+            // 判断交易类型
+            const isIncome = tx.transactionType === 'RECHARGE' || tx.transactionType === 'REFUND';
+            const type = isIncome ? 'income' : 'expense';
+            
+            // 格式化标题
+            let title = '';
+            let desc = tx.description || '';
+            
+            switch(tx.transactionType) {
+              case 'RECHARGE':
+                title = '钱包充值';
+                break;
+              case 'CONSUME':
+                title = '房间消费';
+                break;
+              case 'REFUND':
+                title = '订单退款';
+                break;
+              case 'FREEZE':
+                title = '金额冻结';
+                break;
+              case 'UNFREEZE':
+                title = '解冻金额';
+                break;
+              default:
+                title = tx.transactionType;
+            }
+            
+            // 提取日期和时间
+            const createdTime = tx.createdTime || '';
+            let time = createdTime;
+            let date = '';
+            
+            // 处理时间格式 (2026-02-07T22:08:24 或 2026-02-07 22:08:24)
+            if (createdTime.includes('T')) {
+              const parts = createdTime.split('T');
+              date = parts[0];
+              time = `${parts[0]} ${parts[1].split('.')[0]}`; // 移除毫秒部分
+            } else if (createdTime.includes(' ')) {
+              date = createdTime.split(' ')[0];
+              time = createdTime;
+            } else {
+              date = createdTime;
+              time = createdTime;
+            }
+            
+            return {
+              id: tx.id,
+              type: type,
+              title: title,
+              desc: desc,
+              amount: Math.abs(tx.amount).toFixed(2),
+              time: time,
+              status: tx.status === 'SUCCESS' ? 'success' : 'failed',
+              statusText: tx.status === 'SUCCESS' ? '已完成' : '失败',
+              date: date
+            };
+          });
+          
+          this.setData({
+            allRecords: records,
+            loading: false,
+            hasMore: false
+          });
+          this.filterRecords();
+          this.calculateStatistics(records);
+        } else {
+          console.error('获取交易记录失败:', res.data);
+          this.setData({
+            allRecords: [],
+            loading: false,
+            hasMore: false
+          });
+          this.filterRecords();
+        }
+      },
+      fail: (err) => {
+        console.error('请求交易记录失败:', err);
+        wx.showToast({
+          title: '加载失败，请重试',
+          icon: 'none'
+        });
+        this.setData({
+          allRecords: [],
+          loading: false,
+          hasMore: false
+        });
+        this.filterRecords();
+      }
+    });
   },
 
   // 加载统计信息
   loadStatistics() {
-    const statistics = {
-      monthIncome: '700.00',
-      monthExpense: '1240.00'
-    };
+    // 统计信息将从交易记录中计算
+  },
 
+  // 计算统计信息
+  calculateStatistics(records) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    let monthIncome = 0;
+    let monthExpense = 0;
+    
+    records.forEach(record => {
+      const recordDate = new Date(record.date);
+      if (recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear) {
+        const amount = parseFloat(record.amount);
+        if (record.type === 'income') {
+          monthIncome += amount;
+        } else {
+          monthExpense += amount;
+        }
+      }
+    });
+    
     this.setData({
-      statistics: statistics
+      statistics: {
+        monthIncome: monthIncome.toFixed(2),
+        monthExpense: monthExpense.toFixed(2)
+      }
     });
   },
 

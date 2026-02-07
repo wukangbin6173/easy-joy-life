@@ -4,6 +4,7 @@ import com.easyjoylife.config.WechatPayConfig;
 import com.easyjoylife.entity.PaymentOrder;
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
+import com.wechat.pay.java.core.util.PemUtil;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
 import com.wechat.pay.java.service.payments.jsapi.model.*;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
@@ -12,9 +13,15 @@ import com.wechat.pay.java.service.payments.jsapi.model.Amount;
 import com.wechat.pay.java.service.payments.jsapi.model.Payer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.PostConstruct;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,16 +67,38 @@ public class WechatPayService {
                 log.info("检测到微信支付公钥配置:");
                 log.info("公钥路径: {}", wechatPayConfig.getPublicKeyPath());
                 log.info("公钥ID: {}", wechatPayConfig.getPublicKeyId());
-                log.warn("当前SDK版本暂不支持公钥模式，将使用自动证书管理模式");
-                log.warn("建议升级到最新SDK版本以支持公钥模式，避免证书过期问题");
+                log.info("⚠️ 注意：当前SDK版本(0.2.17)的公钥功能用于回调验签");
+                log.info("⚠️ 如遇平台证书过期问题，请联系微信支付技术支持更新证书");
+                log.info("⚠️ 微信支付客服电话：95017");
             }
 
             // 使用RSAAutoCertificateConfig自动管理证书
-            // 注意：这个配置会自动下载和更新微信支付平台证书
-            // 如果遇到证书过期问题，需要升级SDK并使用公钥模式
+            // 注意：如果遇到证书过期问题，需要联系微信支付技术支持更新平台证书
+            
+            // 从classpath读取私钥文件内容
+            String privateKeyPath = wechatPayConfig.getPrivateKeyPath();
+            PrivateKey privateKey;
+            
+            if (privateKeyPath.startsWith("classpath:")) {
+                // 从classpath读取
+                String resourcePath = privateKeyPath.substring("classpath:".length());
+                log.info("从classpath读取私钥: {}", resourcePath);
+                
+                ClassPathResource resource = new ClassPathResource(resourcePath);
+                try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                    String privateKeyString = FileCopyUtils.copyToString(reader);
+                    privateKey = PemUtil.loadPrivateKeyFromString(privateKeyString);
+                    log.info("✅ 私钥加载成功");
+                }
+            } else {
+                // 从文件系统读取
+                log.info("从文件系统读取私钥: {}", privateKeyPath);
+                privateKey = PemUtil.loadPrivateKeyFromPath(privateKeyPath);
+            }
+            
             this.config = new RSAAutoCertificateConfig.Builder()
                     .merchantId(wechatPayConfig.getMchId())
-                    .privateKeyFromPath(wechatPayConfig.getPrivateKeyPath())
+                    .privateKey(privateKey)
                     .merchantSerialNumber(wechatPayConfig.getMerchantSerialNumber())
                     .apiV3Key(wechatPayConfig.getApiV3Key())
                     .build();

@@ -5,7 +5,7 @@ const { userApi } = require('../../utils/api.js');
 Page({
   data: {
     currentBalance: 168.50,
-    amountOptions: [1, 50, 100, 200, 500, 1000],
+    amountOptions: [0.1, 0.5, 1, 5, 10, 50],
     selectedAmount: 0,
     customAmount: '',
     finalAmount: 0,

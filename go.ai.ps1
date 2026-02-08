@@ -1,6 +1,7 @@
 # ================================================================
-# File: generate-commit-msg.ps1
+# File: go.ai.ps1
 # Description: Generate commit message using DeepSeek AI
+# Project: EasyJoyLife
 # ================================================================
 
 param(

@@ -8,7 +8,7 @@
 
 ```
 go.bat                      # 主部署脚本（Windows）
-generate-commit-msg.ps1     # AI 提交消息生成（PowerShell）
+go.ai.ps1                   # AI 提交消息生成（PowerShell）
 GO脚本使用指南.md           # 详细使用文档
 ```
 

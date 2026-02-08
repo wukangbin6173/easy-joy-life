@@ -205,7 +205,7 @@ if "!msg_option!"=="2" (
     ) else (
         REM 调用 PowerShell 脚本生成提交消息
         set "DEEPSEEK_API_KEY=%DEEPSEEK_API_KEY%"
-        powershell -NoProfile -ExecutionPolicy Bypass -File "generate-commit-msg.ps1"
+        powershell -NoProfile -ExecutionPolicy Bypass -File "go.ai.ps1"
         
         REM 读取 AI 生成的消息（使用 UTF-8 编码）
         set "AI_MSG="

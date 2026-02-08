@@ -6,7 +6,7 @@
 
 **主要文件：**
 - **go.bat** - Windows 部署脚本（包含所有功能）
-- **generate-commit-msg.ps1** - AI 提交消息生成脚本
+- **go.ai.ps1** - AI 提交消息生成脚本（PowerShell）
 
 ## Windows 用户快速开始
 
@@ -393,7 +393,7 @@ ssh root@121.43.96.127 'ps aux | grep easy-joy-life'
 ## 相关文件
 
 - `go.bat` - Windows 部署脚本（主脚本，包含所有功能）
-- `generate-commit-msg.ps1` - AI 提交消息生成脚本
+- `go.ai.ps1` - AI 提交消息生成脚本（PowerShell）
 - `backend\mvnw.cmd` - Maven Wrapper (Windows)
 - `.gitignore` - Git 忽略文件配置
 - `.deployignore` - 部署排除文件配置（如果存在）

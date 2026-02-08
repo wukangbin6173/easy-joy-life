@@ -82,7 +82,12 @@ Page({
   loadUserStats: function() {
     const app = getApp();
     const baseUrl = app.globalData.baseUrl;
-    const userId = 1; // 临时用户ID，实际应该从登录状态获取
+    const userId = app.globalData.userId;
+    
+    if (!userId) {
+      console.log('用户未登录，无法加载用户统计');
+      return;
+    }
     
     // 获取钱包余额
     wx.request({

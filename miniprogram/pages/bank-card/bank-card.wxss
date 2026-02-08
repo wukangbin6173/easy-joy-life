@@ -1,0 +1,212 @@
+.container {
+  background: #f5f5f5;
+  min-height: 100vh;
+  padding: 20rpx;
+}
+
+/* 头部 */
+.header {
+  padding: 40rpx 20rpx;
+  text-align: center;
+}
+
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 银行卡列表 */
+.card-list {
+  padding: 0 20rpx;
+}
+
+.card-item {
+  background: white;
+  border-radius: 20rpx;
+  margin-bottom: 30rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-content {
+  padding: 30rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40rpx;
+}
+
+.bank-info {
+  display: flex;
+  align-items: center;
+}
+
+.bank-logo {
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: 20rpx;
+  background: white;
+  border-radius: 10rpx;
+}
+
+.bank-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.bank-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.card-type {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+.default-badge {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+}
+
+.card-number {
+  font-size: 32rpx;
+  letter-spacing: 4rpx;
+  margin-bottom: 30rpx;
+  font-family: 'Courier New', monospace;
+}
+
+.card-holder {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.card-actions {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 25rpx;
+  font-size: 28rpx;
+  color: #1890ff;
+  background: white;
+  border: none;
+  border-radius: 0;
+}
+
+.action-btn:not(:last-child) {
+  border-right: 1rpx solid #f0f0f0;
+}
+
+.delete-btn {
+  color: #ff4d4f;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 32rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.empty-hint {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 加载中 */
+.loading-state {
+  text-align: center;
+  padding: 100rpx 0;
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 添加按钮 */
+.add-button-container {
+  padding: 30rpx 20rpx;
+}
+
+.add-button {
+  width: 100%;
+  background: #1890ff;
+  color: white;
+  border-radius: 50rpx;
+  padding: 30rpx;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.add-icon {
+  font-size: 40rpx;
+  margin-right: 10rpx;
+}
+
+/* 温馨提示 */
+.tips-section {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin: 20rpx;
+}
+
+.tips-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.tips-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 10rpx;
+}
+
+.tips-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.tip-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 40rpx;
+  margin-bottom: 10rpx;
+}

@@ -1,0 +1,77 @@
+<view class="container">
+  <view class="header">
+    <text class="title">银行卡管理</text>
+    <text class="subtitle">管理您的银行卡信息</text>
+  </view>
+
+  <!-- 银行卡列表 -->
+  <view class="card-list" wx:if="{{cards.length > 0}}">
+    <view class="card-item" wx:for="{{cards}}" wx:key="id" bindtap="viewCardDetail" data-id="{{item.id}}">
+      <view class="card-content">
+        <view class="card-header">
+          <view class="bank-info">
+            <image class="bank-logo" src="/images/bank-{{item.bankCode}}.png" mode="aspectFit"></image>
+            <view class="bank-details">
+              <text class="bank-name">{{item.bankName}}</text>
+              <text class="card-type">{{item.cardType}}</text>
+            </view>
+          </view>
+          <view class="default-badge" wx:if="{{item.isDefault}}">
+            <text>默认</text>
+          </view>
+        </view>
+        
+        <view class="card-number">
+          <text>{{item.cardNoMasked}}</text>
+        </view>
+        
+        <view class="card-holder">
+          <text>{{item.holderName}}</text>
+        </view>
+      </view>
+      
+      <view class="card-actions">
+        <button class="action-btn" wx:if="{{!item.isDefault}}" bindtap="setDefaultCard" data-id="{{item.id}}" catchtap="setDefaultCard">
+          设为默认
+        </button>
+        <button class="action-btn delete-btn" bindtap="deleteCard" data-id="{{item.id}}" catchtap="deleteCard">
+          删除
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{cards.length === 0 && !loading}}">
+    <image class="empty-icon" src="/images/empty.png"></image>
+    <text class="empty-text">暂无银行卡</text>
+    <text class="empty-hint">添加银行卡后可用于提现</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-button-container">
+    <button class="add-button" bindtap="addBankCard">
+      <text class="add-icon">+</text>
+      <text class="add-text">添加银行卡</text>
+    </button>
+  </view>
+
+  <!-- 温馨提示 -->
+  <view class="tips-section">
+    <view class="tips-title">
+      <image class="tips-icon" src="/images/info-icon.png"></image>
+      <text>温馨提示</text>
+    </view>
+    <view class="tips-content">
+      <text class="tip-item">• 请确保银行卡信息准确无误</text>
+      <text class="tip-item">• 仅支持本人实名认证的银行卡</text>
+      <text class="tip-item">• 银行卡信息将加密保存</text>
+      <text class="tip-item">• 提现时将使用默认银行卡</text>
+    </view>
+  </view>
+</view>

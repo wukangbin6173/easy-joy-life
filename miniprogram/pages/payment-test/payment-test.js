@@ -97,8 +97,19 @@ Page({
     this.addLog('开始测试创建订单...');
     this.setData({ 'testResults.order': 'pending' });
 
+    const app = getApp();
+    const userId = app.globalData.userId;
+    
+    if (!userId) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
+    
     const orderData = {
-      userId: 1,
+      userId: userId,
       amount: this.data.selectedAmount,
       paymentMethod: 'WECHAT'
     };

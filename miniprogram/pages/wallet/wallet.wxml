@@ -96,18 +96,5 @@
       </view>
       <text class="feature-arrow">></text>
     </view>
-    
-    <view class="feature-item" bindtap="goToAutoRecharge">
-      <view class="feature-icon">
-        <image src="/images/auto-recharge-icon.png" mode="aspectFit"></image>
-      </view>
-      <view class="feature-info">
-        <text class="feature-title">自动充值</text>
-        <text class="feature-desc">余额不足时自动充值</text>
-      </view>
-      <view class="feature-switch">
-        <switch checked="{{wallet.autoRecharge}}" bindchange="toggleAutoRecharge" />
-      </view>
-    </view>
   </view>
 </view>

@@ -35,15 +35,15 @@ Page({
       return;
     }
 
-    // 从后端获取真实交易记录
-    wx.request({
-      url: `${app.globalData.apiBaseUrl}/payment/transactions/${userId}`,
-      method: 'GET',
-      success: (res) => {
-        console.log('交易记录响应:', res.data);
+    // 使用统一的API模块
+    const api = require('../../utils/api.js');
+    
+    api.walletApi.getTransactions(userId)
+      .then(data => {
+        console.log('交易记录响应:', data);
         
-        if (res.data.success && res.data.transactions) {
-          const records = res.data.transactions.map(tx => {
+        if (data.success && data.transactions) {
+          const records = data.transactions.map(tx => {
             // 判断交易类型
             const isIncome = tx.transactionType === 'RECHARGE' || tx.transactionType === 'REFUND';
             const type = isIncome ? 'income' : 'expense';
@@ -111,7 +111,7 @@ Page({
           this.filterRecords();
           this.calculateStatistics(records);
         } else {
-          console.error('获取交易记录失败:', res.data);
+          console.error('获取交易记录失败:', data);
           this.setData({
             allRecords: [],
             loading: false,
@@ -119,21 +119,30 @@ Page({
           });
           this.filterRecords();
         }
-      },
-      fail: (err) => {
+      })
+      .catch(err => {
         console.error('请求交易记录失败:', err);
+        
+        let errorMsg = '加载失败，请重试';
+        if (err.message && err.message.includes('404')) {
+          errorMsg = 'API接口不存在';
+        } else if (err.message && err.message.includes('timeout')) {
+          errorMsg = '请求超时，请检查网络';
+        }
+        
         wx.showToast({
-          title: '加载失败，请重试',
-          icon: 'none'
+          title: errorMsg,
+          icon: 'none',
+          duration: 3000
         });
+        
         this.setData({
           allRecords: [],
           loading: false,
           hasMore: false
         });
         this.filterRecords();
-      }
-    });
+      });
   },
 
   // 加载统计信息

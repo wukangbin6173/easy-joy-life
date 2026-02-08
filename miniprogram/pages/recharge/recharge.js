@@ -36,7 +36,12 @@ Page({
   loadCurrentBalance() {
     const app = getApp();
     const baseUrl = app.globalData.baseUrl;
-    const userId = 1; // 临时用户ID，实际应该从登录状态获取
+    const userId = app.globalData.userId;
+    
+    if (!userId) {
+      console.log('用户未登录，无法加载余额');
+      return;
+    }
     
     wx.request({
       url: `${baseUrl}/api/payment/wallet/${userId}`,
@@ -208,11 +213,12 @@ Page({
   // 创建充值订单
   createRechargeOrder(amount, paymentMethod) {
     const { request } = require('../../utils/api.js');
+    const app = getApp();
     
     return request('/api/payment/recharge/create', {
       method: 'POST',
       data: {
-        userId: 1, // 临时用户ID，实际应该从登录状态获取
+        userId: app.globalData.userId,
         amount: amount,
         paymentMethod: paymentMethod.toUpperCase()
       }

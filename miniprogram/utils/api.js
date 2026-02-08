@@ -224,10 +224,21 @@ const orderApi = {
   }
 };
 
+/**
+ * 钱包API
+ */
+const walletApi = {
+  // 获取交易记录
+  getTransactions(userId) {
+    return request(`/api/payment/transactions/${userId}`);
+  }
+};
+
 module.exports = {
   request,
   storeApi,
   roomApi,
   userApi,
-  orderApi
+  orderApi,
+  walletApi
 };

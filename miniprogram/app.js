@@ -6,9 +6,11 @@ App({
   globalData: {
     userInfo: null,
     baseUrl: '',
+    apiBaseUrl: '', // 添加 apiBaseUrl
     token: null,
     openid: null,
-    sessionKey: null
+    sessionKey: null,
+    userId: null // 添加 userId
   },
 
   onLaunch() {
@@ -17,6 +19,7 @@ App({
     // 获取环境配置
     const envConfig = config.getCurrentConfig();
     this.globalData.baseUrl = envConfig.baseUrl;
+    this.globalData.apiBaseUrl = envConfig.baseUrl; // 同时设置 apiBaseUrl
     
     console.log('API地址:', this.globalData.baseUrl);
     console.log('所有数据来源: MySQL数据库');
@@ -43,15 +46,19 @@ App({
   autoSilentLogin() {
     console.log('开始自动静默登录...');
     
-    // 先检查缓存中是否有openid
+    // 先检查缓存中是否有openid和userId
     const cachedOpenid = wx.getStorageSync('openid');
+    const cachedUserId = wx.getStorageSync('userId');
     const cachedUserInfo = wx.getStorageSync('userInfo');
     
-    if (cachedOpenid && cachedUserInfo) {
+    if (cachedOpenid && cachedUserId && cachedUserInfo) {
       // 有缓存，直接使用
       this.globalData.openid = cachedOpenid;
+      this.globalData.userId = cachedUserId;
       this.globalData.userInfo = cachedUserInfo;
-      console.log('从缓存恢复登录状态:', cachedUserInfo.nickname);
+      console.log('从缓存恢复登录状态');
+      console.log('用户ID:', cachedUserId);
+      console.log('用户昵称:', cachedUserInfo.nickname);
       return;
     }
     
@@ -70,26 +77,31 @@ App({
             console.log('微信登录API响应:', res);
             
             // 检查是否成功获取到openid
-            if (res.success && res.openid) {
+            if (res.success && res.openid && res.user) {
               const { openid, sessionKey, user } = res;
               
-              // 保存openid和基本用户信息
+              // 保存openid、userId和基本用户信息
               this.globalData.openid = openid;
               this.globalData.sessionKey = sessionKey;
+              this.globalData.userId = user.id; // 设置 userId
               this.globalData.userInfo = user || {
                 nickname: '微信用户',
                 avatar: '/images/default-avatar.png',
                 isLogin: true
               };
               
-              console.log('--------获取到微信的OpenId=:', openid);
+              console.log('========================================');
+              console.log('✅ 静默登录成功！');
+              console.log('OpenId:', openid);
+              console.log('用户ID:', user.id);
+              console.log('用户昵称:', user.nickname);
+              console.log('========================================');
+              
               // 缓存到本地
               wx.setStorageSync('openid', openid);
               wx.setStorageSync('sessionKey', sessionKey);
+              wx.setStorageSync('userId', user.id); // 缓存 userId
               wx.setStorageSync('userInfo', this.globalData.userInfo);
-              
-              console.log('静默登录成功，openid:', openid);
-              console.log('用户信息:', this.globalData.userInfo);
               
               // 尝试获取用户详细信息（如果已授权）
               this.tryGetUserProfile();
@@ -303,10 +315,12 @@ App({
             data: { code: loginRes.code }
           }).then(res => {
             console.log('📥 重新登录响应:', res);
-            if (res.success && res.openid) {
+            if (res.success && res.openid && res.user) {
               console.log('✅ 重新登录成功，用户已创建');
               this.globalData.openid = res.openid;
+              this.globalData.userId = res.user.id; // 设置 userId
               wx.setStorageSync('openid', res.openid);
+              wx.setStorageSync('userId', res.user.id); // 缓存 userId
               
               // 重新尝试更新用户信息
               if (this.globalData.userInfo) {
@@ -409,10 +423,12 @@ App({
               // 保存登录信息
               this.globalData.openid = openid;
               this.globalData.sessionKey = sessionKey;
+              this.globalData.userId = finalUserInfo.id; // 设置 userId
               this.globalData.userInfo = finalUserInfo;
               
               wx.setStorageSync('openid', openid);
               wx.setStorageSync('sessionKey', sessionKey);
+              wx.setStorageSync('userId', finalUserInfo.id); // 缓存 userId
               wx.setStorageSync('userInfo', finalUserInfo);
               
               console.log('登录成功，用户信息已更新:', finalUserInfo);
@@ -421,10 +437,12 @@ App({
               // 即使更新失败，也使用基本用户信息
               this.globalData.openid = openid;
               this.globalData.sessionKey = sessionKey;
+              this.globalData.userId = user.id; // 设置 userId
               this.globalData.userInfo = user;
               
               wx.setStorageSync('openid', openid);
               wx.setStorageSync('sessionKey', sessionKey);
+              wx.setStorageSync('userId', user.id); // 缓存 userId
               wx.setStorageSync('userInfo', user);
               
               console.log('登录成功，使用基本用户信息:', user);
@@ -447,10 +465,12 @@ App({
   logout() {
     this.globalData.openid = null;
     this.globalData.sessionKey = null;
+    this.globalData.userId = null;
     this.globalData.userInfo = null;
     
     wx.removeStorageSync('openid');
     wx.removeStorageSync('sessionKey');
+    wx.removeStorageSync('userId');
     wx.removeStorageSync('userInfo');
     
     console.log('用户已退出登录');

@@ -3,8 +3,7 @@ Page({
     wallet: {
       balance: 0,
       frozen: 0,
-      totalRecharge: 0,
-      autoRecharge: false
+      totalRecharge: 0
     },
     transactions: []
   },
@@ -22,7 +21,16 @@ Page({
   loadWalletInfo() {
     const app = getApp();
     const baseUrl = app.globalData.baseUrl;
-    const userId = 1; // 临时用户ID，实际应该从登录状态获取
+    const userId = app.globalData.userId;
+    
+    if (!userId) {
+      console.log('用户未登录，无法加载钱包信息');
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      return;
+    }
     
     wx.request({
       url: `${baseUrl}/api/payment/wallet/${userId}`,
@@ -34,8 +42,7 @@ Page({
             wallet: {
               balance: wallet.balance || 0.00,
               frozen: wallet.frozenAmount || 0.00,
-              totalRecharge: wallet.totalRecharge || 0.00,
-              autoRecharge: false
+              totalRecharge: wallet.totalRecharge || 0.00
             }
           });
         } else {
@@ -49,8 +56,7 @@ Page({
             wallet: {
               balance: 0.00,
               frozen: 0.00,
-              totalRecharge: 0.00,
-              autoRecharge: false
+              totalRecharge: 0.00
             }
           });
         }
@@ -67,8 +73,7 @@ Page({
           wallet: {
             balance: 0.00,
             frozen: 0.00,
-            totalRecharge: 0.00,
-            autoRecharge: false
+            totalRecharge: 0.00
           }
         });
       }
@@ -86,15 +91,15 @@ Page({
       return;
     }
 
-    // 从后端获取真实交易记录
-    wx.request({
-      url: `${app.globalData.apiBaseUrl}/payment/transactions/${userId}`,
-      method: 'GET',
-      success: (res) => {
-        console.log('交易记录响应:', res.data);
+    // 使用统一的API模块
+    const api = require('../../utils/api.js');
+    
+    api.walletApi.getTransactions(userId)
+      .then(data => {
+        console.log('交易记录响应:', data);
         
-        if (res.data.success && res.data.transactions) {
-          const transactions = res.data.transactions.map(tx => {
+        if (data.success && data.transactions) {
+          const transactions = data.transactions.map(tx => {
             // 判断交易类型
             const isIncome = tx.transactionType === 'RECHARGE' || tx.transactionType === 'REFUND' || tx.transactionType === 'UNFREEZE';
             const type = isIncome ? 'income' : 'expense';
@@ -146,15 +151,23 @@ Page({
             transactions: transactions.slice(0, 5)
           });
         } else {
-          console.error('获取交易记录失败:', res.data);
+          console.error('获取交易记录失败:', data);
           this.setData({ transactions: [] });
         }
-      },
-      fail: (err) => {
+      })
+      .catch(err => {
         console.error('请求交易记录失败:', err);
+        
+        let errorMsg = '加载交易记录失败';
+        if (err.message && err.message.includes('404')) {
+          errorMsg = 'API接口不存在';
+        } else if (err.message && err.message.includes('timeout')) {
+          errorMsg = '请求超时';
+        }
+        
+        console.error(errorMsg, err);
         this.setData({ transactions: [] });
-      }
-    });
+      });
   },
 
   // 充值
@@ -196,38 +209,15 @@ Page({
 
   // 银行卡管理
   goToBankCard() {
-    wx.showToast({
-      title: '银行卡管理功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/bank-card/bank-card'
     });
   },
 
   // 支付密码
   goToPayPassword() {
-    wx.showToast({
-      title: '支付密码功能开发中',
-      icon: 'none'
-    });
-  },
-
-  // 自动充值设置
-  goToAutoRecharge() {
-    wx.showToast({
-      title: '自动充值设置开发中',
-      icon: 'none'
-    });
-  },
-
-  // 切换自动充值
-  toggleAutoRecharge(e) {
-    const autoRecharge = e.detail.value;
-    this.setData({
-      'wallet.autoRecharge': autoRecharge
-    });
-
-    wx.showToast({
-      title: autoRecharge ? '已开启自动充值' : '已关闭自动充值',
-      icon: 'success'
+    wx.navigateTo({
+      url: '/pages/pay-password/pay-password'
     });
   }
 });

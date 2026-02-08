@@ -10,10 +10,10 @@
       <view class="card-content">
         <view class="card-header">
           <view class="bank-info">
-            <image class="bank-logo" src="/images/bank-{{item.bankCode}}.png" mode="aspectFit"></image>
+            <image class="bank-logo" src="{{item.bankLogo || '/images/banks/default.png'}}" mode="aspectFit"></image>
             <view class="bank-details">
               <text class="bank-name">{{item.bankName}}</text>
-              <text class="card-type">{{item.cardType}}</text>
+              <text class="card-type">储蓄卡</text>
             </view>
           </view>
           <view class="default-badge" wx:if="{{item.isDefault}}">

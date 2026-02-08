@@ -1,3 +1,5 @@
+const bankConfig = require('../../utils/bank-config.js');
+
 Page({
   data: {
     cards: [],
@@ -34,10 +36,19 @@ Page({
         if (res.statusCode === 200 && res.data.success) {
           const cards = res.data.cards || [];
           this.setData({
-            cards: cards.map(card => ({
-              ...card,
-              cardNoMasked: this.maskCardNo(card.cardNo)
-            })),
+            cards: cards.map(card => {
+              // 识别银行
+              const bankCode = bankConfig.getBankByCardNo(card.cardNo);
+              const bankInfo = bankCode ? bankConfig.BANK_CONFIG[bankCode] : null;
+              
+              return {
+                ...card,
+                cardNoMasked: this.maskCardNo(card.cardNo),
+                bankCode: bankCode,
+                bankLogo: bankInfo ? bankInfo.logo : '/images/bank-card-icon.png',
+                bankColor: bankInfo ? bankInfo.color : '#6C63FF'
+              };
+            }),
             loading: false
           });
         } else {

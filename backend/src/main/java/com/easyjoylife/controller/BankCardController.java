@@ -23,7 +23,7 @@ public class BankCardController {
     private final StringRedisTemplate redisTemplate;
     
     // 开发模式：true=跳过验证码验证，false=需要验证码
-    private static final boolean DEV_MODE = false;
+    private static final boolean DEV_MODE = true;
 
     /**
      * 获取用户的所有银行卡

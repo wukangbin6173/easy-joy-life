@@ -35,15 +35,24 @@ Page({
       success: (res) => {
         if (res.statusCode === 200 && res.data.success) {
           const cards = res.data.cards || [];
+          console.log('银行卡列表数据:', cards); // 调试日志
+          
           this.setData({
             cards: cards.map(card => {
-              // 识别银行
-              const bankCode = bankConfig.getBankByCardNo(card.cardNo);
+              // 使用后端返回的bankCode，如果没有则尝试识别
+              let bankCode = card.bankCode;
+              if (!bankCode && card.cardNo) {
+                // 如果后端没有返回bankCode，尝试从卡号识别
+                const cleanCardNo = card.cardNo.replace(/\s/g, '');
+                bankCode = bankConfig.getBankByCardNo(cleanCardNo);
+              }
+              
               const bankInfo = bankCode ? bankConfig.BANK_CONFIG[bankCode] : null;
+              console.log('银行卡:', card.bankName, 'bankCode:', bankCode, 'bankInfo:', bankInfo); // 调试日志
               
               return {
                 ...card,
-                cardNoMasked: this.maskCardNo(card.cardNo),
+                cardNoMasked: card.cardNo, // 后端已经遮罩过了
                 bankCode: bankCode,
                 bankLogo: bankInfo ? bankInfo.logo : '/images/bank-card-icon.png',
                 bankColor: bankInfo ? bankInfo.color : '#6C63FF'

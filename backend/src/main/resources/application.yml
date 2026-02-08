@@ -105,6 +105,15 @@ alipay:
   notify-url: https://xx.aieo.cn/api/payment/alipay/notify  # 异步回调地址
   sandbox: true  # 是否沙箱环境
 
+# 阿里云短信配置
+aliyun:
+  sms:
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
+    sign-name: 东阳市耕琅坊包装材料
+    template-code: SMS_501750341
+    region-id: cn-hangzhou
+
 # 日志配置
 logging:
   level:

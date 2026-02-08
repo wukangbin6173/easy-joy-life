@@ -4,6 +4,7 @@ import com.easyjoylife.entity.BankCard;
 import com.easyjoylife.service.BankCardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,10 @@ import java.util.stream.Collectors;
 public class BankCardController {
 
     private final BankCardService bankCardService;
+    private final StringRedisTemplate redisTemplate;
+    
+    // 开发模式：true=跳过验证码验证，false=需要验证码
+    private static final boolean DEV_MODE = false;
 
     /**
      * 获取用户的所有银行卡
@@ -75,8 +80,38 @@ public class BankCardController {
             String holderName = request.get("holderName").toString();
             String cardNo = request.get("cardNo").toString();
             String phone = request.get("phone").toString();
+            String code = request.containsKey("code") ? request.get("code").toString() : null;
             Boolean isDefault = request.containsKey("isDefault") ? 
                     (Boolean) request.get("isDefault") : false;
+            
+            // 验证短信验证码（生产模式）
+            if (!DEV_MODE) {
+                if (code == null || code.isEmpty()) {
+                    response.put("success", false);
+                    response.put("message", "请输入验证码");
+                    return ResponseEntity.ok(response);
+                }
+                
+                String codeKey = "sms:code:" + phone + ":BIND_CARD";
+                String savedCode = redisTemplate.opsForValue().get(codeKey);
+                
+                if (savedCode == null) {
+                    response.put("success", false);
+                    response.put("message", "验证码已过期");
+                    return ResponseEntity.ok(response);
+                }
+                
+                if (!savedCode.equals(code)) {
+                    response.put("success", false);
+                    response.put("message", "验证码错误");
+                    return ResponseEntity.ok(response);
+                }
+                
+                // 验证成功后删除验证码
+                redisTemplate.delete(codeKey);
+            } else {
+                log.info("【开发模式】跳过验证码验证");
+            }
             
             // 识别银行
             Map<String, String> bankInfo = bankCardService.identifyBank(cardNo.substring(0, 6));

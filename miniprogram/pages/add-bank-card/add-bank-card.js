@@ -44,7 +44,7 @@ Page({
     const app = getApp();
     
     wx.request({
-      url: `${app.globalData.apiBaseUrl}/api/bank/identify`,
+      url: `${app.globalData.apiBaseUrl}/api/user/bank-cards/identify`,
       method: 'POST',
       data: { cardNo: cardNo.substring(0, 6) },
       success: (res) => {
@@ -100,10 +100,20 @@ Page({
         this.setData({ codeSending: false });
         
         if (res.statusCode === 200 && res.data.success) {
-          wx.showToast({
-            title: '验证码已发送',
-            icon: 'success'
-          });
+          // 开发模式：显示验证码
+          if (res.data.devMode && res.data.code) {
+            wx.showModal({
+              title: '开发模式',
+              content: `验证码: ${res.data.code}\n(生产环境将通过短信发送)`,
+              showCancel: false,
+              confirmText: '知道了'
+            });
+          } else {
+            wx.showToast({
+              title: '验证码已发送',
+              icon: 'success'
+            });
+          }
           
           // 开始倒计时
           this.startCountdown();

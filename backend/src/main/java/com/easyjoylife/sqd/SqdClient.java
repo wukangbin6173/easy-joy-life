@@ -43,8 +43,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD GET: {}", url);
-            ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            return parseResponse(resp.getBody());
+            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
+            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
         } catch (HttpStatusCodeException e) {
             log.error("SQD GET 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -66,8 +66,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD POST: {} body: {}", url, bodyJson);
-            ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-            return parseResponse(resp.getBody());
+            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
         } catch (HttpStatusCodeException e) {
             log.error("SQD POST 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -89,8 +89,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD PUT: {} body: {}", url, bodyJson);
-            ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-            return parseResponse(resp.getBody());
+            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.PUT, entity, byte[].class);
+            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
         } catch (HttpStatusCodeException e) {
             log.error("SQD PUT 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -110,8 +110,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD DELETE: {}", url);
-            ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
-            return parseResponse(resp.getBody());
+            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.DELETE, entity, byte[].class);
+            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
         } catch (HttpStatusCodeException e) {
             log.error("SQD DELETE 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());

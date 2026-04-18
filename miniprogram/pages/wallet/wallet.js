@@ -20,63 +20,30 @@ Page({
   // 加载钱包信息
   loadWalletInfo() {
     const app = getApp();
-    const baseUrl = app.globalData.baseUrl;
     const userId = app.globalData.userId;
     
     if (!userId) {
       console.log('用户未登录，无法加载钱包信息');
-      wx.showToast({
-        title: '请先登录',
-        icon: 'none'
-      });
       return;
     }
     
-    wx.request({
-      url: `${baseUrl}/api/payment/wallet/${userId}`,
-      method: 'GET',
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          const wallet = res.data.wallet;
-          this.setData({
-            wallet: {
-              balance: wallet.balance || 0.00,
-              frozen: wallet.frozenAmount || 0.00,
-              totalRecharge: wallet.totalRecharge || 0.00
-            }
-          });
-        } else {
-          // API返回失败，显示错误
-          console.error('获取钱包数据失败:', res.data);
-          wx.showToast({
-            title: '获取钱包数据失败',
-            icon: 'none'
-          });
-          this.setData({
-            wallet: {
-              balance: 0.00,
-              frozen: 0.00,
-              totalRecharge: 0.00
-            }
-          });
-        }
-      },
-      fail: (error) => {
-        console.error('加载钱包数据失败:', error);
-        // 显示错误提示
-        wx.showToast({
-          title: '加载钱包数据失败',
-          icon: 'none'
-        });
-        // 使用默认值
+    const { request } = require('../../utils/api.js');
+    request(`/api/wallet/${userId}`).then(res => {
+      if (res.success) {
+        const wallet = res.wallet || {};
         this.setData({
           wallet: {
-            balance: 0.00,
-            frozen: 0.00,
-            totalRecharge: 0.00
+            balance: wallet.balance || 0,
+            frozen: wallet.frozenAmount || 0,
+            totalRecharge: wallet.totalRecharge || 0
           }
         });
       }
+    }).catch(err => {
+      console.error('加载钱包数据失败:', err);
+      this.setData({
+        wallet: { balance: 0, frozen: 0, totalRecharge: 0 }
+      });
     });
   },
 

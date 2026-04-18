@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雀玺 - 智能无人棋牌室 | 24小时自助麻将·棋牌</title>
+    <meta name="description" content="雀玺无人棋牌室，24小时智能自助，扫码开门，自动计费，私密包间，全自动麻将桌。让每一局都是享受。">
+    <meta name="keywords" content="雀玺,无人棋牌室,自助麻将,智能棋牌室,24小时棋牌,扫码开门">
+    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <img src="images/logo.jpg" alt="雀玺" class="logo-img">
+                <span class="logo-text">雀玺</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#hero">首页</a></li>
+                <li><a href="#features">特色</a></li>
+                <li><a href="#how-it-works">流程</a></li>
+                <li><a href="#rooms">房型</a></li>
+                <li><a href="#franchise">加盟</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+            <button class="nav-toggle" id="navToggle" aria-label="切换导航菜单">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero" id="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-particles" id="particles"></div>
+        <div class="container hero-content">
+            <div class="hero-badge">🀄 全国连锁品牌</div>
+            <h1 class="hero-title">
+                <span class="title-line">雀玺</span>
+                <span class="title-sub">智能无人棋牌室</span>
+            </h1>
+            <p class="hero-desc">24小时自助 · 扫码即玩 · 私密舒适 · 智能管理</p>
+            <div class="hero-actions">
+                <a href="#rooms" class="btn btn-primary">立即预约</a>
+                <a href="#how-it-works" class="btn btn-outline">了解更多</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-num" data-target="200">0</span><span class="stat-plus">+</span>
+                    <span class="stat-label">门店覆盖</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="50">0</span><span class="stat-plus">万+</span>
+                    <span class="stat-label">服务用户</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num" data-target="30">0</span><span class="stat-plus">+</span>
+                    <span class="stat-label">城市入驻</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span>向下滚动</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- 特色功能 -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">为什么选择雀玺</span>
+                <h2 class="section-title">重新定义棋牌体验</h2>
+                <p class="section-desc">融合智能科技与舒适空间，打造全新一代无人值守棋牌室</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="6" width="36" height="36" rx="4" stroke="currentColor" stroke-width="2.5"/>
+                            <path d="M18 18h12v12H18z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M6 18h12M30 18h12M18 6v12M18 30v12M30 6v12M30 30v12M6 30h12M30 30h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>扫码开门</h3>
+                    <p>微信扫码即可开门，无需前台，无需等待，随到随玩</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="2.5"/>
+                            <path d="M24 14v10l7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>24小时营业</h3>
+                    <p>全天候不打烊，深夜局、清晨局，想打就打，时间自由</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 4l5.5 11.2L42 17l-9 8.8L35 38 24 32.2 13 38l2-12.2-9-8.8 12.5-1.8z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>全自动麻将桌</h3>
+                    <p>高端品牌全自动麻将桌，静音洗牌，快速上牌，畅享丝滑体验</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6h8v8h-8zM6 20h8v8H6zM34 20h8v8h-8zM20 34h8v8h-8z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M24 14v6M14 24h6M28 24h6M24 34v-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>智能计费</h3>
+                    <p>按时自动计费，费用透明，微信自动扣款，告别现金烦恼</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="4" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2.5"/>
+                            <path d="M16 16h16M16 24h16M16 32h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>私密包间</h3>
+                    <p>独立隔音包间，隐私有保障，朋友聚会、商务社交皆宜</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 38V22l12-12 12 12v16H12z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                            <path d="M20 38v-8h8v8" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                            <circle cx="38" cy="10" r="6" stroke="currentColor" stroke-width="2.5"/>
+                            <path d="M38 7v3l2 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>远程管理</h3>
+                    <p>店主手机远程监控，智能报警，设备状态实时掌握</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 使用流程 -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">简单四步</span>
+                <h2 class="section-title">轻松开局</h2>
+                <p class="section-desc">从扫码到开打，只需一分钟</p>
+            </div>
+            <div class="steps">
+                <div class="step" data-aos="fade-right">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h3>扫码预约</h3>
+                        <p>打开微信小程序，选择附近门店和空闲房间，在线预约</p>
+                    </div>
+                    <div class="step-icon">📱</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-aos="fade-left">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h3>扫码开门</h3>
+                        <p>到店后扫描门口二维码，智能门锁自动开启，进入包间</p>
+                    </div>
+                    <div class="step-icon">🚪</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-aos="fade-right">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h3>畅玩娱乐</h3>
+                        <p>全自动麻将桌一键启动，空调、灯光智能控制，尽情享受</p>
+                    </div>
+                    <div class="step-icon">🀄</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step" data-aos="fade-left">
+                    <div class="step-number">04</div>
+                    <div class="step-content">
+                        <h3>自动结算</h3>
+                        <p>离开时自动计算费用，微信支付一键结算，方便快捷</p>
+                    </div>
+                    <div class="step-icon">💳</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 房型展示 -->
+    <section class="rooms" id="rooms">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">精选房型</span>
+                <h2 class="section-title">总有一间适合你</h2>
+                <p class="section-desc">多种房型满足不同需求，从经济实惠到豪华尊享</p>
+            </div>
+            <div class="rooms-grid">
+                <div class="room-card" data-aos="zoom-in">
+                    <div class="room-image room-standard">
+                        <div class="room-badge">热门</div>
+                    </div>
+                    <div class="room-info">
+                        <h3>标准麻将房</h3>
+                        <p>4人标准包间，全自动麻将桌，空调WiFi齐全</p>
+                        <div class="room-price">
+                            <span class="price">¥15</span>
+                            <span class="unit">/人/小时</span>
+                        </div>
+                        <ul class="room-features">
+                            <li>✓ 全自动麻将桌</li>
+                            <li>✓ 独立空调</li>
+                            <li>✓ 免费WiFi</li>
+                            <li>✓ USB充电</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="room-card featured" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="room-image room-deluxe">
+                        <div class="room-badge">推荐</div>
+                    </div>
+                    <div class="room-info">
+                        <h3>豪华麻将房</h3>
+                        <p>宽敞舒适，高端麻将桌，沙发茶几，商务社交首选</p>
+                        <div class="room-price">
+                            <span class="price">¥25</span>
+                            <span class="unit">/人/小时</span>
+                        </div>
+                        <ul class="room-features">
+                            <li>✓ 高端静音麻将桌</li>
+                            <li>✓ 真皮沙发</li>
+                            <li>✓ 大屏电视</li>
+                            <li>✓ 茶水服务</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="room-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="room-image room-chess">
+                        <div class="room-badge">新品</div>
+                    </div>
+                    <div class="room-info">
+                        <h3>棋牌多功能房</h3>
+                        <p>麻将、扑克、棋类多合一，灵活切换，聚会好去处</p>
+                        <div class="room-price">
+                            <span class="price">¥20</span>
+                            <span class="unit">/人/小时</span>
+                        </div>
+                        <ul class="room-features">
+                            <li>✓ 多功能牌桌</li>
+                            <li>✓ 棋牌用具齐全</li>
+                            <li>✓ 零食饮料柜</li>
+                            <li>✓ 蓝牙音箱</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 加盟合作 -->
+    <section class="franchise" id="franchise">
+        <div class="container">
+            <div class="section-header light">
+                <span class="section-tag">合作共赢</span>
+                <h2 class="section-title">加盟雀玺</h2>
+                <p class="section-desc">低投入、高回报、轻运营，开启你的智能棋牌室事业</p>
+            </div>
+            <div class="franchise-grid">
+                <div class="franchise-card" data-aos="fade-up">
+                    <div class="franchise-num">01</div>
+                    <h3>低成本启动</h3>
+                    <p>最低10万起投，提供选址、装修、设备一站式解决方案，快速开业</p>
+                </div>
+                <div class="franchise-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="franchise-num">02</div>
+                    <h3>无人值守</h3>
+                    <p>全套智能系统，无需雇人看店，一人可管多店，人力成本趋近于零</p>
+                </div>
+                <div class="franchise-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="franchise-num">03</div>
+                    <h3>技术赋能</h3>
+                    <p>自研SaaS管理平台，实时数据看板，智能定价，运营决策有据可依</p>
+                </div>
+                <div class="franchise-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="franchise-num">04</div>
+                    <h3>持续扶持</h3>
+                    <p>总部全程培训指导，营销方案输出，设备终身维护，让你无后顾之忧</p>
+                </div>
+            </div>
+            <div class="franchise-cta">
+                <a href="#contact" class="btn btn-primary btn-lg">咨询加盟详情</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 用户评价 -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">用户好评</span>
+                <h2 class="section-title">他们都在说</h2>
+            </div>
+            <div class="testimonial-slider">
+                <div class="testimonial-card" data-aos="fade-up">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p>"半夜想打牌再也不用求人开门了，扫码就进，太方便了！环境也很干净。"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">张</div>
+                        <div>
+                            <strong>张先生</strong>
+                            <span>资深牌友</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p>"加盟了两家店，基本不用操心，系统自动管理，每月稳定收益，很满意。"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">李</div>
+                        <div>
+                            <strong>李女士</strong>
+                            <span>加盟商</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p>"朋友聚会新去处，包间隔音好，麻将桌很新，价格也合理，已经是常客了。"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">王</div>
+                        <div>
+                            <strong>王先生</strong>
+                            <span>忠实用户</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系我们 -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">联系我们</span>
+                <h2 class="section-title">开启合作</h2>
+                <p class="section-desc">无论是消费体验还是加盟咨询，我们随时为您服务</p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">📞</div>
+                        <div>
+                            <h4>咨询热线</h4>
+                            <p>15157903339</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div>
+                            <h4>总部地址</h4>
+                            <p>浙江省金华市东阳市江北街道茗田社区甘溪东街世纪花城南区12幢1单元101室-1</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">⏰</div>
+                        <div>
+                            <h4>服务时间</h4>
+                            <p>门店24小时 | 客服 9:00-21:00</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">💬</div>
+                        <div>
+                            <h4>微信公众号</h4>
+                            <p>搜索"雀玺棋牌"关注我们</p>
+                        </div>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">姓名</label>
+                            <input type="text" id="name" name="name" placeholder="请输入您的姓名" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">电话</label>
+                            <input type="tel" id="phone" name="phone" placeholder="请输入您的电话" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">咨询类型</label>
+                        <select id="type" name="type">
+                            <option value="franchise">加盟咨询</option>
+                            <option value="consumer">消费咨询</option>
+                            <option value="cooperation">商务合作</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">留言</label>
+                        <textarea id="message" name="message" rows="4" placeholder="请输入您的留言..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">提交咨询</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="images/logo.jpg" alt="雀玺" class="logo-img">
+                        <span class="logo-text">雀玺</span>
+                    </div>
+                    <p>智能无人棋牌室领导品牌<br>让每一局都是享受</p>
+                </div>
+                <div class="footer-links">
+                    <h4>快速导航</h4>
+                    <ul>
+                        <li><a href="#features">品牌特色</a></li>
+                        <li><a href="#how-it-works">使用流程</a></li>
+                        <li><a href="#rooms">房型价格</a></li>
+                        <li><a href="#franchise">加盟合作</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>关于我们</h4>
+                    <ul>
+                        <li><a href="#">品牌故事</a></li>
+                        <li><a href="#">门店查询</a></li>
+                        <li><a href="#">新闻动态</a></li>
+                        <li><a href="#">招聘信息</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>帮助支持</h4>
+                    <ul>
+                        <li><a href="#">常见问题</a></li>
+                        <li><a href="#">用户协议</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                        <li><a href="#">意见反馈</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024-2026 东阳市日旭网络科技有限公司 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
     <!-- Logo -->
     <view class="logo-section">
       <image class="logo" src="/images/logo.png" mode="aspectFit" />
-      <text class="app-name">易享生活棋牌室</text>
+      <text class="app-name">雀玺棋牌室</text>
       <text class="app-desc">完善个人信息，享受更多服务</text>
     </view>
 

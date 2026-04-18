@@ -13,7 +13,7 @@ Page({
     const order = {
       id: orderId,
       orderNo: 'QS' + Date.now(),
-      storeName: '易享生活棋牌室(万达店)',
+      storeName: '雀玺棋牌室(万达店)',
       roomName: '豪华包间A',
       bookingDate: '2025-01-20',
       startTime: '14:00',

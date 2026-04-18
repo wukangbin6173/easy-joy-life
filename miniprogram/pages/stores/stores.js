@@ -57,17 +57,19 @@ Page({
     });
   },
 
-  // 加载门店列表
+  // 加载门店列表（现在先加载商户列表，展示所有商户的门店）
   loadStores() {
     this.setData({ loading: true });
 
-    // 使用API获取门店数据
-    const apiCall = this.data.searchKeyword ? 
-      storeApi.searchStores(this.data.searchKeyword) : 
-      storeApi.getStores();
-
-    apiCall.then(response => {
-      let stores = response.data || [];
+    // 从商起点获取商户列表，再获取门店
+    storeApi.getMerchants(1, 50).then(response => {
+      let stores = [];
+      const data = response.data;
+      if (data && data.list) {
+        stores = data.list;
+      } else if (Array.isArray(data)) {
+        stores = data;
+      }
       
       // 处理图片路径，确保是数组格式
       stores = stores.map(store => {
@@ -128,8 +130,9 @@ Page({
   // 查看门店详情
   onStoreDetail(e) {
     const storeId = e.currentTarget.dataset.id;
+    const merchantId = e.currentTarget.dataset.merchantid;
     wx.navigateTo({
-      url: `/pages/store-detail/store-detail?id=${storeId}`
+      url: `/pages/store-detail/store-detail?id=${storeId}&merchantId=${merchantId || ''}`
     });
   },
 

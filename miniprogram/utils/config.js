@@ -2,13 +2,13 @@
 const config = {
   // 开发环境
   development: {
-    baseUrl: 'https://xx.aieo.cn',
+    baseUrl: 'http://47.97.179.50:8080',
     debug: true
   },
   
-  // 生产环境
+  // 生产环境（备案完成后切换回域名）
   production: {
-    baseUrl: 'https://xx.aieo.cn',
+    baseUrl: 'https://www.quexitai.com',
     debug: false
   }
 };

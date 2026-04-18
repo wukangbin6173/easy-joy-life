@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "易享生活棋牌室"
+  "navigationBarTitleText": "首页",
+  "enablePullDownRefresh": true
 }

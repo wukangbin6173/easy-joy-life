@@ -90,34 +90,16 @@ Page({
     }
     
     // 获取钱包余额
-    wx.request({
-      url: `${baseUrl}/api/payment/wallet/${userId}`,
-      method: 'GET',
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          const wallet = res.data.wallet;
-          this.setData({
-            wallet: {
-              balance: wallet.balance || 0.00
-            }
-          });
-        } else {
-          console.error('获取钱包数据失败:', res.data);
-          this.setData({
-            wallet: {
-              balance: 0.00
-            }
-          });
-        }
-      },
-      fail: (error) => {
-        console.error('加载钱包数据失败:', error);
+    const { request } = require('../../utils/api.js');
+    request(`/api/wallet/${userId}`).then(res => {
+      if (res.success) {
         this.setData({
-          wallet: {
-            balance: 0.00
-          }
+          wallet: { balance: res.wallet ? res.wallet.balance : 0 }
         });
       }
+    }).catch(err => {
+      console.error('加载钱包数据失败:', err);
+      this.setData({ wallet: { balance: 0 } });
     });
     
     // 暂时使用模拟数据

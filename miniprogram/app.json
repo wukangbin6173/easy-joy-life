@@ -26,7 +26,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#1890ff",
-    "navigationBarTitleText": "易享生活",
+    "navigationBarTitleText": "雀玺",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f5f5f5"
   },
@@ -38,15 +38,9 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
+        "text": "会员",
         "iconPath": "images/home.png",
         "selectedIconPath": "images/home-active.png"
-      },
-      {
-        "pagePath": "pages/stores/stores",
-        "text": "门店",
-        "iconPath": "images/store.png",
-        "selectedIconPath": "images/store-active.png"
       },
       {
         "pagePath": "pages/orders/orders",

@@ -1,5 +1,5 @@
 {
-  "description": "易享生活无人棋牌室管理系统",
+  "description": "雀玺智能无人棋牌室",
   "packOptions": {
     "ignore": [
       {
@@ -54,8 +54,8 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.14.0",
-  "appid": "wx9f4a33e5f2b31a6d",
-  "projectname": "easy-joy-life-miniprogram",
+  "appid": "wxace4755a7aaea695",
+  "projectname": "quexi-miniprogram",
   "isGameTourist": false,
   "condition": {
     "search": {

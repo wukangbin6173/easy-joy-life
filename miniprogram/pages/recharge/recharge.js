@@ -4,8 +4,9 @@ const { userApi } = require('../../utils/api.js');
 
 Page({
   data: {
-    currentBalance: 168.50,
-    amountOptions: [0.1, 0.5, 1, 5, 10, 50],
+    currentBalance: 0,
+    userPoints: 0,
+    amountOptions: [10, 20, 50, 100, 200, 500],
     selectedAmount: 0,
     customAmount: '',
     finalAmount: 0,
@@ -32,39 +33,23 @@ Page({
     this.checkPromotion();
   },
 
-  // 加载当前余额
+  // 加载当前余额和积分
   loadCurrentBalance() {
     const app = getApp();
-    const baseUrl = app.globalData.baseUrl;
     const userId = app.globalData.userId;
-    
-    if (!userId) {
-      console.log('用户未登录，无法加载余额');
-      return;
-    }
-    
-    wx.request({
-      url: `${baseUrl}/api/payment/wallet/${userId}`,
-      method: 'GET',
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          const wallet = res.data.wallet;
-          this.setData({
-            currentBalance: wallet.balance || 0.00
-          });
-        } else {
-          console.error('获取钱包数据失败:', res.data);
-          this.setData({
-            currentBalance: 0.00
-          });
-        }
-      },
-      fail: (error) => {
-        console.error('加载钱包数据失败:', error);
+    if (!userId) return;
+
+    const { request } = require('../../utils/api.js');
+    request(`/api/wallet/${userId}`).then(res => {
+      if (res.success) {
         this.setData({
-          currentBalance: 0.00
+          currentBalance: res.wallet ? res.wallet.balance : 0,
+          userPoints: res.points || 0
         });
       }
+    }).catch(err => {
+      console.error('加载钱包数据失败:', err);
+      this.setData({ currentBalance: 0, userPoints: 0 });
     });
   },
 
@@ -215,7 +200,7 @@ Page({
     const { request } = require('../../utils/api.js');
     const app = getApp();
     
-    return request('/api/payment/recharge/create', {
+    return request('/api/wallet/recharge', {
       method: 'POST',
       data: {
         userId: app.globalData.userId,

@@ -28,6 +28,7 @@ public class PaymentService {
     private final PaymentOrderRepository paymentOrderRepository;
     private final UserWalletRepository userWalletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
+    private final PointsService pointsService;
 
     /**
      * 创建充值订单
@@ -140,6 +141,45 @@ public class PaymentService {
 
         log.info("用户充值成功: userId={}, amount={}, newBalance={}", 
                 userId, amount, wallet.getBalance());
+    }
+
+    /**
+     * 余额消费（扣款 + 返积分）
+     */
+    @Transactional
+    public boolean consume(Long userId, BigDecimal amount, String orderNo, String description) {
+        UserWallet wallet = userWalletRepository.findByUserIdWithLock(userId)
+                .orElseGet(() -> createUserWallet(userId));
+
+        if (wallet.getAvailableBalance().compareTo(amount) < 0) {
+            log.warn("余额不足: userId={}, available={}, need={}", userId, wallet.getAvailableBalance(), amount);
+            return false;
+        }
+
+        BigDecimal balanceBefore = wallet.getBalance();
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        wallet.setTotalConsume(wallet.getTotalConsume().add(amount));
+        userWalletRepository.save(wallet);
+
+        // 创建交易记录
+        WalletTransaction transaction = new WalletTransaction();
+        transaction.setTransactionNo(generateTransactionNo());
+        transaction.setUserId(userId);
+        transaction.setOrderNo(orderNo);
+        transaction.setTransactionType(WalletTransaction.TransactionType.CONSUME);
+        transaction.setAmount(amount.negate());
+        transaction.setBalanceBefore(balanceBefore);
+        transaction.setBalanceAfter(wallet.getBalance());
+        transaction.setDescription(description != null ? description : "消费");
+        transaction.setStatus(WalletTransaction.Status.SUCCESS);
+        walletTransactionRepository.save(transaction);
+
+        // 消费返积分
+        long earnedPoints = pointsService.earnPoints(userId, amount, orderNo);
+
+        log.info("用户消费成功: userId={}, amount={}, newBalance={}, earnedPoints={}",
+                userId, amount, wallet.getBalance(), earnedPoints);
+        return true;
     }
 
     /**

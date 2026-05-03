@@ -52,6 +52,7 @@ __pycache__/
 # 测试文件
 test_*.py
 *_test.py
+backend/test_output.txt
 
 # 构建文件
 dist/

@@ -67,9 +67,6 @@ unpackage/
 miniprogram/project.private.config.json
 project.private.config.json
 
-# 本地测试输出
-backend/test_output.txt
-
 # 部署环境变量（勿提交）
 deploy/.env.production
 deploy/.env.local

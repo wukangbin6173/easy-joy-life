@@ -8,4 +8,6 @@ alwaysApply: true
 - 向阿里云云效（Codeup）等远程仓库推送时：**不要**提交或上传编译产生的中间文件、打包产物、source map、本地私有配置。
 - 小程序侧典型需忽略：`miniprogram/miniprogram_npm/`、`miniprogram/node_modules/`、`unpackage/`、`**/*.map`、`project.private.config.json` 等；Java 侧保持 `backend/target/` 等已有规则。
 - **不要**在仓库、规则文件或对话中写入个人访问令牌（PAT）、密码、私钥；使用 SSH 或本机凭据管理器认证。
+- 使用 **HTTPS + 个人访问令牌** 推送 Codeup 时：用户名必须是云效 **「个人设置 → HTTPS 密码」** 页面显示的 **「克隆账号」**（不是 GitHub 昵称、也不一定是邮箱）；密码/口令处填 **PAT**，且创建令牌时需勾选 **代码库读写** 等相关权限。详见：[配置 HTTPS 克隆账号密码](https://help.aliyun.com/zh/yunxiao/user-guide/configure-https-clone-account-password)。
+- 使用 **SSH** 推送时：将本机公钥添加到云效账号，远程地址一般为 `git@codeup.aliyun.com:<组织/路径>/<仓库>.git`；`ssh-keygen -lf` 看到的指纹用于核对主机或密钥，与 HTTPS 无关。
 - 若需补充忽略项，优先更新仓库根目录 `.gitignore`，再提交。

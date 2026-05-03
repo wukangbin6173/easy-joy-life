@@ -1,0 +1,13 @@
+<view class="bridge-page">
+  <view wx:if="{{loading}}" class="hint">正在跳转支付，请稍候...</view>
+  <view wx:elif="{{errorMsg}}" class="error-panel">
+    <view class="error-icon">!</view>
+    <view class="error-title">{{errorMsg}}</view>
+    <view class="error-tip">{{errorTip}}</view>
+    <view class="error-actions">
+      <button class="ghost-btn" bindtap="goBack">返回收银台</button>
+      <button class="primary-btn" bindtap="retryPay">重新尝试</button>
+    </view>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

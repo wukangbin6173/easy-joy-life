@@ -27,10 +27,10 @@ public class SmsController {
     private final AliyunSmsService aliyunSmsService;
     
     // 开发模式：true=模拟短信，false=真实短信
-    private static final boolean DEV_MODE = true;
+    private static final boolean DEV_MODE = false;
     
     // 模拟验证码（开发测试用）
-    private static final String DEV_CODE = "888888";
+    private static final String DEV_CODE = "9999";
 
     /**
      * 发送短信验证码

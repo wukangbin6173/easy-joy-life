@@ -1,72 +1,152 @@
-<view class="container">
-  <view class="order-status">
+<view class="container order-detail-page">
+  <view class="custom-nav">
+    <view class="nav-back" bindtap="goBack">‹</view>
+    <text class="nav-title">订单详情</text>
+  </view>
+
+  <view class="status-card">
     <view class="status-icon">
-      <image src="/images/status-{{order.status}}.png" mode="aspectFit"></image>
+      <image src="{{order.statusIcon}}" mode="aspectFit"></image>
     </view>
-    <text class="status-text">{{order.statusText}}</text>
-    <text class="status-desc">{{order.statusDesc}}</text>
-  </view>
-
-  <view class="order-info">
-    <view class="info-item">
-      <text class="label">订单号：</text>
-      <text class="value">{{order.orderNo}}</text>
-    </view>
-    <view class="info-item">
-      <text class="label">门店：</text>
-      <text class="value">{{order.storeName}}</text>
-    </view>
-    <view class="info-item">
-      <text class="label">房间：</text>
-      <text class="value">{{order.roomName}}</text>
-    </view>
-    <view class="info-item">
-      <text class="label">预订时间：</text>
-      <text class="value">{{order.bookingDate}} {{order.startTime}}-{{order.endTime}}</text>
-    </view>
-    <view class="info-item">
-      <text class="label">联系电话：</text>
-      <text class="value">{{order.phone}}</text>
-    </view>
-    <view class="info-item" wx:if="{{order.remark}}">
-      <text class="label">备注：</text>
-      <text class="value">{{order.remark}}</text>
+    <view class="status-main">
+      <text class="status-text">{{order.statusText}}</text>
+      <text class="status-desc">{{order.statusDesc}}</text>
+      <text class="countdown" wx:if="{{order.countdownText}}">{{order.countdownText}}</text>
+      <text class="open-tip" wx:if="{{order.openTip}}">{{order.openTip}}</text>
     </view>
   </view>
 
-  <view class="price-detail">
-    <view class="detail-item">
-      <text class="label">房间费用</text>
-      <text class="value">¥{{order.roomPrice}}</text>
+  <view class="notice-strip" wx:if="{{order.noticeText}}">
+    <image src="/images/到店提醒.png" mode="aspectFit"></image>
+    <text>{{order.noticeText}}</text>
+  </view>
+
+  <view class="room-card">
+    <view class="room-main">
+      <image class="room-img" src="{{order.coverImage}}" mode="aspectFill"></image>
+      <view class="room-info">
+        <view class="store-row">
+          <text class="store-name">{{order.storeName}}</text>
+          <text class="type-tag">{{order.businessTypeText}}</text>
+        </view>
+        <view class="kv"><text class="kv-label">{{order.resourceLabel}}</text><text class="kv-value">{{order.roomName}}</text></view>
+        <view class="kv"><text class="kv-label">预约方式</text><text class="kv-value">{{order.packageName}}</text></view>
+        <view class="kv"><text class="kv-label">预约时间</text><text class="kv-value">{{order.dateText}} {{order.timeRange}}</text></view>
+        <view class="kv"><text class="kv-label">时长</text><text class="kv-value">{{order.durationText}}</text></view>
+        <view class="kv" wx:if="{{order.showCapacity}}"><text class="kv-label">容量</text><text class="kv-value">{{order.capacityText}}</text></view>
+        <view class="kv" wx:if="{{order.showPeople}}"><text class="kv-label">预约人数</text><text class="kv-value">{{order.peopleText}}</text></view>
+      </view>
     </view>
-    <view class="detail-item" wx:if="{{order.discount > 0}}">
-      <text class="label">优惠金额</text>
-      <text class="value discount">-¥{{order.discount}}</text>
+    <view class="room-tags" wx:if="{{order.tagList && order.tagList.length}}">
+      <text wx:for="{{order.tagList}}" wx:key="*this">{{item}}</text>
     </view>
-    <view class="detail-item total">
-      <text class="label">实付金额</text>
-      <text class="value">¥{{order.totalPrice}}</text>
+    <view class="address-line">
+      <text class="address-label">地址</text>
+      <text class="address-value">{{order.address}}</text>
     </view>
   </view>
 
-  <view class="unlock-info" wx:if="{{order.status === 'using' && order.unlockCode}}">
-    <view class="unlock-title">开门密码</view>
-    <view class="unlock-code">{{order.unlockCode}}</view>
-    <view class="unlock-tip">请在房间门锁上输入此密码开门</view>
+  <view class="info-card">
+    <view class="info-row"><text>订单编号</text><view><text>{{order.orderNo}}</text><text class="copy" bindtap="copyOrderNo">复制</text></view></view>
+    <view class="info-row"><text>下单时间</text><text>{{order.createTimeText}}</text></view>
+    <view class="info-row"><text>支付时间</text><text>{{order.payTimeText}}</text></view>
+    <view class="info-row"><text>支付方式</text><text>{{order.payMethodText}}</text></view>
+    <view class="info-row"><text>联系人</text><text>{{order.contactName}}</text></view>
+    <view class="info-row"><text>手机号</text><text>{{order.phoneText}}</text></view>
   </view>
 
-  <view class="order-actions">
-    <button class="action-btn" wx:if="{{order.status === 'pending'}}" bindtap="cancelOrder">
-      取消订单
-    </button>
-    <button class="action-btn primary" wx:if="{{order.status === 'using'}}" bindtap="unlockRoom">
-      开门
-    </button>
-    <button class="action-btn" wx:if="{{order.status === 'completed'}}" bindtap="rateOrder">
-      评价
-    </button>
-    <button class="action-btn" bindtap="contactService">
-      联系客服
-    </button>
+  <view class="price-card">
+    <view class="price-row"><text>{{order.feeLabel}}（¥{{order.unitPrice}} × {{order.durationText}}）</text><text>¥{{order.roomFee}}</text></view>
+    <view class="price-row"><text>服务费</text><text>¥{{order.serviceFee}}</text></view>
+    <view class="price-row"><text>优惠券</text><text class="discount">-¥{{order.discount}}</text></view>
+    <view class="price-row total"><text>合计</text><text>¥{{order.totalPrice}}</text></view>
+  </view>
+
+  <view class="notice-card">
+    <view class="section-title">到店说明</view>
+    <text>• {{order.useInstruction}}</text>
+    <text wx:if="{{order.openInstruction}}">• {{order.openInstruction}}</text>
+    <text>• 如需续时，请在当前时段结束前于订单页申请。</text>
+    <text>• 如需取消，请至少提前 1 小时申请，退款以实际规则为准。</text>
+  </view>
+
+  <view class="entry-card">
+    <view class="entry-item" bindtap="navigateToStore">
+      <image src="/images/导航到店.png" mode="aspectFit"></image>
+      <view><text>导航到店</text><text>快速导航至门店，按预约时间到店使用</text></view>
+      <text class="arrow">›</text>
+    </view>
+    <view class="entry-item" bindtap="contactService">
+      <image src="/images/联系客服.png" mode="aspectFit"></image>
+      <view><text>联系客服</text><text>如有问题，可随时联系客服为您服务</text></view>
+      <text class="arrow">›</text>
+    </view>
+    <view class="entry-item" bindtap="refundOrder" wx:if="{{order.showRefundEntry}}">
+      <image src="/images/退款.png" mode="aspectFit"></image>
+      <view><text>{{order.refundEntryTitle}}</text><text>{{order.refundEntryDesc}}</text></view>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="pay-summary">
+      <view><text>{{order.amountLabel}}</text><text class="amount">¥{{order.totalPrice}}</text></view>
+      <text>{{order.roomName}} · {{order.dateText}} {{order.timeRange}}</text>
+    </view>
+    <button class="bottom-btn ghost" bindtap="navigateToStore" wx:if="{{order.showNavigate}}">导航到店</button>
+    <button class="bottom-btn primary" bindtap="unlockRoom" wx:if="{{order.showUnlock}}">自助开门</button>
+    <button class="bottom-btn primary" bindtap="payOrder" wx:if="{{order.showPay}}">去支付</button>
+  </view>
+
+  <view class="refund-mask" wx:if="{{showRefundModal}}" catchtap="closeRefundModal"></view>
+  <view class="refund-modal" wx:if="{{showRefundModal}}" catchtap="noop">
+    <view class="refund-head">
+      <view class="refund-icon-wrap">
+        <image src="/images/退款.png" mode="aspectFit"></image>
+      </view>
+      <view class="refund-title-wrap">
+        <text class="refund-title">{{refundPreview.modalTitle}}</text>
+        <text class="refund-subtitle">{{order.storeName}} · {{order.roomName}}</text>
+      </view>
+    </view>
+
+    <view class="refund-summary">
+      <view class="refund-summary-row">
+        <text class="refund-label">订单状态</text>
+        <text class="refund-badge">{{refundPreview.badgeText}}</text>
+      </view>
+      <view class="refund-summary-row amount">
+        <text class="refund-label">{{refundPreview.amountLabel}}</text>
+        <text class="refund-amount">{{refundPreview.amountText}}</text>
+      </view>
+    </view>
+
+    <view class="refund-policy">
+      <image src="/images/提示.png" mode="aspectFit"></image>
+      <text>{{refundPreview.policyText}}</text>
+    </view>
+
+    <view class="reason-block">
+      <text class="reason-title">取消原因</text>
+      <view class="reason-list">
+        <view
+          class="reason-chip {{selectedRefundReason === item ? 'active' : ''}}"
+          wx:for="{{refundReasons}}"
+          wx:key="*this"
+          bindtap="selectRefundReason"
+          data-reason="{{item}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <view class="refund-actions">
+      <button class="refund-cancel-btn" bindtap="closeRefundModal" disabled="{{submittingRefund}}">再想想</button>
+      <button class="refund-confirm-btn" bindtap="confirmRefundAction" loading="{{submittingRefund}}">
+        {{refundPreview.confirmText}}
+      </button>
+    </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

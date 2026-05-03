@@ -1,0 +1,13 @@
+page { background: #f8faf9; }
+.page { min-height: 100vh; padding: 76rpx 22rpx 40rpx; box-sizing: border-box; }
+.nav { position: relative; height: 60rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 22rpx; }
+.back { position: absolute; left: 0; top: 0; width: 54rpx; height: 60rpx; font-size: 54rpx; line-height: 54rpx; color: #111; }
+.title { font-size: 32rpx; font-weight: 800; color: #111; }
+.article { padding: 34rpx 30rpx; border-radius: 22rpx; background: #fff; box-shadow: 0 8rpx 24rpx rgba(22,48,34,.06); }
+.article-title { display: block; margin-bottom: 28rpx; color: #151d18; font-size: 34rpx; font-weight: 900; }
+.paragraph { display: block; margin-bottom: 18rpx; color: #4f5b54; font-size: 28rpx; line-height: 1.7; }
+.service { display: flex; align-items: center; margin-top: 24rpx; padding: 22rpx; border-radius: 18rpx; background: #eaf8f1; }
+.service image { width: 54rpx; height: 54rpx; margin-right: 18rpx; }
+.service view { flex: 1; display: flex; flex-direction: column; color: #26302a; font-size: 26rpx; }
+.service view text:last-child { margin-top: 6rpx; color: #7a837e; font-size: 22rpx; }
+.arrow { color: #08A85C; font-size: 42rpx; }

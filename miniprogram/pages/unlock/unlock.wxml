@@ -76,3 +76,4 @@
     <button class="service-btn" bindtap="contactService">联系客服</button>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

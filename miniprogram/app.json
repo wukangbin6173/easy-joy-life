@@ -1,10 +1,11 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/stores/stores",
+    "pages/nearby-stores/nearby-stores",
     "pages/store-detail/store-detail",
+    "pages/select-room/select-room",
+    "pages/room-schedule/room-schedule",
     "pages/room-detail/room-detail",
-    "pages/booking/booking",
     "pages/orders/orders",
     "pages/order-detail/order-detail",
     "pages/unlock/unlock",
@@ -18,41 +19,46 @@
     "pages/add-bank-card/add-bank-card",
     "pages/pay-password/pay-password",
     "pages/payment-webview/payment-webview",
-    "pages/payment-test/payment-test",
-    "pages/test-simple/test-simple",
-    "pages/network-test/network-test",
-    "pages/test-userinfo/test-userinfo"
+    "pages/cashier-pay-bridge/index",
+    "pages/favorites/favorites",
+    "pages/settings/settings",
+    "pages/messages/messages",
+    "pages/message-detail/message-detail",
+    "pages/help-center/help-center",
+    "pages/help-detail/help-detail",
+    "pages/about/about",
+    "pages/customer-service/customer-service"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#1890ff",
+    "navigationBarBackgroundColor": "#08A85C",
     "navigationBarTitleText": "雀玺",
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "backgroundColor": "#f5f5f5"
   },
   "tabBar": {
     "color": "#666666",
-    "selectedColor": "#1890ff",
+    "selectedColor": "#08A85C",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "会员",
-        "iconPath": "images/home.png",
-        "selectedIconPath": "images/home-active.png"
+        "text": "首页",
+        "iconPath": "images/首页-1.png",
+        "selectedIconPath": "images/首页.png"
       },
       {
         "pagePath": "pages/orders/orders",
         "text": "订单",
-        "iconPath": "images/order.png",
-        "selectedIconPath": "images/order-active.png"
+        "iconPath": "images/订单.png",
+        "selectedIconPath": "images/订单-1.png"
       },
       {
         "pagePath": "pages/profile/profile",
         "text": "我的",
-        "iconPath": "images/profile.png",
-        "selectedIconPath": "images/profile-active.png"
+        "iconPath": "images/我的-1.png",
+        "selectedIconPath": "images/我的.png"
       }
     ]
   },
@@ -61,6 +67,16 @@
       "desc": "您的位置信息将用于为您推荐附近的门店"
     }
   },
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseLocation"
+  ],
   "requiredBackgroundModes": ["location"],
+  "navigateToMiniProgramAppIdList": [
+    "wx5f4949ed33d92a10"
+  ],
+  "usingComponents": {
+    "qx-dialog": "/components/qx-dialog/qx-dialog"
+  },
   "sitemapLocation": "sitemap.json"
 }

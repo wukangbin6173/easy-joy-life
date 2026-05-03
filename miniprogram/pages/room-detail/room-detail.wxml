@@ -1,31 +1,68 @@
-<view class="container">
-  <view class="room-header">
-    <image class="room-image" src="{{room.image}}" mode="aspectFill"></image>
-    <view class="room-info">
-      <text class="room-name">{{room.name}}</text>
-      <text class="room-type">{{room.type}}</text>
-      <text class="room-price">¥{{room.price}}/小时</text>
-    </view>
+<view class="room-detail-page">
+  <view class="loading-card" wx:if="{{loading && !room.id}}">
+    <text>资源详情加载中...</text>
   </view>
 
-  <view class="room-details">
-    <view class="detail-item">
-      <text class="label">房间设施：</text>
-      <text class="value">{{room.facilities}}</text>
+  <block wx:if="{{!(loading && !room.id)}}">
+    <view class="hero-section">
+      <image class="hero-image" src="{{room.image}}" mode="aspectFill" bindtap="previewRoomImage"></image>
+      <view class="hero-mask"></view>
     </view>
-    <view class="detail-item">
-      <text class="label">房间状态：</text>
-      <text class="value status-{{room.status}}">{{room.statusText}}</text>
-    </view>
-    <view class="detail-item">
-      <text class="label">容纳人数：</text>
-      <text class="value">{{room.capacity}}人</text>
-    </view>
-  </view>
 
-  <view class="booking-section">
-    <button class="booking-btn" bindtap="bookRoom" disabled="{{room.status !== 'available'}}">
-      {{room.status === 'available' ? '立即预订' : '暂不可用'}}
+    <view class="main-card">
+      <view class="title-row">
+        <view class="title-main">
+          <text class="room-name">{{room.name}}</text>
+          <view class="room-type-line">
+            <text>{{room.type || serviceMeta.resourceLabel}}</text>
+            <text wx:if="{{room.capacity}}">{{room.capacity}}人</text>
+          </view>
+        </view>
+        <view class="price-block">
+          <view>
+            <text class="price-symbol">¥</text>
+            <text class="room-price">{{room.price}}</text>
+          </view>
+          <text class="price-unit">{{room.unitText || serviceMeta.priceUnitText}}</text>
+        </view>
+      </view>
+
+      <view class="selected-tip" wx:if="{{room.selected}}">
+        <text class="selected-dot"></text>
+        <text>当前已选择该{{serviceMeta.resourceLabel || '资源'}}</text>
+      </view>
+    </view>
+
+    <view class="detail-card">
+      <view class="section-title">{{serviceMeta.resourceLabel || '资源'}}信息</view>
+      <view class="detail-row">
+        <text class="detail-label">当前状态</text>
+        <text class="detail-value status-text status-{{room.statusKey}}">{{room.statusText}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{room.capacity}}">
+        <text class="detail-label">容纳人数</text>
+        <text class="detail-value">{{room.capacity}}人</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">设施标签</text>
+        <text class="detail-value">{{room.facilities}}</text>
+      </view>
+    </view>
+
+    <view class="detail-card">
+      <view class="section-title">{{serviceMeta.resourceLabel || '资源'}}介绍</view>
+      <text class="description-text">{{room.description}}</text>
+    </view>
+  </block>
+
+  <view class="bottom-bar" wx:if="{{room.id}}">
+    <button class="ghost-btn" bindtap="goBack">返回</button>
+    <button class="primary-btn" bindtap="bookRoom" disabled="{{!room.bookable}}">
+      <block wx:if="{{!room.bookable}}">暂不可约</block>
+      <block wx:elif="{{selectMode}}">选择该{{serviceMeta.resourceLabel || '资源'}}</block>
+      <block wx:else>去预订</block>
     </button>
   </view>
 </view>
+
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

@@ -1,0 +1,105 @@
+.bridge-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx 32rpx;
+  box-sizing: border-box;
+  background: #f6f8f7;
+}
+
+.hint {
+  color: #6b756f;
+  font-size: 28rpx;
+}
+
+.pay-panel,
+.error-panel {
+  width: 100%;
+  max-width: 620rpx;
+  padding: 56rpx 40rpx;
+  box-sizing: border-box;
+  border-radius: 8rpx;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 14rpx 40rpx rgba(21, 43, 34, 0.08);
+}
+
+.pay-icon {
+  width: 72rpx;
+  height: 72rpx;
+  margin: 0 auto 28rpx;
+  border-radius: 50%;
+  background: #eaf8f1;
+  color: #08a85c;
+  font-size: 44rpx;
+  line-height: 72rpx;
+  font-weight: 700;
+}
+
+.pay-title,
+.error-title {
+  color: #16231d;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.pay-tip,
+.error-tip {
+  margin-top: 18rpx;
+  color: #6b756f;
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+
+.error-icon {
+  width: 72rpx;
+  height: 72rpx;
+  margin: 0 auto 26rpx;
+  border-radius: 50%;
+  background: #fff1f0;
+  color: #df3b30;
+  font-size: 44rpx;
+  line-height: 72rpx;
+  font-weight: 700;
+}
+
+.error-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 38rpx;
+}
+
+.full-btn {
+  width: 100%;
+  margin-top: 26rpx;
+}
+
+.full-btn + .full-btn {
+  margin-top: 18rpx;
+}
+
+.ghost-btn,
+.primary-btn {
+  flex: 1;
+  height: 82rpx;
+  line-height: 82rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.ghost-btn {
+  background: #f2f5f3;
+  color: #526158;
+}
+
+.primary-btn {
+  background: #08a85c;
+  color: #ffffff;
+}
+
+.ghost-btn::after,
+.primary-btn::after {
+  border: 0;
+}

@@ -3,6 +3,7 @@ package com.easyjoylife.controller;
 import com.easyjoylife.sqd.SqdOrderService;
 import com.easyjoylife.sqd.SqdPaymentService;
 import com.easyjoylife.sqd.SqdResponse;
+import com.easyjoylife.service.OrderCancelLimitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class PaymentController {
 
     private final SqdPaymentService sqdPaymentService;
     private final SqdOrderService sqdOrderService;
+    private final OrderCancelLimitService orderCancelLimitService;
 
     /**
      * 创建收银台支付
@@ -192,13 +194,33 @@ public class PaymentController {
     @PostMapping("/orders/{orderId}/cancel")
     public ResponseEntity<Map<String, Object>> cancelOrder(
             @PathVariable Long orderId,
-            @RequestParam Long merchantId) {
+            @RequestParam Long merchantId,
+            @RequestParam(required = false) String externalUserId) {
         Map<String, Object> response = new HashMap<>();
         try {
+            String resolvedExternalUserId = resolveExternalUserId(orderId, merchantId, externalUserId);
+            if (resolvedExternalUserId == null || resolvedExternalUserId.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "无法确认用户身份，请重新进入订单页后再试");
+                return ResponseEntity.ok(response);
+            }
+
+            OrderCancelLimitService.LimitStatus activeLimit =
+                    orderCancelLimitService.getActiveLimit(resolvedExternalUserId);
+            if (activeLimit.isLimited()) {
+                return ResponseEntity.ok(buildCancelLimitedResponse(activeLimit));
+            }
+
             SqdResponse sqd = sqdOrderService.cancelOrder(orderId, merchantId);
             if (sqd.isSuccess()) {
                 response.put("success", true);
                 response.put("message", "订单已取消");
+                OrderCancelLimitService.LimitStatus afterCancel =
+                        orderCancelLimitService.recordUserCancel(
+                                resolvedExternalUserId, orderId, merchantId, "用户取消订单");
+                if (afterCancel.isLimited()) {
+                    response.put("cancelLimit", buildCancelLimitData(afterCancel));
+                }
             } else {
                 response.put("success", false);
                 response.put("message", sqd.getMsg());
@@ -210,6 +232,73 @@ public class PaymentController {
             response.put("message", "取消订单失败: " + e.getMessage());
             return ResponseEntity.ok(response);
         }
+    }
+
+    private String resolveExternalUserId(Long orderId, Long merchantId, String externalUserId) {
+        if (externalUserId != null && !externalUserId.trim().isEmpty()) {
+            return externalUserId.trim();
+        }
+
+        SqdResponse order = sqdOrderService.getOrder(orderId, merchantId);
+        Map<String, Object> orderData = order.isSuccess() ? order.getDataAsMap() : null;
+        return firstText(findDeepValue(orderData, "externalUserId"), findDeepValue(orderData, "userId"));
+    }
+
+    private Map<String, Object> buildCancelLimitedResponse(OrderCancelLimitService.LimitStatus limit) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("code", "CANCEL_LIMITED");
+        response.put("message", limit.getMessage());
+        response.put("retryAfterSeconds", limit.getRetryAfterSeconds());
+        if (limit.getLockUntil() != null) {
+            response.put("limitedUntil", limit.getLockUntil().toString());
+        }
+        return response;
+    }
+
+    private Map<String, Object> buildCancelLimitData(OrderCancelLimitService.LimitStatus limit) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("limited", limit.isLimited());
+        data.put("message", limit.getMessage());
+        data.put("retryAfterSeconds", limit.getRetryAfterSeconds());
+        if (limit.getLockUntil() != null) {
+            data.put("limitedUntil", limit.getLockUntil().toString());
+        }
+        return data;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object findDeepValue(Object source, String key) {
+        if (source instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) source;
+            Object direct = map.get(key);
+            if (direct != null && !direct.toString().trim().isEmpty()) {
+                return direct;
+            }
+            for (Object value : map.values()) {
+                Object found = findDeepValue(value, key);
+                if (found != null) {
+                    return found;
+                }
+            }
+        } else if (source instanceof Iterable) {
+            for (Object value : (Iterable<?>) source) {
+                Object found = findDeepValue(value, key);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String firstText(Object... values) {
+        for (Object value : values) {
+            if (value != null && !value.toString().trim().isEmpty()) {
+                return value.toString().trim();
+            }
+        }
+        return null;
     }
 
     /**

@@ -20,9 +20,9 @@ public class User {
     private Long id;
 
     /**
-     * 微信openid
+     * 微信openid（可选，绑定微信后填入）
      */
-    @Column(name = "openid", unique = true, nullable = false, length = 50)
+    @Column(name = "openid", unique = true, length = 50)
     private String openid;
 
     /**
@@ -50,9 +50,9 @@ public class User {
     private Integer gender = 0;
 
     /**
-     * 手机号
+     * 手机号（唯一标识）
      */
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone", unique = true, length = 20)
     private String phone;
 
     /**

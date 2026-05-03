@@ -183,17 +183,24 @@ public class PaymentService {
     }
 
     /**
-     * 创建用户钱包
+     * 创建用户钱包（处理并发重复创建）
      */
     private UserWallet createUserWallet(Long userId) {
-        UserWallet wallet = new UserWallet();
-        wallet.setUserId(userId);
-        wallet.setBalance(BigDecimal.ZERO);
-        wallet.setFrozenAmount(BigDecimal.ZERO);
-        wallet.setTotalRecharge(BigDecimal.ZERO);
-        wallet.setTotalConsume(BigDecimal.ZERO);
-        wallet.setStatus(UserWallet.Status.ACTIVE);
-        return userWalletRepository.save(wallet);
+        try {
+            UserWallet wallet = new UserWallet();
+            wallet.setUserId(userId);
+            wallet.setBalance(BigDecimal.ZERO);
+            wallet.setFrozenAmount(BigDecimal.ZERO);
+            wallet.setTotalRecharge(BigDecimal.ZERO);
+            wallet.setTotalConsume(BigDecimal.ZERO);
+            wallet.setStatus(UserWallet.Status.ACTIVE);
+            return userWalletRepository.save(wallet);
+        } catch (Exception e) {
+            // 唯一约束冲突，说明已被其他线程创建，直接查询返回
+            log.warn("钱包已存在，重新查询: userId={}", userId);
+            return userWalletRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("创建钱包失败: " + e.getMessage()));
+        }
     }
 
     /**

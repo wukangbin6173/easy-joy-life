@@ -38,3 +38,4 @@
     <button class="action-btn" bindtap="rerunTests">重新测试</button>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

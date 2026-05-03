@@ -43,7 +43,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{cards.length === 0 && !loading}}">
-    <image class="empty-icon" src="/images/empty.png"></image>
+    <image class="empty-icon" src="/images/提示.png"></image>
     <text class="empty-text">暂无银行卡</text>
     <text class="empty-hint">添加银行卡后可用于提现</text>
   </view>
@@ -75,3 +75,4 @@
     </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

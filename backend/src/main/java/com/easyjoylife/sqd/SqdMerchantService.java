@@ -43,12 +43,24 @@ public class SqdMerchantService {
     }
 
     /** 查询附近门店 */
-    public SqdResponse nearbyStores(Double longitude, Double latitude, Integer radius) {
+    public SqdResponse nearbyStores(Double longitude, Double latitude, Integer radius, Integer radiusKm, Integer limit) {
         Map<String, Object> params = new HashMap<>();
         params.put("longitude", longitude);
         params.put("latitude", latitude);
         params.put("radius", radius);
+        params.put("radiusKm", resolveRadiusKm(radius, radiusKm));
+        params.put("limit", limit);
         return client.get("/v1/stores/nearby", params);
+    }
+
+    private Integer resolveRadiusKm(Integer radiusMeters, Integer radiusKm) {
+        if (radiusKm != null) {
+            return radiusKm;
+        }
+        if (radiusMeters == null) {
+            return null;
+        }
+        return Math.max(1, (int) Math.ceil(radiusMeters / 1000.0));
     }
 
     /** 查询门店营业时间 */

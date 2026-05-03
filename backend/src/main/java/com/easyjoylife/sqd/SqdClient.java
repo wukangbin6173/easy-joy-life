@@ -1,21 +1,22 @@
 package com.easyjoylife.sqd;
 
 import com.easyjoylife.config.SqdConfig;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,15 +24,29 @@ import java.util.UUID;
  * 商起点开放平台 HTTP 客户端
  * 
  * 负责：签名生成、请求发送、响应解析
+ * 使用独立的 RestTemplate 避免全局 Jackson 转换器干扰
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class SqdClient {
 
     private final SqdConfig sqdConfig;
-    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private RestTemplate sqdRestTemplate;
+
+    public SqdClient(SqdConfig sqdConfig, ObjectMapper objectMapper) {
+        this.sqdConfig = sqdConfig;
+        this.objectMapper = objectMapper;
+    }
+
+    @PostConstruct
+    public void init() {
+        // 创建独立的 RestTemplate，只用 StringHttpMessageConverter
+        this.sqdRestTemplate = new RestTemplate();
+        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
+        stringConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.ALL));
+        this.sqdRestTemplate.setMessageConverters(Collections.singletonList(stringConverter));
+    }
 
     /**
      * GET 请求
@@ -43,8 +58,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD GET: {}", url);
-            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
-            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
+            ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            return parseResponse(resp.getBody());
         } catch (HttpStatusCodeException e) {
             log.error("SQD GET 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -66,8 +81,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD POST: {} body: {}", url, bodyJson);
-            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
-            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
+            ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            return parseResponse(resp.getBody());
         } catch (HttpStatusCodeException e) {
             log.error("SQD POST 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -89,8 +104,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD PUT: {} body: {}", url, bodyJson);
-            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.PUT, entity, byte[].class);
-            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
+            ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+            return parseResponse(resp.getBody());
         } catch (HttpStatusCodeException e) {
             log.error("SQD PUT 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -110,8 +125,8 @@ public class SqdClient {
 
         try {
             log.debug("SQD DELETE: {}", url);
-            ResponseEntity<byte[]> resp = restTemplate.exchange(url, HttpMethod.DELETE, entity, byte[].class);
-            return parseResponse(new String(resp.getBody(), StandardCharsets.UTF_8));
+            ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+            return parseResponse(resp.getBody());
         } catch (HttpStatusCodeException e) {
             log.error("SQD DELETE 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return parseResponse(e.getResponseBodyAsString());
@@ -127,8 +142,13 @@ public class SqdClient {
      * 构建完整 URL
      */
     private String buildUrl(String path, Map<String, Object> params) {
+        String baseUrl = sqdConfig.getBaseUrl();
+        if (baseUrl != null && baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        String normalizedPath = path != null && path.startsWith("/") ? path : "/" + path;
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl(sqdConfig.getBaseUrl() + path);
+                .fromHttpUrl(baseUrl + normalizedPath);
 
         if (params != null) {
             params.forEach((k, v) -> {

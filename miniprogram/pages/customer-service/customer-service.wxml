@@ -1,0 +1,74 @@
+<view class="customer-page">
+  <view class="nav">
+    <view class="back" bindtap="goBack">‹</view>
+    <text class="title">联系客服</text>
+  </view>
+
+  <view class="hero">
+    <view class="hero-copy">
+      <text class="hero-eyebrow">雀玺客服</text>
+      <text class="hero-title">有问题，马上联系</text>
+      <text class="hero-desc">预约、支付、开门、退款等问题，人工客服 7×24 小时在线处理。</text>
+    </view>
+    <image class="hero-image" src="/images/客服图标.png" mode="aspectFit"></image>
+  </view>
+
+  <view class="quick-actions">
+    <view class="quick-action primary" bindtap="callPhone">
+      <image src="/images/电话.png" mode="aspectFit"></image>
+      <text>拨打电话</text>
+    </view>
+    <view class="quick-action" bindtap="copyWechat">
+      <image src="/images/联系人.png" mode="aspectFit"></image>
+      <text>复制微信</text>
+    </view>
+  </view>
+
+  <view class="info-card">
+    <view class="info-row" bindtap="callPhone">
+      <view class="info-icon">
+        <image src="/images/电话.png" mode="aspectFit"></image>
+      </view>
+      <view class="info-copy">
+        <text class="info-label">客服电话</text>
+        <text class="info-value">{{servicePhone}}</text>
+      </view>
+      <text class="info-action">拨打</text>
+    </view>
+
+    <view class="info-row" bindtap="copyWechat">
+      <view class="info-icon">
+        <image src="/images/官方客服.png" mode="aspectFit"></image>
+      </view>
+      <view class="info-copy">
+        <text class="info-label">微信客服</text>
+        <text class="info-value">{{wechatId}}</text>
+      </view>
+      <text class="info-action">复制</text>
+    </view>
+
+    <view class="info-row" bindtap="goHelp">
+      <view class="info-icon">
+        <image src="/images/帮助中心.png" mode="aspectFit"></image>
+      </view>
+      <view class="info-copy">
+        <text class="info-label">帮助中心</text>
+        <text class="info-value">支付、退款、开门常见问题</text>
+      </view>
+      <text class="info-action">查看</text>
+    </view>
+  </view>
+
+  <view class="notice-card">
+    <image src="/images/提示.png" mode="aspectFit"></image>
+    <view>
+      <text class="notice-title">联系时请准备订单信息</text>
+      <text class="notice-text">提供门店名称、订单号和问题截图，客服可以更快处理。</text>
+    </view>
+  </view>
+
+  <view class="bottom-action">
+    <button bindtap="callPhone">拨打客服电话</button>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

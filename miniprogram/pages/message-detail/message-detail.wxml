@@ -1,0 +1,14 @@
+<view class="page">
+  <view class="nav">
+    <view class="back" bindtap="goBack">‹</view>
+    <text class="title">消息详情</text>
+  </view>
+  <view class="card">
+    <image class="icon" src="{{message.icon}}" mode="aspectFit"></image>
+    <text class="msg-title">{{message.title}}</text>
+    <text class="time">{{message.timeText}}</text>
+    <text class="content">{{message.content}}</text>
+    <button class="primary" bindtap="goAction">查看相关内容</button>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

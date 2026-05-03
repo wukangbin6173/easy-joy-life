@@ -82,6 +82,23 @@ CREATE TABLE orders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 用户取消订单记录表
+CREATE TABLE order_cancel_records (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  external_user_id VARCHAR(64) NOT NULL,
+  order_id BIGINT NOT NULL,
+  merchant_id BIGINT,
+  reason VARCHAR(200),
+  source VARCHAR(20) NOT NULL,
+  cancelled_at TIMESTAMP NOT NULL,
+  lock_until TIMESTAMP,
+  created_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_order_cancel_user_time ON order_cancel_records(external_user_id, cancelled_at);
+CREATE INDEX idx_order_cancel_lock ON order_cancel_records(external_user_id, lock_until);
+CREATE INDEX idx_order_cancel_order ON order_cancel_records(order_id);
+
 -- 支付记录表
 CREATE TABLE payments (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,

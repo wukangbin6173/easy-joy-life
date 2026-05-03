@@ -1,0 +1,17 @@
+page { background: #f8faf9; }
+.page { min-height: 100vh; padding: 76rpx 20rpx 40rpx; box-sizing: border-box; }
+.nav { position: relative; height: 60rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 18rpx; }
+.back { position: absolute; left: 0; top: 0; width: 54rpx; height: 60rpx; font-size: 54rpx; line-height: 54rpx; color: #111; }
+.title { font-size: 32rpx; font-weight: 800; color: #111; }
+.tabs { display: flex; gap: 16rpx; margin-bottom: 20rpx; }
+.tab { flex: 1; height: 56rpx; border-radius: 999rpx; background: #fff; color: #3d4741; font-size: 25rpx; line-height: 56rpx; text-align: center; }
+.tab.active { background: #08A85C; color: #fff; font-weight: 700; }
+.message-card { position: relative; display: flex; align-items: center; padding: 22rpx; margin-bottom: 16rpx; border-radius: 18rpx; background: #fff; box-shadow: 0 8rpx 24rpx rgba(22,48,34,.06); }
+.msg-icon { width: 56rpx; height: 56rpx; margin-right: 18rpx; }
+.msg-main { flex: 1; min-width: 0; }
+.msg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8rpx; }
+.msg-title { color: #161d19; font-size: 29rpx; font-weight: 800; }
+.msg-time { color: #98a19c; font-size: 21rpx; }
+.msg-desc { display: block; color: #66726b; font-size: 24rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.unread { position: absolute; right: 18rpx; top: 18rpx; width: 14rpx; height: 14rpx; border-radius: 50%; background: #ef4d64; }
+.empty { padding: 120rpx 0; color: #8a938e; text-align: center; font-size: 28rpx; }

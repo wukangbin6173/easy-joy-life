@@ -1,5 +1,6 @@
 {
-  "navigationBarTitleText": "完善个人信息",
-  "navigationBarBackgroundColor": "#1890ff",
-  "navigationBarTextStyle": "white"
+  "navigationBarTitleText": "账号与手机号",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f7f9f8"
 }

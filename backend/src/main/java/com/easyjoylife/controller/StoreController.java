@@ -27,7 +27,7 @@ public class StoreController {
      */
     @GetMapping
     public ResponseEntity<Map<String, Object>> getStores(
-            @RequestParam Long merchantId,
+            @RequestParam(required = false) Long merchantId,
             @RequestParam(defaultValue = "1") Integer pageNo,
             @RequestParam(defaultValue = "20") Integer pageSize) {
         Map<String, Object> response = new HashMap<>();
@@ -80,10 +80,12 @@ public class StoreController {
     public ResponseEntity<Map<String, Object>> nearbyStores(
             @RequestParam Double longitude,
             @RequestParam Double latitude,
-            @RequestParam(required = false) Integer radius) {
+            @RequestParam(required = false) Integer radius,
+            @RequestParam(required = false) Integer radiusKm,
+            @RequestParam(required = false) Integer limit) {
         Map<String, Object> response = new HashMap<>();
         try {
-            SqdResponse sqd = sqdMerchantService.nearbyStores(longitude, latitude, radius);
+            SqdResponse sqd = sqdMerchantService.nearbyStores(longitude, latitude, radius, radiusKm, limit);
             if (sqd.isSuccess()) {
                 response.put("success", true);
                 response.put("data", sqd.getData());

@@ -119,6 +119,22 @@ CREATE TABLE IF NOT EXISTS payment_orders (
     INDEX idx_created_time (created_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付订单表';
 
+-- 用户取消订单记录表
+CREATE TABLE IF NOT EXISTS order_cancel_records (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    external_user_id VARCHAR(64) NOT NULL COMMENT '外部用户ID',
+    order_id BIGINT NOT NULL COMMENT '订单ID',
+    merchant_id BIGINT COMMENT '商户ID',
+    reason VARCHAR(200) COMMENT '取消原因',
+    source VARCHAR(20) NOT NULL COMMENT '取消来源：USER-用户主动取消',
+    cancelled_at DATETIME NOT NULL COMMENT '取消时间',
+    lock_until DATETIME COMMENT '限制取消截止时间',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_order_cancel_user_time (external_user_id, cancelled_at),
+    INDEX idx_order_cancel_lock (external_user_id, lock_until),
+    INDEX idx_order_cancel_order (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户取消订单记录表';
+
 -- 用户钱包表
 CREATE TABLE IF NOT EXISTS user_wallets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

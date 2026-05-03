@@ -27,6 +27,8 @@ services:
       WECHAT_MCH_ID: ${WECHAT_MCH_ID}
       WECHAT_API_KEY: ${WECHAT_API_KEY}
       SERVER_DOMAIN: ${SERVER_DOMAIN}
+      UPLOAD_BASE_PATH: /opt/easy-joy-life/uploads
+      UPLOAD_BASE_URL: https://www.quexitai.com/api/upload/files
     volumes:
       - app_logs:/opt/easy-joy-life/logs
       - app_uploads:/opt/easy-joy-life/uploads

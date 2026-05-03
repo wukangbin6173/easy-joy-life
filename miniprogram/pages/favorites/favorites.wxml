@@ -1,0 +1,33 @@
+<view class="container">
+  <view class="page-head">
+    <text class="page-title">收藏门店</text>
+    <text class="page-count" wx:if="{{countText}}">{{countText}}</text>
+  </view>
+
+  <view class="store-list" wx:if="{{favorites.length > 0}}">
+    <view
+      class="store-card"
+      wx:for="{{favorites}}"
+      wx:key="id"
+      bindtap="goToStore"
+      data-id="{{item.id}}"
+      data-merchantid="{{item.merchantId}}"
+    >
+      <image class="store-img" src="{{item.coverImage}}" mode="aspectFill"></image>
+      <view class="store-info">
+        <text class="store-name">{{item.name}}</text>
+        <text class="store-address">{{item.address}}</text>
+      </view>
+      <view class="remove-btn" catchtap="removeFavorite" data-id="{{item.id}}">
+        <text>取消收藏</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <image class="empty-icon" src="/images/门店.png" mode="aspectFit"></image>
+    <text class="empty-text">暂无收藏门店</text>
+    <button class="empty-btn" bindtap="goBrowseStores">去找门店</button>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

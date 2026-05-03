@@ -1,11 +1,12 @@
 Page({
   data: {
-    wallet: {
-      balance: 0,
-      frozen: 0,
-      totalRecharge: 0
-    },
-    transactions: []
+    wallet: { balance: 0, frozen: 0, totalRecharge: 0 },
+    transactions: [],
+    showPhoneModal: false,
+    modalPhone: '',
+    modalCode: '',
+    modalCountdown: 0,
+    modalLoading: false
   },
 
   onLoad() {
@@ -139,31 +140,51 @@ Page({
 
   // 充值
   goToRecharge() {
-    wx.navigateTo({
-      url: '/pages/recharge/recharge'
-    });
+    const app = getApp();
+    const openid = app.globalData.openid;
+    const userInfo = app.globalData.userInfo;
+    const phone = userInfo && userInfo.phone;
+
+    if (openid && phone) {
+      // 已登录且有手机号，直接跳充值页
+      wx.navigateTo({ url: '/pages/recharge/recharge' });
+    } else {
+      // 没有登录或没有手机号，弹验证窗口
+      this.setData({ showPhoneModal: true, modalPhone: '', modalCode: '', modalCountdown: 0 });
+    }
   },
 
   // 提现
   goToWithdraw() {
-    if (this.data.wallet.balance <= 0) {
-      wx.showToast({
-        title: '余额不足，无法提现',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    wx.navigateTo({
-      url: '/pages/withdraw/withdraw'
+    wx.showModal({
+      title: '提现暂未开放',
+      content: '当前钱包余额主要用于门店消费和充值优惠。如需处理资金问题，请联系客服：15157903339',
+      confirmText: '联系客服',
+      cancelText: '查看明细',
+      success: (res) => {
+        if (res.confirm) {
+          wx.navigateTo({ url: '/pages/customer-service/customer-service' });
+        } else {
+          this.goToRecords();
+        }
+      }
     });
   },
 
   // 转账
   goToTransfer() {
-    wx.showToast({
-      title: '转账功能开发中',
-      icon: 'none'
+    wx.showModal({
+      title: '转账说明',
+      content: '当前钱包余额仅支持门店消费、充值和提现。如需处理资金问题，请联系客服。',
+      confirmText: '联系客服',
+      cancelText: '查看明细',
+      success: (res) => {
+        if (res.confirm) {
+          wx.navigateTo({ url: '/pages/customer-service/customer-service' });
+        } else {
+          this.goToRecords();
+        }
+      }
     });
   },
 
@@ -183,8 +204,54 @@ Page({
 
   // 支付密码
   goToPayPassword() {
-    wx.navigateTo({
-      url: '/pages/pay-password/pay-password'
+    wx.navigateTo({ url: '/pages/pay-password/pay-password' });
+  },
+
+  // ===== 手机验证弹窗 =====
+  closePhoneModal() {
+    this.setData({ showPhoneModal: false });
+    if (this._timer) clearInterval(this._timer);
+  },
+
+  onModalPhoneInput(e) { this.setData({ modalPhone: e.detail.value }); },
+  onModalCodeInput(e) { this.setData({ modalCode: e.detail.value }); },
+
+  sendModalCode() {
+    const phone = this.data.modalPhone.trim();
+    if (!/^1\d{10}$/.test(phone)) { wx.showToast({ title: '请输入正确的手机号', icon: 'none' }); return; }
+    const { smsApi } = require('../../utils/api.js');
+    smsApi.sendCode(phone, 'LOGIN').then(() => {
+      wx.showToast({ title: '验证码已发送', icon: 'success' });
+      this.setData({ modalCountdown: 60 });
+      this._timer = setInterval(() => {
+        if (this.data.modalCountdown <= 1) { clearInterval(this._timer); this.setData({ modalCountdown: 0 }); }
+        else this.setData({ modalCountdown: this.data.modalCountdown - 1 });
+      }, 1000);
+    }).catch(err => wx.showToast({ title: err.message || '发送失败', icon: 'none' }));
+  },
+
+  confirmPhone() {
+    const { modalPhone, modalCode } = this.data;
+    if (!/^1\d{10}$/.test(modalPhone.trim())) { wx.showToast({ title: '请输入正确的手机号', icon: 'none' }); return; }
+    if (!modalCode.trim()) { wx.showToast({ title: '请输入验证码', icon: 'none' }); return; }
+    this.setData({ modalLoading: true });
+    const { request } = require('../../utils/api.js');
+    const app = getApp();
+    request('/api/auth/phone/bind', {
+      method: 'POST',
+      data: { userId: app.globalData.userId, phone: modalPhone.trim(), code: modalCode.trim() }
+    }).then(res => {
+      const user = res.user || {};
+      const userInfo = { ...(app.globalData.userInfo || {}), ...user, phone: modalPhone.trim(), isLogin: true };
+      app.globalData.userInfo = userInfo;
+      if (user.id) { app.globalData.userId = user.id; wx.setStorageSync('userId', user.id); }
+      wx.setStorageSync('userInfo', userInfo);
+      this.setData({ showPhoneModal: false, modalLoading: false });
+      wx.showToast({ title: '绑定成功', icon: 'success' });
+      setTimeout(() => wx.navigateTo({ url: '/pages/recharge/recharge' }), 1000);
+    }).catch(err => {
+      this.setData({ modalLoading: false });
+      wx.showToast({ title: err.message || '验证失败', icon: 'none' });
     });
   }
 });

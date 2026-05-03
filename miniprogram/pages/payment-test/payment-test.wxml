@@ -76,3 +76,4 @@
     <button class="clear-log-btn" bindtap="clearLogs">清空日志</button>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

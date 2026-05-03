@@ -1,58 +1,489 @@
-/* 首页 - 雀胜风格 */
-.container { background: #f5f5f5; min-height: 100vh; }
+/* 首页 - 绿色轻奢风 */
+page {
+  background: #f6f8f7;
+}
 
-/* 搜索栏 */
-.search-bar {
-  display: flex; align-items: center; margin: 20rpx; padding: 16rpx 24rpx;
-  background: #fff; border-radius: 32rpx; border: 1rpx solid #e8e8e8;
+.home-page {
+  min-height: 100vh;
+  background: #f6f8f7;
 }
-.search-icon { width: 32rpx; height: 32rpx; margin-right: 16rpx; opacity: 0.5; }
-.search-input { flex: 1; font-size: 28rpx; color: #333; }
 
-/* 品牌Banner */
-.brand-banner {
-  position: relative; margin: 0 20rpx 20rpx; height: 320rpx;
-  border-radius: 16rpx; overflow: hidden;
+.page-content {
+  padding: 88rpx 18rpx 190rpx;
 }
-.brand-bg { width: 100%; height: 100%; }
-.brand-overlay {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  background: rgba(0,0,0,0.3);
-}
-.brand-name {
-  font-size: 72rpx; font-weight: bold; color: #ff4d4f;
-  text-shadow: 0 4rpx 8rpx rgba(0,0,0,0.3);
-}
-.brand-welcome {
-  font-size: 48rpx; font-weight: bold; color: #ff4d4f;
-  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.3);
-}
-.banner-icons {
-  position: absolute; top: 20rpx; right: 20rpx; display: flex; gap: 16rpx;
-}
-.banner-icon-item {
-  width: 64rpx; height: 64rpx; background: rgba(255,255,255,0.8);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-}
-.banner-icon-img { width: 36rpx; height: 36rpx; }
 
-/* 门店列表 */
-.store-list { padding: 0 20rpx; }
+.hero-card {
+  position: relative;
+  height: 346rpx;
+  overflow: hidden;
+  border-radius: 24rpx;
+  background: #eaf8f1;
+  box-shadow: 0 14rpx 36rpx rgba(31, 159, 103, 0.18);
+}
+
+.hero-banner {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.account-card {
+  height: 88rpx;
+  margin: 18rpx 2rpx 18rpx;
+  padding: 0 18rpx;
+  border-radius: 22rpx;
+  background: #eaf8f1;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 8rpx 20rpx rgba(20, 126, 79, 0.08);
+}
+
+.avatar-badge {
+  width: 58rpx;
+  height: 58rpx;
+  margin-right: 16rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #d8f3e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.account-avatar {
+  width: 58rpx;
+  height: 58rpx;
+  display: block;
+  border-radius: 50%;
+}
+
+.account-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.account-name {
+  max-width: 320rpx;
+  overflow: hidden;
+  color: #17211c;
+  font-size: 27rpx;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.account-sub {
+  margin-top: 7rpx;
+  color: #26352e;
+  font-size: 21rpx;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.verified-pill {
+  display: flex;
+  align-items: center;
+  margin-right: 16rpx;
+  color: #18a45d;
+  font-size: 22rpx;
+}
+
+.verified-icon {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 4rpx;
+}
+
+.account-arrow {
+  color: #222;
+  font-size: 46rpx;
+  line-height: 1;
+}
+
+.service-grid {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.service-card {
+  position: relative;
+  flex: 1;
+  height: 236rpx;
+  overflow: hidden;
+  border: 2rpx solid rgba(9, 151, 77, 0.04);
+  border-radius: 20rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 26rpx rgba(24, 60, 44, 0.09);
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+}
+
+.service-card.active {
+  padding: 8rpx;
+  border: 4rpx solid #18b36b;
+  background: #fff;
+  box-shadow: 0 14rpx 30rpx rgba(10, 151, 80, 0.26);
+}
+
+.service-bg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 18rpx;
+}
+
+.service-card.active .service-bg {
+  opacity: 0.98;
+  border-radius: 14rpx;
+}
+
+.service-copy {
+  position: absolute;
+  top: 24rpx;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.service-title {
+  display: block;
+  color: #15241d;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.service-desc {
+  display: block;
+  margin-top: 10rpx;
+  color: #6d7973;
+  font-size: 20rpx;
+  font-weight: 500;
+}
+
+.service-card.active .service-title,
+.service-card.active .service-desc {
+  color: #fff;
+}
+
+.check-badge {
+  position: absolute;
+  top: 14rpx;
+  right: 14rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border: 3rpx solid #fff;
+  border-radius: 50%;
+  color: #12a35f;
+  font-size: 26rpx;
+  font-weight: 800;
+  line-height: 34rpx;
+  text-align: center;
+  background: #eaf8f1;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10rpx 2rpx 16rpx;
+}
+
+.section-title {
+  color: #111;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.more-link {
+  display: flex;
+  align-items: center;
+  color: #7b857f;
+  font-size: 22rpx;
+}
+
+.more-arrow {
+  margin-left: 4rpx;
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+.store-list {
+  padding-bottom: 16rpx;
+}
+
 .store-card {
-  display: flex; background: #fff; border-radius: 16rpx;
-  margin-bottom: 20rpx; overflow: hidden;
+  display: flex;
+  margin-bottom: 16rpx;
+  padding: 12rpx 12rpx 12rpx 10rpx;
+  border-radius: 20rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 22rpx rgba(18, 34, 27, 0.08);
 }
-.store-img { width: 200rpx; height: 200rpx; flex-shrink: 0; }
-.store-info {
-  flex: 1; padding: 20rpx; display: flex; flex-direction: column; justify-content: space-between;
-}
-.store-name { font-size: 32rpx; font-weight: bold; color: #333; margin-bottom: 8rpx; }
-.store-address { font-size: 24rpx; color: #999; margin-bottom: 8rpx; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.store-meta { display: flex; justify-content: space-between; align-items: center; }
-.store-rooms { font-size: 24rpx; color: #1890ff; }
-.store-distance { font-size: 24rpx; color: #999; }
 
-/* 空状态 & 加载 */
-.empty-state, .loading-state { text-align: center; padding: 100rpx 0; }
-.empty-text, .loading-text { font-size: 28rpx; color: #999; }
+.store-cover-wrap,
+.store-img {
+  width: 178rpx;
+  height: 154rpx;
+  flex-shrink: 0;
+  border-radius: 14rpx;
+}
+
+.store-cover-wrap {
+  overflow: hidden;
+}
+
+.store-img.placeholder {
+  background: linear-gradient(135deg, #26342d 0%, #131815 100%);
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.store-info {
+  min-width: 0;
+  flex: 1;
+  padding: 2rpx 0 0 18rpx;
+}
+
+.store-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6rpx;
+}
+
+.store-name {
+  max-width: 330rpx;
+  overflow: hidden;
+  color: #151515;
+  font-size: 30rpx;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-distance {
+  color: #7cbf9f;
+  font-size: 20rpx;
+}
+
+.store-address-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.mini-icon {
+  width: 22rpx;
+  height: 22rpx;
+  margin-right: 5rpx;
+}
+
+.store-address {
+  max-width: 430rpx;
+  overflow: hidden;
+  color: #5b6961;
+  font-size: 21rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-tags {
+  display: flex;
+  gap: 8rpx;
+  margin-bottom: 12rpx;
+}
+
+.store-tag {
+  padding: 4rpx 9rpx;
+  border-radius: 6rpx;
+  color: #10a560;
+  font-size: 18rpx;
+  line-height: 1.2;
+  background: #eef9f3;
+}
+
+.store-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.price-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.price-symbol,
+.price {
+  color: #e57a23;
+  font-weight: 800;
+}
+
+.price-symbol {
+  font-size: 22rpx;
+  align-self: flex-end;
+  margin-bottom: 2rpx;
+}
+
+.price {
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.price-unit {
+  margin: 0 10rpx 0 3rpx;
+  color: #df8134;
+  font-size: 18rpx;
+}
+
+.price-pending {
+  margin-right: 10rpx;
+  color: #8a928d;
+  font-size: 22rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  margin-right: 10rpx;
+  color: #787f7b;
+  font-size: 19rpx;
+  white-space: nowrap;
+}
+
+.meta-icon {
+  width: 22rpx;
+  height: 22rpx;
+  margin-right: 3rpx;
+  opacity: 0.75;
+}
+
+.book-btn {
+  flex-shrink: 0;
+  min-width: 112rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 12rpx;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  background: linear-gradient(135deg, #13b86a 0%, #07984d 100%);
+  box-shadow: 0 8rpx 16rpx rgba(10, 160, 86, 0.22);
+}
+
+.book-btn.muted {
+  color: #178f56;
+  background: #eef8f2;
+  box-shadow: none;
+}
+
+.quick-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  height: 92rpx;
+  margin: 0 14rpx;
+  border-radius: 22rpx 22rpx 0 0;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 -8rpx 30rpx rgba(15, 37, 27, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dock-item {
+  width: 230rpx;
+  height: 92rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.dock-icon {
+  width: 44rpx;
+  height: 44rpx;
+  margin-bottom: 3rpx;
+}
+
+.dock-title {
+  color: #1f1f1f;
+  font-size: 25rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dock-sub {
+  margin-top: 4rpx;
+  color: #7a817d;
+  font-size: 18rpx;
+  line-height: 1;
+}
+
+.dock-scan {
+  position: relative;
+  width: 156rpx;
+  height: 118rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-circle {
+  position: absolute;
+  top: -38rpx;
+  width: 116rpx;
+  height: 116rpx;
+  border: 8rpx solid rgba(233, 249, 241, 0.95);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 700;
+  background: radial-gradient(circle at 32% 26%, #5ed997 0%, #12b96c 48%, #08914b 100%);
+  box-shadow: 0 12rpx 28rpx rgba(9, 160, 87, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.scan-icon {
+  width: 44rpx;
+  height: 44rpx;
+  margin-bottom: 2rpx;
+  filter: brightness(0) invert(1);
+}
+
+.empty-state,
+.loading-state {
+  text-align: center;
+  padding: 80rpx 0;
+}
+
+.empty-text,
+.loading-text {
+  color: #98a19c;
+  font-size: 26rpx;
+}

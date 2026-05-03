@@ -1,0 +1,77 @@
+<view class="page">
+  <view class="nav">
+    <view class="back" bindtap="goBack">‹</view>
+    <text class="title">{{serviceMeta.selectPageTitle}}</text>
+  </view>
+
+  <view class="store-card">
+    <image class="store-img" src="{{storeCover}}" mode="aspectFill"></image>
+    <view class="store-info">
+      <view class="store-head">
+        <text class="store-name">{{store.name || '门店'}}</text>
+        <text class="type-tag">{{store.categoryTitle || serviceMeta.categoryTitle}}</text>
+      </view>
+      <view class="addr">
+        <image src="/images/定位.png" mode="aspectFit"></image>
+        <text>{{store.address || '暂无地址'}}</text>
+        <text class="arrow">›</text>
+      </view>
+      <text class="current-time">当前：今天 {{startTime || '--:--'}}-{{endTime || '--:--'}} · {{packageName || '按小时预约'}}</text>
+    </view>
+  </view>
+
+  <view class="filters">
+    <view class="filter active">全部</view>
+    <view class="filter">当前可约</view>
+  </view>
+
+  <view class="legend">
+    <view><text class="dot available"></text>可约</view>
+    <view><text class="dot booked"></text>已预约</view>
+    <view><text class="dot cleaning"></text>待清洁</view>
+    <view><text class="dot disabled"></text>不可约</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <view class="room-list" wx:else>
+    <view class="room-card {{selectedRoomId == item.id ? 'active' : ''}} {{!item.bookable ? 'disabled' : ''}}" wx:for="{{rooms}}" wx:key="id" bindtap="selectRoom" data-id="{{item.id}}">
+      <image class="room-img" src="{{item.image}}" mode="aspectFill"></image>
+      <view class="room-main">
+        <view class="room-head">
+          <text class="room-name">{{item.name}}</text>
+          <text class="capacity" wx:if="{{item.capacityText}}">{{item.capacityText}}</text>
+        </view>
+        <view class="room-tags" wx:if="{{item.tagList && item.tagList.length}}">
+          <text wx:for="{{item.tagList}}" wx:key="*this">{{item}}</text>
+        </view>
+        <text class="status {{item.statusClass}}">{{item.availabilityText}}</text>
+        <text class="support" wx:if="{{item.supportText}}">{{item.supportText}}</text>
+        <view class="timeline-label">今日时段</view>
+        <view class="timeline-hours">
+          <text>12</text><text>14</text><text>16</text><text>18</text><text>20</text><text>22</text><text>24</text>
+        </view>
+        <view class="timeline">
+          <view class="seg {{seg.status}}" wx:for="{{item.timeline}}" wx:key="index"></view>
+        </view>
+      </view>
+      <view class="room-side">
+        <view class="check">{{selectedRoomId == item.id ? '✓' : ''}}</view>
+        <view class="price">
+          <text>¥{{item.pricePerHour}}</text><text class="unit">{{item.priceUnitText || serviceMeta.priceUnitText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{rooms.length === 0}}">{{serviceMeta.emptyText}}</view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="selected">
+      <text>已选：{{selectedRoom.name || serviceMeta.selectPlaceholder}}</text>
+      <text class="sub">今天 {{startTime || '--:--'}}-{{endTime || '--:--'}} · {{packageName || '按小时预约'}}</text>
+    </view>
+    <button class="confirm" bindtap="confirmSelect">确认选择</button>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

@@ -147,8 +147,14 @@ public class PointsService {
     }
 
     private UserPoints createUserPoints(Long userId) {
-        UserPoints p = new UserPoints();
-        p.setUserId(userId);
-        return userPointsRepository.save(p);
+        try {
+            UserPoints p = new UserPoints();
+            p.setUserId(userId);
+            return userPointsRepository.save(p);
+        } catch (Exception e) {
+            log.warn("积分记录已存在，重新查询: userId={}", userId);
+            return userPointsRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("创建积分记录失败: " + e.getMessage()));
+        }
     }
 }

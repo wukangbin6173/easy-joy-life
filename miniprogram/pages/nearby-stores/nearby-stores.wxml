@@ -1,0 +1,171 @@
+<view class="container nearby-page">
+  <view class="custom-nav">
+    <view class="nav-back" bindtap="goBack">‹</view>
+    <text class="nav-title">附近门店</text>
+  </view>
+
+  <view class="search-card">
+    <view class="search-icon"></view>
+    <input class="search-input" placeholder="搜索门店 / 地址 / 商圈" value="{{searchKeyword}}" bindinput="onSearchInput" confirm-type="search" />
+  </view>
+
+  <view class="location-row">
+    <view class="location-left" bindtap="chooseMapLocation">
+      <image src="/images/定位.png" mode="aspectFit"></image>
+      <text class="location-city">{{locationText}}</text>
+      <text class="location-arrow">›</text>
+    </view>
+    <view class="location-actions">
+      <view class="relocate" bindtap="relocate">
+        <text class="refresh-icon">↻</text>
+        <text>重新定位</text>
+      </view>
+      <view class="city-switch" bindtap="showCitySelector">切换城市</view>
+    </view>
+  </view>
+
+  <view class="category-row">
+    <view class="category-tab {{item.active ? 'active' : ''}}" wx:for="{{categoryTabs}}" wx:key="type" data-category="{{item.type}}" bindtap="onCategoryTap">
+      {{item.title}}
+    </view>
+  </view>
+
+  <view class="filter-row">
+    <view class="filter-chip {{sortMode === 'distance' ? 'active' : ''}}" data-sort="distance" bindtap="setSortMode">
+      距离优先 <text>⌄</text>
+    </view>
+    <view class="filter-chip {{filters.open ? 'active' : ''}}" data-filter="open" bindtap="toggleFilter">营业中</view>
+    <view class="filter-chip {{filters.selfService ? 'active' : ''}}" data-filter="selfService" bindtap="toggleFilter">可自助开门</view>
+    <view class="filter-chip {{filters.fullDay ? 'active' : ''}}" data-filter="fullDay" bindtap="toggleFilter">24小时</view>
+    <view class="filter-chip more" bindtap="showMoreFilters">更多筛选</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <view class="store-list" wx:else>
+    <view class="store-card" wx:for="{{stores}}" wx:key="id" bindtap="goStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">
+      <image class="store-cover" wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill"></image>
+      <view class="store-cover placeholder" wx:else>{{item.categoryShortName}}</view>
+
+      <view class="store-info">
+        <view class="store-title-row">
+          <view class="store-title-main">
+            <text class="store-name">{{item.displayName}}</text>
+            <text class="type-tag">{{item.categoryTitle}}</text>
+          </view>
+          <view class="distance" catchtap="openStoreLocation" data-store="{{item}}">
+            <image src="/images/导航.png" mode="aspectFit"></image>
+            <text>{{item.distanceText}}</text>
+          </view>
+        </view>
+
+        <view class="address-line" catchtap="openStoreLocation" data-store="{{item}}">
+          <image src="/images/定位.png" mode="aspectFit"></image>
+          <text>{{item.address}}</text>
+        </view>
+
+        <view class="tag-row">
+          <text>营业中</text>
+          <text>{{item.selfServiceText}}</text>
+          <text>{{item.extraTag}}</text>
+        </view>
+
+        <view class="store-bottom">
+          <view class="store-bottom-left">
+            <view class="price-row" wx:if="{{item.hasPrice}}">
+              <text class="price-symbol">¥</text>
+              <text class="price">{{item.priceText}}</text>
+              <text class="price-unit">{{item.priceUnitText}}</text>
+            </view>
+            <view class="price-row pending" wx:else>
+              <text>价格待同步</text>
+            </view>
+            <view class="meta-line">
+              <text class="meta-icon">{{item.categoryIcon}}</text>
+              <text>{{item.serviceName}}{{item.roomCount}}{{item.serviceUnit}}</text>
+              <text class="meta-dot">·</text>
+              <text>{{item.availableText}}</text>
+            </view>
+          </view>
+          <button class="book-btn" catchtap="goStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">立即预约</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{stores.length === 0}}">
+      <text>{{emptyText}}</text>
+    </view>
+  </view>
+
+  <view class="float-service" bindtap="contactService">
+    <image src="/images/联系客服.png" mode="aspectFit"></image>
+  </view>
+
+  <view class="city-mask" wx:if="{{showCityPanel}}" catchtap="hideCitySelector"></view>
+  <view class="city-panel" wx:if="{{showCityPanel}}">
+    <view class="city-panel-head">
+      <view>
+        <text class="city-panel-title">切换城市</text>
+        <text class="city-panel-subtitle">选择后按城市筛选附近门店</text>
+      </view>
+      <text class="city-close" bindtap="hideCitySelector">×</text>
+    </view>
+    <view class="city-search-card">
+      <view class="city-search-icon"></view>
+      <input
+        class="city-search-input"
+        placeholder="搜索城市，例如 东阳 / 杭州"
+        value="{{citySearchKeyword}}"
+        bindinput="onCitySearchInput"
+        bindconfirm="onCitySearchConfirm"
+        confirm-type="search"
+      />
+      <text class="city-search-clear" wx:if="{{citySearchKeyword}}" bindtap="clearCitySearch">×</text>
+    </view>
+    <view class="current-city-row" wx:if="{{selectedCity}}">
+      <text class="current-label">当前城市</text>
+      <text class="current-value">{{selectedCity}}</text>
+      <text class="current-relocate" bindtap="relocate">重新定位</text>
+    </view>
+    <view class="city-hot" wx:if="{{!citySearchKeyword && hotCities.length}}">
+      <text class="city-section-title">热门城市</text>
+      <view class="city-chip-grid">
+        <view
+          class="city-chip {{item.name === selectedCity ? 'active' : ''}}"
+          wx:for="{{hotCities}}"
+          wx:key="name"
+          data-city="{{item.name}}"
+          bindtap="onCityTap"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </view>
+    <scroll-view class="city-list" scroll-y>
+      <view class="city-search-use" wx:if="{{citySearchCandidate}}" bindtap="onUseSearchCity">
+        使用“{{citySearchCandidate}}”
+      </view>
+      <block wx:for="{{cityGroups}}" wx:key="province" wx:for-item="group">
+        <view class="city-section" wx:if="{{group.cities.length}}">
+          <text class="city-section-title">{{group.province}}</text>
+          <view class="city-chip-grid">
+            <view
+              class="city-chip {{city.name === selectedCity ? 'active' : ''}}"
+              wx:for="{{group.cities}}"
+              wx:key="name"
+              wx:for-item="city"
+              data-city="{{city.name}}"
+              bindtap="onCityTap"
+            >
+              {{city.name}}
+            </view>
+          </view>
+        </view>
+      </block>
+      <view class="city-empty" wx:if="{{cityGroups.length === 0 && !citySearchCandidate}}">
+        没有找到匹配城市
+      </view>
+    </scroll-view>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

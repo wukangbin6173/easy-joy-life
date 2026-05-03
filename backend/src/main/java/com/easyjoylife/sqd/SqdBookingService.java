@@ -16,11 +16,27 @@ public class SqdBookingService {
     private final SqdClient client;
 
     /** 查询可用预约时间段 */
-    public SqdResponse availableSlots(Long merchantId, Long resourceId, String date) {
+    public SqdResponse availableSlots(Long merchantId, Long storeId, Long resourceId, Long resourceTypeId,
+                                      String bookingDate, Integer durationMinutes, Integer slotStepMinutes) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
-        params.put("resourceId", resourceId);
-        params.put("date", date);
+        if (storeId != null) {
+            params.put("storeId", storeId);
+        }
+        if (resourceId != null) {
+            params.put("resourceId", resourceId);
+        }
+        if (resourceTypeId != null) {
+            params.put("resourceTypeId", resourceTypeId);
+        }
+        params.put("bookingDate", bookingDate);
+        params.put("date", bookingDate);
+        if (durationMinutes != null) {
+            params.put("durationMinutes", durationMinutes);
+        }
+        if (slotStepMinutes != null) {
+            params.put("slotStepMinutes", slotStepMinutes);
+        }
         return client.get("/v1/booking/available-slots", params);
     }
 

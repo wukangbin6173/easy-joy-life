@@ -1,44 +1,66 @@
 // 环境配置
+const DEFAULT_MERCHANT_ID = 23;
+const ASSET_BASE_URL = 'https://www.quexitai.com';
+const DEFAULT_STORE_IMAGE = '/images/banner.png';
+const DEFAULT_ROOM_IMAGE = '/images/棋牌预约.png';
+const DEFAULT_EMPTY_IMAGE = '/images/提示.png';
+
 const config = {
   // 开发环境
   development: {
     baseUrl: 'http://47.97.179.50:8080',
-    debug: true
+    assetBaseUrl: ASSET_BASE_URL,
+    uploadBaseUrl: ASSET_BASE_URL,
+    debug: true,
+    defaultMerchantId: DEFAULT_MERCHANT_ID
   },
   
-  // 生产环境（备案完成后切换回域名）
+  // 生产环境
   production: {
     baseUrl: 'https://www.quexitai.com',
-    debug: false
+    assetBaseUrl: ASSET_BASE_URL,
+    uploadBaseUrl: ASSET_BASE_URL,
+    debug: false,
+    defaultMerchantId: DEFAULT_MERCHANT_ID
   }
 };
 
 // 自动检测环境
 function getEnvironment() {
-  // 可以通过不同方式检测环境
-  // 方法1: 通过域名检测
-  const accountInfo = wx.getAccountInfoSync();
-  if (accountInfo.miniProgram.envVersion === 'develop') {
-    return 'development';
+  try {
+    const accountInfo = wx.getAccountInfoSync();
+    const envVersion = accountInfo && accountInfo.miniProgram && accountInfo.miniProgram.envVersion;
+    if (envVersion === 'release' || envVersion === 'trial') {
+      return 'production';
+    }
+  } catch (e) {
+    // 非微信运行环境下默认开发环境，方便本地调试。
   }
   
-  // 方法2: 手动设置（推荐用于测试）
   return 'development';
-  // return 'production';      // 发布时使用
 }
 
 // 获取当前环境配置
 function getCurrentConfig() {
   const env = getEnvironment();
-  const currentConfig = config[env];
+  const currentConfig = config[env] || config.development;
   
-  console.log('当前环境:', env);
-  console.log('配置信息:', currentConfig);
+  if (currentConfig.debug) {
+    console.log('当前环境:', env);
+    console.log('配置信息:', currentConfig);
+  }
   
-  return currentConfig;
+  return {
+    ...currentConfig,
+    env
+  };
 }
 
 module.exports = {
+  DEFAULT_MERCHANT_ID,
+  DEFAULT_STORE_IMAGE,
+  DEFAULT_ROOM_IMAGE,
+  DEFAULT_EMPTY_IMAGE,
   getCurrentConfig,
   getEnvironment
 };

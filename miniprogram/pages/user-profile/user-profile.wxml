@@ -1,53 +1,100 @@
-<view class="container">
-  <view class="header">
-    <text class="title">完善个人信息</text>
-    <text class="subtitle">设置您的头像和昵称</text>
-  </view>
-
-  <view class="profile-section">
-    <!-- 头像选择 - 使用微信新版组件 -->
-    <view class="avatar-section">
-      <text class="label">头像</text>
-      <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-        <image class="avatar" src="{{avatarUrl}}" mode="aspectFill"></image>
-        <view class="avatar-overlay">
-          <text class="avatar-text">点击更换</text>
+<view class="account-page">
+  <view class="account-card">
+    <view class="card-title">账号信息</view>
+    <view class="account-main">
+      <view class="avatar-box">
+        <image class="avatar" wx:if="{{avatarUrl && !avatarLoadFailed}}" src="{{avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
+        <image class="avatar avatar-default" wx:else src="/images/default-avatar.png" mode="aspectFill"></image>
+        <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" loading="{{savingAvatar}}" disabled="{{savingAvatar}}"></button>
+      </view>
+      <view class="account-copy">
+        <text class="nickname">{{nickname || '微信用户'}}</text>
+        <view class="auth-row">
+          <text class="auth-text">微信账号已登录</text>
+          <view class="status-badge">
+            <text class="badge-shield">✓</text>
+            <text>已登录</text>
+          </view>
+          <button class="avatar-action-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" loading="{{savingAvatar}}" disabled="{{savingAvatar}}">{{avatarUrl && !avatarLoadFailed ? '更换头像' : '设置头像'}}</button>
         </view>
-      </button>
-    </view>
-
-    <!-- 昵称输入 - 使用微信新版组件 -->
-    <view class="nickname-section">
-      <text class="label">昵称</text>
-      <input 
-        class="nickname-input" 
-        type="nickname" 
-        placeholder="请输入昵称"
-        value="{{nickname}}"
-        bindinput="onNicknameInput"
-        bindconfirm="onNicknameConfirm"
-        maxlength="20"
-      />
+      </view>
     </view>
   </view>
 
-  <view class="actions">
-    <button 
-      class="save-btn" 
-      bindtap="saveUserInfo"
-      loading="{{loading}}"
-      disabled="{{loading}}"
-    >
-      保存信息
-    </button>
-    
-    <button class="skip-btn" bindtap="skipSetting">
-      跳过设置
-    </button>
+  <view class="phone-card">
+    <view class="card-title">手机号</view>
+    <view class="phone-main">
+      <image class="phone-icon" src="/images/手机号.png" mode="aspectFit"></image>
+      <view class="phone-copy">
+        <text class="phone-number">{{maskedPhone}}</text>
+        <view class="badge-row">
+          <view class="status-badge {{isPhoneBound ? '' : 'muted-badge'}}">
+            <text class="badge-shield {{isPhoneBound ? '' : 'muted-shield'}}">{{isPhoneBound ? '✓' : '!'}}</text>
+            <text>{{isPhoneBound ? '已绑定' : '未绑定'}}</text>
+          </view>
+          <view class="status-badge" wx:if="{{isPhoneBound}}">
+            <text class="badge-shield">✓</text>
+            <text>已认证</text>
+          </view>
+        </view>
+        <text class="phone-desc">该手机号用于预约、到店核验、接收通知，并与商起点会员身份绑定。</text>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+    <view class="action-row" bindtap="startChangePhone">
+      <view>
+        <text class="action-title">{{isPhoneBound ? '更换手机号' : '绑定手机号'}}</text>
+        <text class="action-desc">通过短信验证码完成{{isPhoneBound ? '更换' : '绑定'}}</text>
+      </view>
+      <text class="arrow">›</text>
+    </view>
   </view>
 
-  <view class="tips">
-    <text class="tip-text">• 头像和昵称将用于个人中心展示</text>
-    <text class="tip-text">• 您可以随时在个人中心修改这些信息</text>
+  <view class="simple-card" bindtap="showBindHelp">
+    <view>
+      <text class="simple-title">绑定说明</text>
+      <text class="simple-desc">了解手机号绑定用途与解绑规则</text>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+
+  <view class="security-banner">
+    <view class="security-icon">✓</view>
+    <view class="security-text">
+      <text>为保障订单与到店核验安全，</text>
+      <text>更换手机号后需重新验证。</text>
+    </view>
+    <image class="security-img" src="/images/绑定成功.png" mode="aspectFit"></image>
+  </view>
+
+  <view class="bottom-action">
+    <button class="change-btn" bindtap="startChangePhone">{{isPhoneBound ? '更换手机号' : '绑定手机号'}}</button>
+  </view>
+
+  <view class="phone-mask" wx:if="{{showPhoneEditor}}" bindtap="closePhoneEditor"></view>
+  <view class="phone-sheet" wx:if="{{showPhoneEditor}}">
+    <view class="sheet-head">
+      <text class="sheet-title">{{isPhoneBound ? '更换手机号' : '绑定手机号'}}</text>
+      <text class="sheet-close" bindtap="closePhoneEditor">×</text>
+    </view>
+    <view class="sheet-body">
+      <view class="input-block">
+        <text class="input-label">新手机号</text>
+        <view class="input-row">
+          <input class="input" type="number" placeholder="请输入手机号" value="{{phone}}" bindinput="onPhoneInput" maxlength="11" disabled="{{phoneFromWechat}}" />
+          <button class="wechat-phone-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber" wx:if="{{!phone}}">微信授权</button>
+        </view>
+      </view>
+      <view class="input-block">
+        <text class="input-label">验证码</text>
+        <view class="input-row">
+          <input class="input code-input" type="number" placeholder="请输入验证码" value="{{smsCode}}" bindinput="onCodeInput" maxlength="6" />
+          <button class="code-btn {{countdown > 0 ? 'disabled' : ''}}" bindtap="sendSmsCode" disabled="{{countdown > 0}}">{{countdown > 0 ? countdown + 's' : '获取验证码'}}</button>
+        </view>
+      </view>
+      <button class="sheet-submit" bindtap="saveUserInfo" loading="{{loading}}" disabled="{{loading}}">确认{{isPhoneBound ? '更换' : '绑定'}}</button>
+    </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

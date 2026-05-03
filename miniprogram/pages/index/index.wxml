@@ -1,49 +1,128 @@
-<!--首页 - 参照雀胜样式-->
-<view class="container">
-  <!-- 搜索栏 -->
-  <view class="search-bar">
-    <image class="search-icon" src="/images/search.png"></image>
-    <input class="search-input" placeholder="请输入关键字" bindinput="onSearchInput" bindconfirm="onSearch" />
-  </view>
-
-  <!-- 品牌Banner -->
-  <view class="brand-banner">
-    <image class="brand-bg" src="/images/brand-banner.jpg" mode="aspectFill"></image>
-    <view class="brand-overlay">
-      <text class="brand-name">雀玺</text>
-      <text class="brand-welcome">欢迎您</text>
+<!-- 首页 -->
+<view class="container home-page">
+  <view class="page-content">
+    <view class="hero-card">
+      <swiper
+        class="hero-swiper"
+        indicator-dots="{{true}}"
+        indicator-color="rgba(255,255,255,0.65)"
+        indicator-active-color="#08A85C"
+        autoplay="{{true}}"
+        circular="{{true}}"
+        interval="3500"
+        duration="500"
+      >
+        <swiper-item wx:for="{{bannerList}}" wx:key="url">
+          <image class="hero-banner" src="{{item.url}}" mode="aspectFill"></image>
+        </swiper-item>
+      </swiper>
     </view>
-    <!-- 右上角图标 -->
-    <view class="banner-icons">
-      <view class="banner-icon-item" bindtap="goToOrders">
-        <image src="/images/order.png" class="banner-icon-img"></image>
+
+    <view class="account-card" bindtap="goToProfile">
+      <view class="avatar-badge">
+        <image class="account-avatar" src="{{userAvatar}}" mode="aspectFill" binderror="onUserAvatarError"></image>
+      </view>
+      <view class="account-main">
+        <text class="account-name">{{userNickname}}</text>
+        <text class="account-sub">{{userPhoneText}}</text>
+      </view>
+      <view class="verified-pill" wx:if="{{isPhoneVerified}}">
+        <image class="verified-icon" src="/images/自助开门.png" mode="aspectFit"></image>
+        <text>已认证</text>
+      </view>
+      <text class="account-arrow">›</text>
+    </view>
+
+    <view class="service-grid">
+      <view class="service-card {{item.active ? 'active' : ''}}" wx:for="{{serviceCards}}" wx:key="type" bindtap="filterByCategory" data-cat="{{item.type}}">
+        <image class="service-bg" src="{{item.active ? item.activeImage : item.image}}" mode="aspectFill"></image>
+        <view class="service-copy" wx:if="{{item.copyOverlay}}">
+          <text class="service-title">{{item.title}}</text>
+          <text class="service-desc">{{item.desc}}</text>
+        </view>
+        <view class="check-badge" wx:if="{{item.active && item.showCheck}}">✓</view>
       </view>
     </view>
-  </view>
 
-  <!-- 门店列表 -->
-  <view class="store-list">
-    <view class="store-card" wx:for="{{nearbyStores}}" wx:key="id"
-          bindtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">
-      <image class="store-img" src="{{item.images ? item.images[0] : '/images/default-store.jpg'}}" mode="aspectFill"></image>
-      <view class="store-info">
-        <text class="store-name">{{item.name}}</text>
-        <text class="store-address">{{item.address}}</text>
-        <view class="store-meta">
-          <text class="store-rooms">剩余{{item.availableRooms || 0}}间包厢</text>
-          <text class="store-distance">{{item.distance || ''}}</text>
+    <view class="section-head">
+      <text class="section-title">附近{{categoryTitle}}</text>
+      <view class="more-link" bindtap="goToStores">
+        <text>查看更多</text>
+        <text class="more-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="store-list">
+      <view class="store-card" wx:for="{{nearbyStores}}" wx:key="id" bindtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">
+        <view class="store-cover-wrap">
+          <image class="store-img" wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill"></image>
+          <view class="store-img placeholder" wx:else>
+            <text>{{item.serviceName}}</text>
+          </view>
+        </view>
+        <view class="store-info">
+          <view class="store-title-row">
+            <text class="store-name">{{item.displayName}}</text>
+            <text class="store-distance" wx:if="{{item.distance}}">{{item.distance}}</text>
+          </view>
+          <view class="store-address-row">
+            <image class="mini-icon" src="/images/定位.png" mode="aspectFit"></image>
+            <text class="store-address">{{item.address}}</text>
+          </view>
+          <view class="store-tags">
+            <text class="store-tag">营业中</text>
+            <text class="store-tag">24小时</text>
+            <text class="store-tag">可自助开门</text>
+            <text class="store-tag">{{item.extraTag}}</text>
+          </view>
+          <view class="store-bottom">
+            <view class="price-line">
+              <block wx:if="{{item.hasPrice}}">
+                <text class="price-symbol">￥</text>
+                <text class="price">{{item.priceYuan}}</text>
+                <text class="price-unit">{{item.priceUnitText || '起'}}</text>
+              </block>
+              <text wx:else class="price-pending">价格待同步</text>
+              <view class="meta-item">
+                <image class="meta-icon" src="/images/包间.png" mode="aspectFit"></image>
+                <text>{{item.serviceName}} {{item.roomCount || 0}} {{item.serviceUnit}}</text>
+              </view>
+              <view class="meta-item">
+                <image class="meta-icon" src="/images/时间.png" mode="aspectFit"></image>
+                <text>{{item.availableText}}</text>
+              </view>
+            </view>
+            <view class="book-btn {{item.canBook === false ? 'muted' : ''}}" catchtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">{{item.canBook === false ? '查看门店' : '立即预订'}}</view>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{nearbyStores.length === 0 && !loading}}">
-      <text class="empty-text">暂无门店数据</text>
+      <view class="empty-state" wx:if="{{nearbyStores.length === 0 && !loading}}">
+        <text class="empty-text">{{emptyCategoryText}}</text>
+      </view>
+      <view class="loading-state" wx:if="{{loading}}">
+        <text class="loading-text">加载中...</text>
+      </view>
     </view>
+  </view>
 
-    <!-- 加载中 -->
-    <view class="loading-state" wx:if="{{loading}}">
-      <text class="loading-text">加载中...</text>
+  <view class="quick-dock">
+    <view class="dock-item" bindtap="goToStores">
+      <image class="dock-icon" src="/images/找门店.png" mode="aspectFit"></image>
+      <text class="dock-title">找门店</text>
+      <text class="dock-sub">查看附近</text>
+    </view>
+    <view class="dock-scan" bindtap="scanCode">
+      <view class="scan-circle">
+        <image class="scan-icon" src="/images/扫一扫.png" mode="aspectFit"></image>
+        <text>扫码</text>
+      </view>
+    </view>
+    <view class="dock-item" bindtap="contactService">
+      <image class="dock-icon" src="/images/联系客服.png" mode="aspectFit"></image>
+      <text class="dock-title">联系客服</text>
+      <text class="dock-sub">7×24小时在线</text>
     </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

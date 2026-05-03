@@ -52,3 +52,4 @@
     <button class="confirm-btn" bindtap="confirmBooking">确认预订</button>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

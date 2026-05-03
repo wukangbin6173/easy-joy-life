@@ -16,9 +16,12 @@ public class SqdResourceService {
     private final SqdClient client;
 
     /** 查询资源列表 */
-    public SqdResponse listResources(Long merchantId, Integer pageNo, Integer pageSize) {
+    public SqdResponse listResources(Long merchantId, Long storeId, Integer pageNo, Integer pageSize) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
+        if (storeId != null) {
+            params.put("storeId", storeId);
+        }
         params.put("pageNo", pageNo);
         params.put("pageSize", pageSize);
         return client.get("/v1/resources", params);

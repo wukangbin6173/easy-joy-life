@@ -57,6 +57,22 @@ test_*.py
 dist/
 build/
 
+# 微信小程序：依赖打包目录、source map、本地私有配置（勿提交编译中间产物与构建包）
+miniprogram/node_modules/
+miniprogram/miniprogram_npm/
+**/*.map
+unpackage/
+**/unpackage/
+miniprogram/project.private.config.json
+project.private.config.json
+
+# 本地测试输出
+backend/test_output.txt
+
+# 部署环境变量（勿提交）
+deploy/.env.production
+deploy/.env.local
+
 # 临时文件和备份
 *.bak
 *.backup

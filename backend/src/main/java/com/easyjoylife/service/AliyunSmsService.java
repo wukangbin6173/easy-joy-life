@@ -37,8 +37,11 @@ public class AliyunSmsService {
             Config config = new Config()
                     .setAccessKeyId(accessKeyId)
                     .setAccessKeySecret(accessKeySecret)
-                    .setEndpoint("dysmsapi.aliyuncs.com");
+                    .setEndpoint("dysmsapi.aliyuncs.com")
+                    .setRegionId("cn-hangzhou");
             client = new Client(config);
+            log.info("阿里云短信客户端初始化: keyId={}, signName={}, templateCode={}",
+                    accessKeyId.substring(0, 8) + "****", signName, templateCode);
         }
         return client;
     }
@@ -71,7 +74,8 @@ public class AliyunSmsService {
             }
             
         } catch (Exception e) {
-            log.error("短信发送异常: phone={}", phone, e);
+            log.error("短信发送异常: phone={}, keyId={}, signName={}, templateCode={}, error={}",
+                    phone, accessKeyId, signName, templateCode, e.getMessage(), e);
             return false;
         }
     }

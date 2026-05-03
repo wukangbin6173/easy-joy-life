@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="nav">
+    <view class="back" bindtap="goBack">‹</view>
+    <text class="title">消息通知</text>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{activeType === item.type ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="type" data-type="{{item.type}}" bindtap="switchType">{{item.name}}</view>
+  </view>
+
+  <view class="message-list">
+    <view class="message-card" wx:for="{{messages}}" wx:key="id" data-id="{{item.id}}" bindtap="openDetail">
+      <image class="msg-icon" src="{{item.icon}}" mode="aspectFit"></image>
+      <view class="msg-main">
+        <view class="msg-head">
+          <text class="msg-title">{{item.title}}</text>
+          <text class="msg-time">{{item.timeText}}</text>
+        </view>
+        <text class="msg-desc">{{item.content}}</text>
+      </view>
+      <view class="unread" wx:if="{{!item.read}}"></view>
+    </view>
+    <view class="empty" wx:if="{{messages.length === 0}}">暂无消息</view>
+  </view>
+</view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

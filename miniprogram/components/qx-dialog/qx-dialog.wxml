@@ -1,0 +1,49 @@
+<view wx:if="{{dialog.visible}}">
+  <view class="qx-dialog-mask" catchtap="noop"></view>
+  <view class="qx-dialog-card {{dialog.variant === 'service' ? 'service-card' : ''}}" catchtap="noop">
+    <block wx:if="{{dialog.variant === 'service'}}">
+      <view class="qx-service-head">
+        <view class="qx-service-icon">
+          <image src="/images/联系客服.png" mode="aspectFit"></image>
+        </view>
+        <text class="qx-service-title">{{dialog.title}}</text>
+        <text class="qx-service-desc">{{dialog.serviceDesc || '预约、支付、开门、退款等问题都可以联系人工客服'}}</text>
+      </view>
+      <view class="qx-service-info">
+        <view class="qx-service-row">
+          <image src="/images/电话.png" mode="aspectFit"></image>
+          <view>
+            <text class="qx-service-label">客服电话</text>
+            <text class="qx-service-value">{{dialog.servicePhone}}</text>
+          </view>
+        </view>
+        <view class="qx-service-row">
+          <image src="/images/官方客服.png" mode="aspectFit"></image>
+          <view>
+            <text class="qx-service-label">服务时间</text>
+            <text class="qx-service-value">{{dialog.serviceTime}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+    <view class="qx-dialog-icon {{dialog.type}}">
+      <text>{{dialog.iconText}}</text>
+    </view>
+    <text class="qx-dialog-title">{{dialog.title}}</text>
+    <text class="qx-dialog-content">{{dialog.content}}</text>
+    </block>
+    <textarea
+      wx:if="{{dialog.editable}}"
+      class="qx-dialog-input"
+      value="{{inputValue}}"
+      placeholder="{{dialog.placeholderText}}"
+      maxlength="{{dialog.maxlength || 300}}"
+      bindinput="onInput"
+    />
+    <view class="qx-dialog-actions {{dialog.showCancel ? '' : 'single'}}">
+      <button wx:if="{{dialog.showCancel}}" class="qx-dialog-btn secondary" catchtap="onCancel">{{dialog.cancelText}}</button>
+      <button class="qx-dialog-btn primary" catchtap="onConfirm">{{dialog.confirmText}}</button>
+    </view>
+  </view>
+</view>

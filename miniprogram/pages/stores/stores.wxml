@@ -17,6 +17,19 @@
     </view>
   </view>
 
+  <!-- 分类筛选 -->
+  <view class="category-tabs">
+    <view
+      class="category-tab {{item.active ? 'active' : ''}}"
+      wx:for="{{categoryTabs}}"
+      wx:key="type"
+      data-category="{{item.type}}"
+      bindtap="onCategoryTap"
+    >
+      {{item.title}}
+    </view>
+  </view>
+
   <!-- 位置授权提示 -->
   <view class="location-auth" wx:if="{{showLocationAuth}}">
     <image class="location-icon" src="/images/location.png" />
@@ -31,11 +44,12 @@
 
   <!-- 门店列表 -->
   <view class="store-list" wx:else>
-    <view class="store-item" wx:for="{{stores}}" wx:key="id" bindtap="onStoreDetail" data-id="{{item.id}}">
-      <image class="store-image" src="{{item.images[0] || '/images/default-store.jpg'}}" />
+    <view class="store-item" wx:for="{{stores}}" wx:key="id" bindtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">
+      <image class="store-image" wx:if="{{item.images[0]}}" src="{{item.images[0]}}" />
+      <view class="store-image placeholder" wx:else>{{item.serviceName}}</view>
       <view class="store-info">
         <view class="store-header">
-          <text class="store-name">{{item.name}}</text>
+          <text class="store-name">{{item.displayName}}</text>
           <view class="store-status" wx:if="{{item.status === 1}}">
             <text class="status-text">营业中</text>
           </view>
@@ -43,16 +57,16 @@
         <text class="store-address">{{item.address}}</text>
         <view class="store-tags">
           <text class="tag">24小时</text>
-          <text class="tag">智能门锁</text>
-          <text class="tag">环境优雅</text>
+          <text class="tag">{{item.categoryTitle}}</text>
+          <text class="tag">可自助开门</text>
         </view>
         <view class="store-footer">
           <text class="distance" wx:if="{{item.distance}}">{{item.distance}}</text>
           <view class="store-actions">
-            <button class="action-btn navigate-btn" bindtap="onNavigate" data-store="{{item}}" catchtap="true">
+            <button class="action-btn navigate-btn" catchtap="onNavigate" data-store="{{item}}">
               导航
             </button>
-            <button class="action-btn book-btn">预订</button>
+            <button class="action-btn book-btn" catchtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">预订</button>
           </view>
         </view>
       </view>
@@ -60,8 +74,8 @@
 
     <!-- 空状态 -->
     <view class="empty-state" wx:if="{{stores.length === 0}}">
-      <image class="empty-icon" src="/images/empty.png" />
-      <text class="empty-text">暂无门店信息</text>
+      <text class="empty-text">{{emptyText}}</text>
     </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

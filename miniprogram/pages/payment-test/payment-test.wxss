@@ -37,7 +37,7 @@
   font-weight: bold;
   color: #333;
   margin-bottom: 20rpx;
-  border-left: 6rpx solid #1890ff;
+  border-left: 6rpx solid #F5A623;
   padding-left: 15rpx;
 }
 
@@ -82,7 +82,7 @@
   width: 100%;
   height: 80rpx;
   line-height: 80rpx;
-  background: #1890ff;
+  background: #F5A623;
   color: white;
   border: none;
   border-radius: 8rpx;
@@ -132,9 +132,9 @@
 }
 
 .amount-btn.selected {
-  background: #1890ff;
+  background: #F5A623;
   color: white;
-  border-color: #1890ff;
+  border-color: #F5A623;
 }
 
 .log-container {

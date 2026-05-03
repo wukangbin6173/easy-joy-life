@@ -1,16 +1,120 @@
 // app.js
 const config = require('./utils/config.js');
 const api = require('./utils/api.js');
+const userProfile = require('./utils/user-profile.js');
+
+const nativePage = Page;
+const nativeShowModal = wx.showModal;
+
+function normalizeDialogOptions(options = {}) {
+  const showCancel = options.showCancel !== false;
+  const type = options.type || (showCancel ? 'confirm' : 'info');
+  const iconText = options.iconText || (type === 'info' ? 'i' : '!');
+  return {
+    visible: true,
+    variant: options.variant || '',
+    title: options.title || '提示',
+    content: options.content || '',
+    servicePhone: options.servicePhone || '15157903339',
+    serviceTime: options.serviceTime || '7×24小时在线',
+    serviceDesc: options.serviceDesc || '',
+    showCancel,
+    cancelText: options.cancelText || '取消',
+    confirmText: options.confirmText || '确定',
+    type,
+    iconText,
+    editable: !!options.editable,
+    placeholderText: options.placeholderText || '请输入内容',
+    inputValue: options.inputValue || '',
+    maxlength: options.maxlength || 300
+  };
+}
+
+Page = function(pageOptions = {}) {
+  const originalData = pageOptions.data || {};
+  const originalOnUnload = pageOptions.onUnload;
+
+  pageOptions.data = {
+    ...originalData,
+    __qxDialog: {
+      visible: false
+    }
+  };
+
+  pageOptions.__showQxDialog = function(options = {}) {
+    return new Promise(resolve => {
+      this.__qxDialogOptions = options;
+      this.__qxDialogResolve = resolve;
+      this.setData({
+        __qxDialog: normalizeDialogOptions(options)
+      });
+    });
+  };
+
+  pageOptions.__finishQxDialog = function(result) {
+    const options = this.__qxDialogOptions || {};
+    this.setData({
+      __qxDialog: {
+        visible: false
+      }
+    });
+    this.__qxDialogOptions = null;
+    const resolve = this.__qxDialogResolve;
+    this.__qxDialogResolve = null;
+    if (typeof options.success === 'function') options.success(result);
+    if (typeof options.complete === 'function') options.complete(result);
+    if (typeof resolve === 'function') resolve(result);
+  };
+
+  pageOptions.__onQxDialogConfirm = function(e = {}) {
+    const detail = e.detail || {};
+    this.__finishQxDialog({
+      confirm: true,
+      cancel: false,
+      content: detail.content || ''
+    });
+  };
+
+  pageOptions.__onQxDialogCancel = function() {
+    this.__finishQxDialog({
+      confirm: false,
+      cancel: true
+    });
+  };
+
+  pageOptions.onUnload = function(...args) {
+    this.__qxDialogOptions = null;
+    this.__qxDialogResolve = null;
+    if (typeof originalOnUnload === 'function') return originalOnUnload.apply(this, args);
+  };
+
+  return nativePage(pageOptions);
+};
+
+wx.showModal = function(options = {}) {
+  try {
+    const pages = getCurrentPages();
+    const currentPage = pages && pages[pages.length - 1];
+    if (currentPage && typeof currentPage.__showQxDialog === 'function') {
+      return currentPage.__showQxDialog(options);
+    }
+  } catch (e) {}
+
+  return nativeShowModal.call(wx, options);
+};
 
 App({
   globalData: {
     userInfo: null,
     baseUrl: '',
-    apiBaseUrl: '', // 添加 apiBaseUrl
+    apiBaseUrl: '',
     token: null,
     openid: null,
     sessionKey: null,
-    userId: null // 添加 userId
+    userId: null,
+    currentLocation: null,
+    defaultMerchantId: config.DEFAULT_MERCHANT_ID,
+    currentMerchantId: null
   },
 
   onLaunch() {
@@ -20,6 +124,8 @@ App({
     const envConfig = config.getCurrentConfig();
     this.globalData.baseUrl = envConfig.baseUrl;
     this.globalData.apiBaseUrl = envConfig.baseUrl; // 同时设置 apiBaseUrl
+    this.globalData.defaultMerchantId = envConfig.defaultMerchantId || config.DEFAULT_MERCHANT_ID;
+    this.globalData.currentMerchantId = wx.getStorageSync('currentMerchantId') || this.globalData.defaultMerchantId;
     
     console.log('API地址:', this.globalData.baseUrl);
     console.log('所有数据来源: MySQL数据库');
@@ -48,17 +154,39 @@ App({
     
     // 先检查缓存中是否有openid和userId
     const cachedOpenid = wx.getStorageSync('openid');
-    const cachedUserId = wx.getStorageSync('userId');
     const cachedUserInfo = wx.getStorageSync('userInfo');
     
-    if (cachedOpenid && cachedUserId && cachedUserInfo) {
-      // 有缓存，直接使用
+    if (cachedOpenid && cachedUserInfo) {
       this.globalData.openid = cachedOpenid;
-      this.globalData.userId = cachedUserId;
       this.globalData.userInfo = cachedUserInfo;
-      console.log('从缓存恢复登录状态');
-      console.log('用户ID:', cachedUserId);
-      console.log('用户昵称:', cachedUserInfo.nickname);
+      // 每次启动都从后端拉最新用户信息，确保userId和手机号是最新的
+      api.request('/api/auth/user/info', {
+        method: 'GET',
+        data: { openid: cachedOpenid }
+      }).then(res => {
+        if (res.success && res.user) {
+          this.globalData.userId = res.user.id;
+          // 头像以服务端最新值优先，服务端没有真实头像时再回落本地缓存，避免旧缓存盖住微信头像。
+          this.globalData.userInfo = {
+            ...res.user,
+            nickname: userProfile.resolveNickname(cachedUserInfo, res.user),
+            avatar: userProfile.resolveAvatar(
+              res.user,
+              cachedUserInfo,
+              userProfile.avatarOptions({ allowLocal: true })
+            ),
+            phone: res.user.phone || cachedUserInfo.phone,
+            isLogin: true
+          };
+          wx.setStorageSync('userId', res.user.id);
+          wx.setStorageSync('userInfo', this.globalData.userInfo);
+          console.log('从后端刷新用户信息, userId:', res.user.id, 'phone:', res.user.phone);
+        }
+      }).catch(() => {
+        // 后端失败降级用缓存
+        const cachedUserId = wx.getStorageSync('userId');
+        this.globalData.userId = cachedUserId;
+      });
       return;
     }
     
@@ -84,9 +212,14 @@ App({
               this.globalData.openid = openid;
               this.globalData.sessionKey = sessionKey;
               this.globalData.userId = user.id; // 设置 userId
-              this.globalData.userInfo = user || {
+              this.globalData.userInfo = user ? {
+                ...user,
+                nickname: userProfile.resolveNickname(user),
+                avatar: userProfile.resolveAvatar(user),
+                isLogin: true
+              } : {
                 nickname: '微信用户',
-                avatar: '/images/default-avatar.png',
+                avatar: '',
                 isLogin: true
               };
               
@@ -102,9 +235,6 @@ App({
               wx.setStorageSync('sessionKey', sessionKey);
               wx.setStorageSync('userId', user.id); // 缓存 userId
               wx.setStorageSync('userInfo', this.globalData.userInfo);
-              
-              // 尝试获取用户详细信息（如果已授权）
-              this.tryGetUserProfile();
               
             } else {
               // 登录失败，但不是网络错误
@@ -154,8 +284,11 @@ App({
               
               const detailedUserInfo = {
                 ...this.globalData.userInfo,
-                nickname: userRes.userInfo.nickName,
-                avatar: userRes.userInfo.avatarUrl,
+                nickname: userProfile.resolveNickname(this.globalData.userInfo, {
+                  nickname: userRes.userInfo.nickName
+                }),
+                avatar: userProfile.resolveAvatar({ avatarUrl: userRes.userInfo.avatarUrl }, this.globalData.userInfo),
+                avatarUrl: userProfile.resolveAvatar({ avatarUrl: userRes.userInfo.avatarUrl }, this.globalData.userInfo),
                 gender: userRes.userInfo.gender,
                 isLogin: true
               };
@@ -214,8 +347,11 @@ App({
           
           const detailedUserInfo = {
             ...this.globalData.userInfo,
-            nickname: res.userInfo.nickName,
-            avatar: res.userInfo.avatarUrl,
+            nickname: userProfile.resolveNickname(this.globalData.userInfo, {
+              nickname: res.userInfo.nickName
+            }),
+            avatar: userProfile.resolveAvatar({ avatarUrl: res.userInfo.avatarUrl }, this.globalData.userInfo),
+            avatarUrl: userProfile.resolveAvatar({ avatarUrl: res.userInfo.avatarUrl }, this.globalData.userInfo),
             gender: res.userInfo.gender,
             isLogin: true
           };
@@ -251,14 +387,18 @@ App({
     console.log('🔑 使用openid:', this.globalData.openid);
     console.log('👤 用户信息:', userInfo);
     
+    const avatar = userProfile.resolveAvatar(userInfo);
+    const data = {
+      openid: this.globalData.openid,
+      gender: userInfo.gender || 0
+    };
+    const nickname = userProfile.resolveNickname(userInfo);
+    if (!userProfile.isDefaultNickname(nickname)) data.nickname = nickname;
+    if (avatar) data.avatar = avatar;
+
     api.request('/api/auth/user/update', {
       method: 'POST',
-      data: {
-        openid: this.globalData.openid,
-        nickname: userInfo.nickname,
-        avatar: userInfo.avatar,
-        gender: userInfo.gender || 0
-      }
+      data
     }).then(res => {
       console.log('📥 后端响应:', res);
       if (res.success) {
@@ -346,7 +486,7 @@ App({
   setDefaultUserInfo() {
     const defaultUserInfo = {
       nickname: '微信用户',
-      avatar: '/images/default-avatar.png',
+      avatar: '',
       gender: 0,
       isLogin: false
     };
@@ -400,22 +540,28 @@ App({
    */
   loginWithCode(code, userInfo) {
     return new Promise((resolve, reject) => {
-      api.request('/auth/wechat/login', {
+      api.request('/api/auth/wechat/login', {
         method: 'POST',
         data: { code }
       }).then(res => {
         if (res.success) {
           const { openid, sessionKey, user } = res;
+          const profileData = {
+            openid: openid,
+            gender: userInfo.gender
+          };
+          const nickname = userProfile.resolveNickname({ nickname: userInfo.nickName });
+          const avatar = userProfile.resolveAvatar({
+            avatarUrl: userInfo.avatarUrl,
+            nickname: userInfo.nickName
+          });
+          if (!userProfile.isDefaultNickname(nickname)) profileData.nickname = nickname;
+          if (avatar) profileData.avatar = avatar;
           
           // 更新用户信息（包括头像和昵称）
-          return api.request('/auth/user/update', {
+          return api.request('/api/auth/user/update', {
             method: 'POST',
-            data: {
-              openid: openid,
-              nickname: userInfo.nickName,
-              avatar: userInfo.avatarUrl,
-              gender: userInfo.gender
-            }
+            data: profileData
           }).then(updateRes => {
             if (updateRes.success) {
               const finalUserInfo = updateRes.user;
@@ -481,6 +627,26 @@ App({
    */
   getUserInfo() {
     return this.globalData.userInfo;
+  },
+
+  /**
+   * 记录当前业务商户，供订单、充值、会员余额等页面复用
+   */
+  setActiveMerchantId(merchantId) {
+    if (!merchantId) return;
+    const normalized = Number(merchantId) || merchantId;
+    this.globalData.currentMerchantId = normalized;
+    wx.setStorageSync('currentMerchantId', normalized);
+  },
+
+  /**
+   * 获取当前业务商户，默认回落到配置项，避免页面散落硬编码
+   */
+  getActiveMerchantId() {
+    return this.globalData.currentMerchantId ||
+      wx.getStorageSync('currentMerchantId') ||
+      this.globalData.defaultMerchantId ||
+      config.DEFAULT_MERCHANT_ID;
   },
 
   /**

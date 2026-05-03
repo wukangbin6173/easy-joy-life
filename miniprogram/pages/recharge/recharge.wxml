@@ -1,54 +1,117 @@
-<!--充值页 - 雀胜风格-->
-<view class="container">
-  <!-- 余额 + 积分卡片 -->
-  <view class="balance-card">
-    <view class="balance-item">
-      <text class="balance-label">充值余额</text>
-      <text class="balance-value">¥ {{currentBalance}}</text>
+<view class="recharge-page">
+  <view class="asset-card">
+    <view class="asset-item">
+      <text class="asset-label">店内余额</text>
+      <view class="asset-value-row">
+        <text class="asset-currency">¥</text>
+        <text class="asset-value">{{currentBalance || '0.00'}}</text>
+      </view>
     </view>
-    <view class="balance-item">
-      <text class="balance-label">我的积分</text>
-      <text class="balance-value">¥ {{userPoints}}</text>
+    <view class="asset-divider"></view>
+    <view class="asset-item">
+      <text class="asset-label">我的积分</text>
+      <view class="asset-value-row">
+        <text class="asset-value">{{userPoints || 0}}</text>
+      </view>
     </view>
   </view>
 
-  <!-- 充值金额选择 -->
-  <view class="amount-section">
-    <text class="section-title">选择充值金额</text>
+  <view class="panel amount-panel">
+    <view class="panel-head">
+      <text class="panel-title">选择充值金额</text>
+      <text class="panel-subtitle">充值后可用于门店预约消费</text>
+    </view>
+
     <view class="amount-grid">
-      <view class="amount-item {{selectedAmount === item ? 'selected' : ''}}"
-            wx:for="{{amountOptions}}" wx:key="*this"
-            bindtap="selectAmount" data-amount="{{item}}">
-        <text class="amount-text">¥{{item}}</text>
+      <view
+        class="amount-item {{selectedAmount === item ? 'selected' : ''}}"
+        wx:for="{{amountOptions}}"
+        wx:key="*this"
+        bindtap="selectAmount"
+        data-amount="{{item}}"
+      >
+        <text class="amount-symbol">¥</text>
+        <text class="amount-text">{{item}}</text>
       </view>
     </view>
 
     <view class="custom-amount">
       <text class="custom-label">自定义金额</text>
-      <view class="input-wrapper">
+      <view class="input-wrapper {{customAmount ? 'active' : ''}}">
         <text class="currency">¥</text>
-        <input class="amount-input" type="digit" placeholder="请输入充值金额"
-               value="{{customAmount}}" bindinput="onCustomAmountInput" bindblur="onCustomAmountBlur" />
+        <input
+          class="amount-input"
+          type="digit"
+          placeholder="请输入充值金额"
+          value="{{customAmount}}"
+          bindinput="onCustomAmountInput"
+          bindblur="onCustomAmountBlur"
+        />
       </view>
     </view>
   </view>
 
-  <!-- 支付方式 -->
-  <view class="payment-section">
-    <text class="section-title">选择支付方式</text>
-    <view class="payment-item {{selectedPayment === 'wechat' ? 'selected' : ''}}"
-          bindtap="selectPayment" data-id="wechat">
-      <image class="payment-icon" src="/images/wechat-pay-icon.png" mode="aspectFit"></image>
-      <text class="payment-name">微信支付</text>
-      <view class="radio {{selectedPayment === 'wechat' ? 'checked' : ''}}"></view>
+  <view class="notice-card">
+    <view class="notice-icon">
+      <image src="/images/店内余额.png" mode="aspectFit"></image>
+    </view>
+    <view class="notice-content">
+      <text class="notice-title">充值说明</text>
+      <text class="notice-text">余额仅用于雀玺门店预约消费，支付完成后自动到账。</text>
     </view>
   </view>
 
-  <!-- 充值按钮 -->
   <view class="recharge-footer">
-    <button class="recharge-btn {{finalAmount > 0 ? 'active' : ''}}"
-            bindtap="confirmRecharge" disabled="{{finalAmount <= 0}}">
-      确认充值 ¥{{finalAmount || 0}}
+    <view class="footer-amount">
+      <text class="footer-label">应付金额</text>
+      <text class="footer-price">¥{{finalAmount || 0}}</text>
+    </view>
+    <button
+      class="recharge-btn {{finalAmount > 0 ? 'active' : ''}}"
+      bindtap="confirmRecharge"
+      disabled="{{finalAmount <= 0}}"
+    >
+      确认充值
     </button>
   </view>
 </view>
+
+<view class="phone-mask" wx:if="{{showPhoneModal}}" bindtap="closePhoneModal"></view>
+<view class="phone-modal" wx:if="{{showPhoneModal}}">
+  <view class="modal-header">
+    <text class="modal-title">绑定手机号</text>
+    <text class="modal-close" bindtap="closePhoneModal">×</text>
+  </view>
+  <view class="modal-body">
+    <view class="modal-input-row">
+      <input
+        class="modal-input"
+        type="number"
+        placeholder="请输入手机号"
+        value="{{modalPhone}}"
+        bindinput="onModalPhoneInput"
+        maxlength="11"
+      />
+    </view>
+    <view class="modal-input-row code-row">
+      <input
+        class="modal-input code-input"
+        type="number"
+        placeholder="请输入验证码"
+        value="{{modalCode}}"
+        bindinput="onModalCodeInput"
+        maxlength="6"
+      />
+      <button
+        class="send-code-btn {{modalCountdown > 0 ? 'disabled' : ''}}"
+        bindtap="sendModalCode"
+        disabled="{{modalCountdown > 0}}"
+      >
+        {{modalCountdown > 0 ? modalCountdown + 's' : '获取验证码'}}
+      </button>
+    </view>
+  </view>
+  <button class="modal-confirm-btn" bindtap="confirmPhone" loading="{{modalLoading}}">确认绑定</button>
+</view>
+
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

@@ -1,0 +1,146 @@
+<view class="page">
+  <view class="header">
+    <view class="resource-name">{{resourceName}}</view>
+    <view class="resource-meta">资源ID {{resourceId}} · 商户ID {{merchantId}}{{storeId ? ' · 门店ID ' + storeId : ''}}</view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">应用资源</view>
+    <view class="field-help top-help">默认保存当前资源。需要批量排班时，输入多个资源ID，用逗号或空格分隔。</view>
+    <input
+      class="ids-input"
+      value="{{batchResourceIdsText}}"
+      placeholder="例如：20, 21"
+      bindinput="onBatchIdsInput"
+    />
+  </view>
+
+  <view class="section">
+    <view class="section-title">排班类型</view>
+    <view class="segmented">
+      <view class="segment {{mode === 'weekly' ? 'active' : ''}}" data-mode="weekly" bindtap="switchMode">按星期</view>
+      <view class="segment {{mode === 'date' ? 'active' : ''}}" data-mode="date" bindtap="switchMode">指定日期</view>
+    </view>
+
+    <view wx:if="{{mode === 'weekly'}}" class="week-grid">
+      <view
+        wx:for="{{weekDays}}"
+        wx:key="value"
+        class="week-chip {{selectedDay === item.value ? 'active' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="selectDay"
+      >
+        {{item.label}}
+      </view>
+    </view>
+
+    <picker wx:else mode="date" value="{{scheduleDate}}" bindchange="onDateChange">
+      <view class="field-row">
+        <text class="field-label">排班日期</text>
+        <text class="field-value">{{scheduleDate}}</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="section">
+    <view class="switch-row">
+      <view>
+        <view class="field-title">启用排班</view>
+        <view class="field-help">关闭后该条排班不生效</view>
+      </view>
+      <switch checked="{{isEnabled}}" color="#08A85C" bindchange="onEnabledChange" />
+    </view>
+
+    <view class="switch-row">
+      <view>
+        <view class="field-title">设为休息日</view>
+        <view class="field-help">休息日不接受预约</view>
+      </view>
+      <switch checked="{{isRestDay}}" color="#08A85C" bindchange="onRestDayChange" />
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view class="section-title">营业时间</view>
+      <button wx:if="{{!isRestDay}}" class="small-button" bindtap="addTimeSlot">新增</button>
+    </view>
+
+    <block wx:if="{{!isRestDay}}">
+      <view wx:for="{{timeSlots}}" wx:key="index" class="slot-row">
+        <picker mode="time" value="{{item.start}}" data-index="{{index}}" bindchange="onStartTimeChange">
+          <view class="time-box">{{item.start}}</view>
+        </picker>
+        <text class="time-separator">至</text>
+        <picker mode="time" value="{{item.end}}" data-index="{{index}}" bindchange="onEndTimeChange">
+          <view class="time-box">{{item.end}}</view>
+        </picker>
+        <button class="delete-button" data-index="{{index}}" bindtap="removeTimeSlot">删除</button>
+      </view>
+    </block>
+
+    <view wx:else class="empty-time">该日期不营业</view>
+  </view>
+
+  <button class="primary-button" loading="{{savingSchedule}}" disabled="{{savingSchedule}}" bindtap="saveSchedule">
+    保存排班
+  </button>
+  <view class="save-result" wx:if="{{scheduleResultText}}">{{scheduleResultText}}</view>
+
+  <view class="section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">可约时间校验</view>
+        <view class="field-help">保存后自动刷新，也可以手动查询 available-slots。</view>
+      </view>
+      <button class="small-button" loading="{{loadingSlots}}" disabled="{{loadingSlots}}" bindtap="refreshAvailableSlots">刷新</button>
+    </view>
+
+    <picker wx:if="{{mode !== 'date'}}" mode="date" value="{{previewDate}}" bindchange="onPreviewDateChange">
+      <view class="field-row">
+        <text class="field-label">查询日期</text>
+        <text class="field-value">{{previewDate}}</text>
+      </view>
+    </picker>
+    <view wx:else class="field-row">
+      <text class="field-label">查询日期</text>
+      <text class="field-value">{{scheduleDate}}</text>
+    </view>
+
+    <view class="inline-fields">
+      <view class="mini-field">
+        <text>时长(分钟)</text>
+        <input type="number" value="{{durationMinutes}}" bindinput="onDurationInput" />
+      </view>
+      <view class="mini-field">
+        <text>步长(分钟)</text>
+        <input type="number" value="{{slotStepMinutes}}" bindinput="onStepInput" />
+      </view>
+    </view>
+
+    <view class="available-message">{{availableSlotsText}}</view>
+    <view class="available-list" wx:if="{{availableSlots.length}}">
+      <view wx:for="{{availableSlots}}" wx:key="index" class="available-chip">
+        <text>{{item.start}}{{item.end ? ' - ' + item.end : ''}}</text>
+        <text class="slot-status">{{item.statusText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section status-section">
+    <view class="section-title">房间状态</view>
+    <view class="field-help status-help">维护中、停用、休息中会被视为不可约。</view>
+    <picker mode="selector" range="{{statusOptions}}" range-key="label" value="{{selectedStatusIndex}}" bindchange="onStatusChange">
+      <view class="field-row">
+        <text class="field-label">当前状态</text>
+        <text class="field-value">{{selectedStatusLabel || '请选择状态'}}</text>
+      </view>
+    </picker>
+    <input class="reason-input" value="{{changeReason}}" placeholder="变更原因（可选）" bindinput="onReasonInput" />
+    <button class="secondary-button" loading="{{savingStatus}}" disabled="{{savingStatus}}" bindtap="saveStatus">
+      更新状态
+    </button>
+  </view>
+</view>
+
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

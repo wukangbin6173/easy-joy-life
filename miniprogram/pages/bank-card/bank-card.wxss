@@ -105,7 +105,7 @@
   flex: 1;
   padding: 25rpx;
   font-size: 28rpx;
-  color: #1890ff;
+  color: #F5A623;
   background: white;
   border: none;
   border-radius: 0;
@@ -159,7 +159,7 @@
 
 .add-button {
   width: 100%;
-  background: #1890ff;
+  background: #F5A623;
   color: white;
   border-radius: 50rpx;
   padding: 30rpx;

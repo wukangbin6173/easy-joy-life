@@ -1,13 +1,24 @@
-<view class="payment-container">
-  <view class="payment-header">
-    <text class="payment-title">支付宝支付</text>
-    <text class="payment-tip">请在打开的页面中完成支付</text>
-  </view>
-  
-  <web-view src="{{paymentUrl}}" bindmessage="onWebViewMessage"></web-view>
-  
-  <view class="payment-footer">
-    <button class="cancel-btn" bindtap="cancelPayment">取消支付</button>
-    <button class="check-btn" bindtap="checkPaymentStatus">查看支付状态</button>
+<view class="container">
+  <web-view
+    wx:if="{{cashierUrl && !errorTitle}}"
+    class="cashier-frame"
+    src="{{cashierUrl}}"
+    bindload="onWebViewLoad"
+    bindmessage="onCashierMessage"
+    binderror="onWebViewError"
+  ></web-view>
+  <view wx:else class="cashier-state">
+    <view class="state-icon">!</view>
+    <view class="state-title">{{errorTitle || '正在打开收银台'}}</view>
+    <view class="state-desc">{{errorText || '请稍候...'}}</view>
+    <view wx:if="{{cashierDebugUrl}}" class="debug-box">
+      <text class="debug-label">收银台链接</text>
+      <text class="debug-url">{{cashierDebugUrl}}</text>
+    </view>
+    <view class="state-actions">
+      <button class="state-secondary" bindtap="copyCashierUrl">复制链接</button>
+      <button class="state-retry" bindtap="reloadCashier">重新加载</button>
+    </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

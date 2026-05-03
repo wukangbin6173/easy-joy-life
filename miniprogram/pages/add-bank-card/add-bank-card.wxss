@@ -55,7 +55,7 @@
 }
 
 .input:focus {
-  border-color: #1890ff;
+  border-color: #F5A623;
 }
 
 .bank-name {
@@ -63,7 +63,7 @@
   right: 20rpx;
   top: 70rpx;
   font-size: 24rpx;
-  color: #1890ff;
+  color: #F5A623;
 }
 
 .code-input-group {
@@ -78,7 +78,7 @@
 .code-btn {
   width: 200rpx;
   height: 80rpx;
-  background: #1890ff;
+  background: #F5A623;
   color: white;
   border-radius: 10rpx;
   font-size: 26rpx;
@@ -111,7 +111,7 @@
 
 .submit-btn {
   width: 100%;
-  background: #1890ff;
+  background: #F5A623;
   color: white;
   border-radius: 50rpx;
   padding: 30rpx;

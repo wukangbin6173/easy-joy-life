@@ -1,36 +1,128 @@
-<!--订单页 - 雀胜风格-->
-<view class="container">
-  <!-- Tab栏 -->
-  <view class="tabs">
-    <view class="tab-item {{activeTab === 'ongoing' ? 'active' : ''}}" bindtap="switchTab" data-tab="ongoing">进行中</view>
-    <view class="tab-item {{activeTab === 'completed' ? 'active' : ''}}" bindtap="switchTab" data-tab="completed">已完成</view>
+<!-- 订单页 -->
+<view class="container order-page">
+  <view class="custom-nav">
+    <view class="nav-back" bindtap="goBack">‹</view>
+    <text class="nav-title">我的订单</text>
   </view>
 
-  <!-- 订单列表 -->
-  <view class="order-list" wx:if="{{orders.length > 0}}">
-    <view class="order-card" wx:for="{{orders}}" wx:key="id" bindtap="viewOrderDetail" data-id="{{item.id}}">
-      <view class="order-header">
-        <text class="order-store">{{item.storeName}}</text>
-        <text class="order-status">{{item.statusText}}</text>
-      </view>
-      <view class="order-body">
-        <text class="order-room">{{item.roomName}}</text>
-        <text class="order-time">{{item.bookingDate}} {{item.startTime}}-{{item.endTime}}</text>
-      </view>
-      <view class="order-footer">
-        <text class="order-price">¥{{item.totalPrice}}</text>
-        <view class="order-actions">
-          <button class="btn-cancel" wx:if="{{item.status === 'pending'}}" catchtap="cancelOrder" data-id="{{item.id}}">取消</button>
-          <button class="btn-primary" wx:if="{{item.status === 'using'}}" catchtap="unlockRoom" data-id="{{item.id}}">开门</button>
-          <button class="btn-default" wx:if="{{item.status === 'completed'}}" catchtap="rateOrder" data-id="{{item.id}}">评价</button>
-        </view>
-      </view>
+  <view class="status-tabs">
+    <view class="status-tab {{item.active ? 'active' : ''}}" wx:for="{{statusTabs}}" wx:key="key" data-key="{{item.key}}" bindtap="switchStatus">
+      {{item.label}}
     </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{orders.length === 0}}">
-    <image class="empty-icon" src="/images/empty-order.png"></image>
-    <text class="empty-text">暂无充值数据</text>
+  <view class="filter-row">
+    <picker mode="selector" range="{{dateFilterOptions}}" range-key="label" bindchange="onDateFilterChange">
+      <view class="filter-pill">{{dateFilterText}} <text class="chevron">⌄</text></view>
+    </picker>
+    <picker mode="selector" range="{{storeFilterOptions}}" range-key="label" bindchange="onStoreFilterChange">
+      <view class="filter-pill">{{storeFilterText}} <text class="chevron">⌄</text></view>
+    </picker>
+    <picker mode="selector" range="{{typeFilterOptions}}" range-key="label" bindchange="onTypeFilterChange">
+      <view class="filter-pill wide">{{typeFilterText}} <text class="chevron">⌄</text></view>
+    </picker>
+  </view>
+
+  <view class="search-bar">
+    <text class="search-icon"></text>
+    <input class="search-input" value="{{searchKeyword}}" placeholder="搜索订单号 / 门店 / 资源" confirm-type="search" bindinput="onSearchInput" />
+  </view>
+
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view class="order-list" wx:if="{{!loading && orders.length > 0}}">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id" bindtap="viewOrderDetail" data-id="{{item.id}}">
+      <view class="order-main">
+        <view class="order-cover-wrap">
+          <image class="order-cover" wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill"></image>
+          <image class="order-cover" wx:else src="{{item.fallbackImage}}" mode="aspectFill"></image>
+        </view>
+
+        <view class="order-info">
+          <view class="order-title-row">
+            <text class="store-name">{{item.storeName}}</text>
+            <text class="order-status status-{{item.statusKey}}">{{item.statusText}}</text>
+          </view>
+
+          <view class="room-line">
+            <text class="room-name">{{item.displayRoomName}}</text>
+            <text class="order-type" wx:if="{{item.showBusinessType}}">{{item.businessTypeText}}</text>
+          </view>
+
+          <view class="detail-line">
+            <text class="line-icon clock"></text>
+            <text>{{item.dateText}} {{item.timeRange}}</text>
+            <text class="duration">{{item.durationText}}</text>
+          </view>
+
+          <view class="detail-line" wx:if="{{item.showCapacity}}">
+            <text class="line-icon people"></text>
+            <text>容量 {{item.capacityText}}</text>
+          </view>
+
+          <view class="amount-row">
+            <text>{{item.amountLabel}}</text>
+            <view class="amount {{item.statusKey === 'pendingPay' ? 'paying' : ''}}">
+              <text class="currency">￥</text>
+              <text>{{item.priceYuan}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="order-tip {{item.tipType}}">
+        <text>{{item.tipText}}</text>
+      </view>
+
+      <view class="order-actions">
+        <button class="action-btn ghost" wx:if="{{item.showCancelOrder}}" catchtap="cancelOrder" data-id="{{item.id}}">取消订单</button>
+        <button class="action-btn primary" wx:if="{{item.showPay}}" catchtap="payOrder" data-id="{{item.id}}">去支付</button>
+        <button class="action-btn ghost" wx:if="{{item.showCancelBooking}}" catchtap="cancelOrder" data-id="{{item.id}}">取消预约</button>
+        <button class="action-btn ghost" wx:if="{{item.showDetail}}" catchtap="viewOrderDetail" data-id="{{item.id}}">查看详情</button>
+        <button class="action-btn ghost" wx:if="{{item.showRenew}}" catchtap="renewOrder" data-id="{{item.id}}">续时</button>
+        <button class="action-btn primary" wx:if="{{item.showUnlock}}" catchtap="unlockRoom" data-id="{{item.id}}">自助开门</button>
+        <button class="action-btn ghost" wx:if="{{item.showRebook}}" catchtap="rebookOrder" data-id="{{item.id}}">再次预约</button>
+      </view>
+    </view>
+
+    <view class="list-bottom">已经到底了</view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && orders.length === 0}}">
+    <text class="empty-text">暂无符合条件的订单</text>
+  </view>
+
+  <view class="cancel-mask" wx:if="{{showCancelConfirm}}" catchtap="closeCancelConfirm"></view>
+  <view class="cancel-modal" wx:if="{{showCancelConfirm}}" catchtap="noop">
+    <view class="cancel-icon">!</view>
+    <text class="cancel-title">{{cancelConfirm.title}}</text>
+    <text class="cancel-desc">{{cancelConfirm.desc}}</text>
+
+    <view class="cancel-summary">
+      <view class="cancel-row">
+        <text>门店</text>
+        <text>{{cancelConfirm.storeName}}</text>
+      </view>
+      <view class="cancel-row">
+        <text>资源</text>
+        <text>{{cancelConfirm.roomName}}</text>
+      </view>
+      <view class="cancel-row">
+        <text>时间</text>
+        <text>{{cancelConfirm.timeText}}</text>
+      </view>
+      <view class="cancel-row">
+        <text>金额</text>
+        <text class="cancel-amount">{{cancelConfirm.amountText}}</text>
+      </view>
+    </view>
+
+    <view class="cancel-actions">
+      <button class="cancel-action secondary" disabled="{{cancelConfirmSubmitting}}" catchtap="closeCancelConfirm">再想想</button>
+      <button class="cancel-action primary" loading="{{cancelConfirmSubmitting}}" disabled="{{cancelConfirmSubmitting}}" catchtap="confirmCancelOrder">{{cancelConfirm.confirmText}}</button>
+    </view>
   </view>
 </view>
+<qx-dialog dialog="{{__qxDialog}}" bind:confirm="__onQxDialogConfirm" bind:cancel="__onQxDialogCancel" />

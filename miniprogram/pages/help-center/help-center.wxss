@@ -1,0 +1,14 @@
+page { background: #f8faf9; }
+.page { min-height: 100vh; padding: 76rpx 22rpx 40rpx; box-sizing: border-box; }
+.nav { position: relative; height: 60rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 22rpx; }
+.back { position: absolute; left: 0; top: 0; width: 54rpx; height: 60rpx; font-size: 54rpx; line-height: 54rpx; color: #111; }
+.title { font-size: 32rpx; font-weight: 800; color: #111; }
+.search { height: 66rpx; padding-left: 26rpx; margin-bottom: 22rpx; border-radius: 999rpx; color: #9aa39e; font-size: 25rpx; line-height: 66rpx; background: #fff; }
+.card { overflow: hidden; border-radius: 20rpx; background: #fff; box-shadow: 0 8rpx 24rpx rgba(22,48,34,.06); }
+.item { display: flex; align-items: center; min-height: 112rpx; padding: 20rpx 26rpx; border-bottom: 1rpx solid #edf0ee; }
+.item:last-child { border-bottom: none; }
+.item image { width: 48rpx; height: 48rpx; margin-right: 22rpx; }
+.main { flex: 1; display: flex; flex-direction: column; }
+.name { color: #18211c; font-size: 28rpx; font-weight: 800; }
+.desc { margin-top: 8rpx; color: #7b8580; font-size: 22rpx; }
+.arrow { color: #9ba39f; font-size: 42rpx; }

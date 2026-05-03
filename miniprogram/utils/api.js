@@ -9,8 +9,9 @@ function request(url, options = {}) {
     const currentConfig = config.getCurrentConfig();
     const baseUrl = currentConfig.baseUrl;
     const fullUrl = baseUrl + url;
+    const debug = !!currentConfig.debug;
 
-    console.log('发起API请求:', fullUrl);
+    if (debug) console.log('发起API请求:', fullUrl);
 
     const requestOptions = {
       url: fullUrl,
@@ -21,20 +22,26 @@ function request(url, options = {}) {
         ...options.header
       },
       success: (res) => {
-        console.log('API响应:', fullUrl, res.statusCode);
+        if (debug) console.log('API响应:', fullUrl, res.statusCode, typeof res.data);
 
         if (res.statusCode === 200) {
+          // 兼容 res.data 为字符串的情况
+          let data = res.data;
+          if (typeof data === 'string') {
+            try { data = JSON.parse(data); } catch(e) {}
+          }
+
           // 兼容多种响应格式
-          if (url.includes('/auth/wechat/login') || url.includes('/auth/wechat/test')) {
-            resolve(res.data);
-          } else if (res.data && res.data.success) {
-            resolve(res.data);
-          } else if (res.data && res.data.code == 200) {
-            resolve(res.data);
+          if (url.includes('/auth/wechat/login') || url.includes('/auth/wechat/test') || url.includes('/auth/wechat/phone')) {
+            resolve(data);
+          } else if (data && data.success) {
+            resolve(data);
+          } else if (data && data.code == 200) {
+            resolve(data);
           } else {
-            console.error('API业务错误:', res.data);
-            const error = new Error(res.data?.message || '请求失败');
-            error.data = res.data;
+            console.error('API业务错误:', data);
+            const error = new Error(data?.message || '请求失败');
+            error.data = data;
             reject(error);
           }
         } else {
@@ -56,6 +63,56 @@ function request(url, options = {}) {
     } catch (e) {}
 
     wx.request(requestOptions);
+  });
+}
+
+/**
+ * 上传文件
+ */
+function uploadFile(url, filePath, name = 'file', formData = {}) {
+  return new Promise((resolve, reject) => {
+    const currentConfig = config.getCurrentConfig();
+    const uploadBaseUrls = [];
+    [currentConfig.uploadBaseUrl, currentConfig.assetBaseUrl, currentConfig.baseUrl].forEach(base => {
+      const normalized = String(base || '').replace(/\/+$/, '');
+      if (normalized && uploadBaseUrls.indexOf(normalized) === -1) uploadBaseUrls.push(normalized);
+    });
+    const fullUrl = (uploadBaseUrls[0] || '') + url;
+    const debug = !!currentConfig.debug;
+    const header = {};
+
+    try {
+      const app = getApp();
+      if (app && app.globalData && app.globalData.token) {
+        header.Authorization = `Bearer ${app.globalData.token}`;
+      }
+    } catch (e) {}
+
+    if (debug) console.log('上传文件:', fullUrl);
+
+    wx.uploadFile({
+      url: fullUrl,
+      filePath,
+      name,
+      formData,
+      header,
+      success: (res) => {
+        if (debug) console.log('上传响应:', fullUrl, res.statusCode, res.data);
+        let data = res.data;
+        if (typeof data === 'string') {
+          try { data = JSON.parse(data); } catch (e) {}
+        }
+
+        if (res.statusCode === 200 && (data && (data.success || data.code == 200))) {
+          resolve(data);
+        } else {
+          const error = new Error(data?.message || '上传失败');
+          error.data = data;
+          reject(error);
+        }
+      },
+      fail: reject
+    });
   });
 }
 
@@ -84,24 +141,35 @@ const storeApi = {
     });
   },
 
-  // 获取商户下的门店列表
+  // 获取门店列表（merchantId 可选）
   getStores(merchantId, pageNo = 1, pageSize = 20) {
-    return request('/api/stores', {
-      method: 'GET',
-      data: { merchantId, pageNo, pageSize }
-    });
+    const data = { pageNo, pageSize };
+    if (merchantId) data.merchantId = merchantId;
+    return request('/api/stores', { method: 'GET', data });
   },
 
   // 获取门店详情
   getStoreById(storeId) {
-    return request(`/api/stores/${storeId}`);
+    return request(`/api/stores/${storeId}`, {
+      method: 'GET',
+      data: { _t: Date.now() }
+    });
   },
 
   // 查询附近门店
-  getNearbyStores(longitude, latitude, radius) {
+  getNearbyStores(longitude, latitude, radius, limit = 20) {
+    const data = { longitude, latitude };
+    if (radius !== undefined && radius !== null) {
+      data.radius = radius;
+      const radiusNumber = Number(radius);
+      if (Number.isFinite(radiusNumber)) {
+        data.radiusKm = Math.max(1, Math.ceil(radiusNumber / 1000));
+      }
+    }
+    if (limit) data.limit = limit;
     return request('/api/stores/nearby', {
       method: 'GET',
-      data: { longitude, latitude, radius }
+      data
     });
   },
 
@@ -139,10 +207,12 @@ const storeApi = {
  */
 const roomApi = {
   // 获取商户下的房间列表
-  getRooms(merchantId, pageNo = 1, pageSize = 20) {
+  getRooms(merchantId, pageNo = 1, pageSize = 20, storeId) {
+    const data = { merchantId, pageNo, pageSize };
+    if (storeId) data.storeId = storeId;
     return request('/api/rooms', {
       method: 'GET',
-      data: { merchantId, pageNo, pageSize }
+      data
     });
   },
 
@@ -162,11 +232,44 @@ const roomApi = {
     });
   },
 
+  // 设置房间排班
+  setSchedule(resourceId, merchantId, data) {
+    return request(`/api/rooms/${resourceId}/schedule?merchantId=${merchantId}`, {
+      method: 'PUT',
+      data
+    });
+  },
+
+  // 批量设置房间排班
+  batchSetSchedules(data) {
+    return request('/api/rooms/schedules/batch', {
+      method: 'POST',
+      data
+    });
+  },
+
+  // 更新房间状态
+  updateStatus(resourceId, merchantId, data) {
+    return request(`/api/rooms/${resourceId}/status?merchantId=${merchantId}`, {
+      method: 'PUT',
+      data
+    });
+  },
+
   // 查询可用预约时间段
-  getAvailableSlots(merchantId, resourceId, date) {
+  getAvailableSlots(merchantId, resourceId, date, options = {}) {
+    const bookingDate = options.bookingDate || date;
+    const data = {
+      ...options,
+      merchantId,
+      bookingDate,
+      date: bookingDate
+    };
+    if (resourceId) data.resourceId = resourceId;
+
     return request('/api/rooms/booking/available-slots', {
       method: 'GET',
-      data: { merchantId, resourceId, date }
+      data
     });
   },
 
@@ -250,6 +353,12 @@ const userApi = {
       method: 'POST',
       data
     });
+  }
+};
+
+const uploadApi = {
+  uploadImage(filePath) {
+    return uploadFile('/api/upload/image', filePath, 'file');
   }
 };
 
@@ -418,9 +527,11 @@ const walletApi = {
 
 module.exports = {
   request,
+  uploadFile,
   storeApi,
   roomApi,
   userApi,
+  uploadApi,
   paymentApi,
   orderApi,
   walletApi,

@@ -9,13 +9,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AdminManagementService {
+
+    private static final Duration ADMIN_SESSION_TTL = Duration.ofHours(12);
 
     private final AdminUserRepository adminUserRepository;
     private final AdminRoleRepository adminRoleRepository;
@@ -23,6 +27,7 @@ public class AdminManagementService {
     private final AdminUserRoleRepository adminUserRoleRepository;
     private final AdminRolePermissionRepository adminRolePermissionRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Map<String, AdminSession> adminSessions = new ConcurrentHashMap<>();
 
     public Page<AdminUser> searchUsers(String keyword, String status, int pageNo, int pageSize) {
         return adminUserRepository.search(emptyToNull(keyword), emptyToNull(status),
@@ -100,12 +105,36 @@ public class AdminManagementService {
         user.setLastLoginIp(requestIp);
         adminUserRepository.save(user);
 
+        String token = UUID.randomUUID().toString().replace("-", "");
+        adminSessions.put(token, new AdminSession(user.getId(), user.getUsername(), LocalDateTime.now().plus(ADMIN_SESSION_TTL)));
+
         Map<String, Object> data = new HashMap<>();
-        data.put("token", UUID.randomUUID().toString().replace("-", ""));
+        data.put("token", token);
         data.put("user", user);
         data.put("roles", getUserRoles(user.getId()));
         data.put("permissions", getUserPermissions(user.getId()));
         return data;
+    }
+
+    public Optional<AdminSession> validateToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        AdminSession session = adminSessions.get(token.trim());
+        if (session == null) {
+            return Optional.empty();
+        }
+        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+            adminSessions.remove(token.trim());
+            return Optional.empty();
+        }
+        return Optional.of(session);
+    }
+
+    public void logout(String token) {
+        if (token != null) {
+            adminSessions.remove(token.trim());
+        }
     }
 
     public List<AdminRole> getUserRoles(Long adminUserId) {
@@ -272,5 +301,29 @@ public class AdminManagementService {
 
     private String emptyToNull(String value) {
         return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    public static class AdminSession {
+        private final Long userId;
+        private final String username;
+        private final LocalDateTime expiresAt;
+
+        public AdminSession(Long userId, String username, LocalDateTime expiresAt) {
+            this.userId = userId;
+            this.username = username;
+            this.expiresAt = expiresAt;
+        }
+
+        public Long getUserId() {
+            return userId;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public LocalDateTime getExpiresAt() {
+            return expiresAt;
+        }
     }
 }

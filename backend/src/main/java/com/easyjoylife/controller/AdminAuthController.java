@@ -39,8 +39,22 @@ public class AdminAuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest servletRequest) {
+        adminManagementService.logout(resolveToken(servletRequest));
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
     private String text(Object value) {
         return value == null ? "" : value.toString().trim();
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            return authorization.substring("Bearer ".length()).trim();
+        }
+        return request.getHeader("X-Admin-Token");
     }
 
     private String clientIp(HttpServletRequest request) {

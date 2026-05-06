@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # 易享生活棋牌室小程序 - 快速部署脚本
-# 服务器: 47.97.179.50
-# 域名: xx.aieo.cn
+# 服务器: quexitai.com
+# 域名: www.quexitai.com
 
 set -e
 
 echo "=========================================="
 echo "易享生活棋牌室小程序 - 快速部署"
-echo "服务器: 47.97.179.50"
-echo "域名: xx.aieo.cn"
+echo "服务器: quexitai.com"
+echo "域名: www.quexitai.com"
 echo "=========================================="
 
 # 检查是否为root用户
@@ -106,7 +106,7 @@ sleep 30
 # 17. 健康检查
 echo "17. 健康检查..."
 for i in {1..10}; do
-    if curl -f https://xx.aieo.cn/api/stores > /dev/null 2>&1; then
+    if curl -f https://www.quexitai.com/api/stores > /dev/null 2>&1; then
         echo "✓ 服务启动成功！"
         break
     else
@@ -127,12 +127,12 @@ echo ""
 echo "🎉 易享生活棋牌室小程序已成功部署"
 echo ""
 echo "访问地址:"
-echo "- 网站: https://xx.aieo.cn"
-echo "- API: https://xx.aieo.cn/api/stores"
-echo "- 管理后台: https://xx.aieo.cn/admin.html"
+echo "- 网站: https://www.quexitai.com"
+echo "- API: https://www.quexitai.com/api/stores"
+echo "- 管理后台: https://www.quexitai.com/admin.html"
 echo ""
 echo "下一步:"
-echo "1. 在微信公众平台配置服务器域名: xx.aieo.cn"
+echo "1. 在微信公众平台配置服务器域名: www.quexitai.com"
 echo "2. 更新小程序代码并上传"
 echo "3. 提交审核发布"
 echo "=========================================="

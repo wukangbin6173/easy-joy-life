@@ -7,8 +7,8 @@ set -e
 
 echo "=========================================="
 echo "易享生活棋牌室 - 服务器环境检查"
-echo "服务器: 47.97.179.50"
-echo "域名: easyjoylife.xin"
+echo "服务器: quexitai.com"
+echo "域名: quexitai.com"
 echo "检查时间: $(date)"
 echo "=========================================="
 
@@ -58,7 +58,7 @@ check_success "GitHub连接"
 
 # 检查域名解析
 SERVER_IP=$(curl -s ifconfig.me)
-DOMAIN_IP=$(dig +short easyjoylife.xin @8.8.8.8 | tail -n1)
+DOMAIN_IP=$(dig +short quexitai.com @8.8.8.8 | tail -n1)
 echo "服务器IP: $SERVER_IP"
 echo "域名解析IP: $DOMAIN_IP"
 if [ "$SERVER_IP" = "$DOMAIN_IP" ]; then
@@ -200,12 +200,12 @@ echo "----------------------------------------"
 which certbot > /dev/null 2>&1
 check_success "Certbot已安装"
 
-if [ -d "/etc/letsencrypt/live/easyjoylife.xin" ]; then
+if [ -d "/etc/letsencrypt/live/quexitai.com" ]; then
     check_success "SSL证书目录存在"
     
     # 检查证书有效期
-    if openssl x509 -checkend 86400 -noout -in /etc/letsencrypt/live/easyjoylife.xin/cert.pem > /dev/null 2>&1; then
-        CERT_EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/easyjoylife.xin/cert.pem | cut -d= -f2)
+    if openssl x509 -checkend 86400 -noout -in /etc/letsencrypt/live/quexitai.com/cert.pem > /dev/null 2>&1; then
+        CERT_EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/quexitai.com/cert.pem | cut -d= -f2)
         echo "证书到期时间: $CERT_EXPIRY"
         check_success "SSL证书有效"
     else
@@ -256,13 +256,13 @@ fi
 # 12. HTTPS访问检查
 echo -e "\n${BLUE}12. HTTPS访问检查${NC}"
 echo "----------------------------------------"
-if curl -f https://easyjoylife.xin > /dev/null 2>&1; then
+if curl -f https://quexitai.com > /dev/null 2>&1; then
     check_success "HTTPS网站访问正常"
 else
     check_warning "HTTPS网站访问失败"
 fi
 
-if curl -f https://easyjoylife.xin/api/stores > /dev/null 2>&1; then
+if curl -f https://quexitai.com/api/stores > /dev/null 2>&1; then
     check_success "HTTPS API访问正常"
 else
     check_warning "HTTPS API访问失败"
@@ -346,8 +346,8 @@ echo "- 监控系统资源使用情况"
 
 echo -e "\n${BLUE}📋 下一步操作建议:${NC}"
 echo "1. 如果所有检查都通过，你的服务器已准备就绪"
-echo "2. 访问 https://easyjoylife.xin 测试网站"
-echo "3. 访问 https://easyjoylife.xin/admin.html 测试管理后台"
+echo "2. 访问 https://quexitai.com 测试网站"
+echo "3. 访问 https://quexitai.com/admin.html 测试管理后台"
 echo "4. 在微信开发者工具中配置小程序域名"
 echo "5. 上传小程序代码并提交审核"
 

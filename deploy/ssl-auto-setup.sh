@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # 易享生活棋牌室 - 自动SSL证书申请脚本
-# 域名: easyjoylife.xin
+# 域名: quexitai.com
 # 支持自动申请、续期和监控
 
 set -e
 
 # 配置变量
-DOMAIN="xx.aieo.cn"
-EMAIL="admin@xx.aieo.cn"
+DOMAIN="www.quexitai.com"
+EMAIL="admin@www.quexitai.com"
 WEBROOT="/var/www/html"
 NGINX_CONF="/etc/nginx/sites-available/easy-joy-life"
 SSL_DIR="/etc/letsencrypt/live/$DOMAIN"

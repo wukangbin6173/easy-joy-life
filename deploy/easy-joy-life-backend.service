@@ -27,7 +27,7 @@ Environment="WECHAT_APPID=your_wechat_miniprogram_appid"
 Environment="WECHAT_SECRET=your_wechat_miniprogram_secret"
 Environment="WECHAT_MCH_ID=your_wechat_merchant_id"
 Environment="WECHAT_API_KEY=your_wechat_payment_api_key"
-Environment="SERVER_DOMAIN=https://xx.aieo.cn"
+Environment="SERVER_DOMAIN=https://www.quexitai.com"
 
 [Install]
 WantedBy=multi-user.target

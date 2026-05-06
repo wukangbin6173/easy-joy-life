@@ -31,7 +31,7 @@
 | 微信静默登录问题修复总结.md | experiences/01.wechat-login-fix.md | 已创建模板 |
 | 微信支付平台证书过期完整解决方案.md | experiences/02.wechat-payment-cert.md | 已创建 |
 | 用户信息更新问题修复完成总结.md | experiences/03.user-info-update.md | 需迁移 |
-| 域名更换至xx.aieo.cn完成总结.md | experiences/04.domain-migration.md | 需迁移 |
+| 域名更换至www.quexitai.com完成总结.md | experiences/04.domain-migration.md | 需迁移 |
 | 后端服务完全修复部署总结.md | experiences/05.server-deployment.md | 需迁移 |
 | Go脚本优化完成总结.md | experiences/06.go-script-optimization.md | 需迁移 |
 | ZERO/永久解决方案总结.md | experiences/07.utf8-console-fix.md | 需迁移 |
@@ -109,7 +109,7 @@ mkdir -p archive/2025-12
 # 2. 迁移经验文档
 cp "微信静默登录问题修复总结.md" docs/experiences/01.wechat-login-fix.md
 cp "用户信息更新问题修复完成总结.md" docs/experiences/03.user-info-update.md
-cp "域名更换至xx.aieo.cn完成总结.md" docs/experiences/04.domain-migration.md
+cp "域名更换至www.quexitai.com完成总结.md" docs/experiences/04.domain-migration.md
 cp "后端服务完全修复部署总结.md" docs/experiences/05.server-deployment.md
 cp "Go脚本优化完成总结.md" docs/experiences/06.go-script-optimization.md
 

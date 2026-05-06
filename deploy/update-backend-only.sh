@@ -78,7 +78,7 @@ else
     echo "   ⚠ API访问失败"
 fi
 
-if curl -f -s https://xx.aieo.cn/api/stores > /dev/null 2>&1; then
+if curl -f -s https://www.quexitai.com/api/stores > /dev/null 2>&1; then
     echo "   ✓ 线上API访问正常"
 else
     echo "   ⚠ 线上API访问失败"

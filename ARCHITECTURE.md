@@ -38,7 +38,7 @@
 ┌─────────────────────────────────────────────────┐
 │              Target Systems                      │
 │  • Local Server (8080)                          │
-│  • Production Server (121.43.96.127)            │
+│  • Production Server (quexitai.com)            │
 │  • Git Repository (GitHub)                      │
 └─────────────────────────────────────────────────┘
 ```
@@ -212,7 +212,7 @@ User runs: ./go.sh 3
          │   • MySQL Database
          │
          ├─► Production Server (SSH)
-         │   • Host: 121.43.96.127
+         │   • Host: quexitai.com
          │   • User: root
          │   • Path: /opt/easy-joy-life
          │
@@ -395,11 +395,11 @@ go.lib.sh
 ├─────────────────────────────────────────────────┤
 │  go.lib.sh                                      │
 │  ┌───────────────────────────────────────────┐ │
-│  │ SERVER_HOST="121.43.96.127"              │ │
+│  │ SERVER_HOST="quexitai.com"              │ │
 │  │ SERVER_USER="root"                        │ │
 │  │ SERVER_PATH="/opt/easy-joy-life"         │ │
 │  │ BACKEND_JAR="easy-joy-life-system.jar"   │ │
-│  │ SITE_URL="https://xx.aieo.cn"            │ │
+│  │ SITE_URL="https://www.quexitai.com"            │ │
 │  │ GIT_BRANCH="main"                         │ │
 │  └───────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────┤

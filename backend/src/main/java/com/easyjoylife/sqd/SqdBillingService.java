@@ -159,6 +159,11 @@ public class SqdBillingService {
         return client.get("/v1/billing/cleaning/pending-list", params);
     }
 
+    /** 今日营收看板 */
+    public SqdResponse dashboard(Map<String, Object> params) {
+        return client.get("/v1/billing/dashboard", params);
+    }
+
     // ========== 设备控制 ==========
 
     /** 远程开锁 */

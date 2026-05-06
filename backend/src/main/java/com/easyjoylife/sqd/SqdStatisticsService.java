@@ -19,6 +19,10 @@ public class SqdStatisticsService {
     public SqdResponse overview(Long merchantId) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
+        return overview(params);
+    }
+
+    public SqdResponse overview(Map<String, Object> params) {
         return client.get("/v1/statistics/overview", params);
     }
 
@@ -27,6 +31,10 @@ public class SqdStatisticsService {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
         params.put("period", period);
+        return sales(params);
+    }
+
+    public SqdResponse sales(Map<String, Object> params) {
         return client.get("/v1/statistics/sales", params);
     }
 
@@ -34,6 +42,10 @@ public class SqdStatisticsService {
     public SqdResponse customers(Long merchantId) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
+        return customers(params);
+    }
+
+    public SqdResponse customers(Map<String, Object> params) {
         return client.get("/v1/statistics/customers", params);
     }
 
@@ -41,6 +53,10 @@ public class SqdStatisticsService {
     public SqdResponse channels(Long merchantId) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
+        return channels(params);
+    }
+
+    public SqdResponse channels(Map<String, Object> params) {
         return client.get("/v1/statistics/channels", params);
     }
 
@@ -48,6 +64,10 @@ public class SqdStatisticsService {
     public SqdResponse bookings(Long merchantId) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantId", merchantId);
+        return bookings(params);
+    }
+
+    public SqdResponse bookings(Map<String, Object> params) {
         return client.get("/v1/statistics/bookings", params);
     }
 

@@ -1,6 +1,7 @@
 package com.easyjoylife.sqd;
 
 import com.easyjoylife.config.SqdConfig;
+import com.easyjoylife.service.OpenApiCallLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -32,11 +33,13 @@ public class SqdClient {
 
     private final SqdConfig sqdConfig;
     private final ObjectMapper objectMapper;
+    private final OpenApiCallLogService openApiCallLogService;
     private RestTemplate sqdRestTemplate;
 
-    public SqdClient(SqdConfig sqdConfig, ObjectMapper objectMapper) {
+    public SqdClient(SqdConfig sqdConfig, ObjectMapper objectMapper, OpenApiCallLogService openApiCallLogService) {
         this.sqdConfig = sqdConfig;
         this.objectMapper = objectMapper;
+        this.openApiCallLogService = openApiCallLogService;
     }
 
     @PostConstruct
@@ -55,17 +58,26 @@ public class SqdClient {
         String url = buildUrl(path, params);
         HttpHeaders headers = buildHeaders("");
         HttpEntity<String> entity = new HttpEntity<>(headers);
+        long start = System.currentTimeMillis();
+        String traceId = newTraceId();
+        String requestPayload = toJson(params);
 
         try {
             log.debug("SQD GET: {}", url);
             ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            return parseResponse(resp.getBody());
+            SqdResponse response = parseResponse(resp.getBody());
+            recordCall("GET", path, requestPayload, response, start, traceId);
+            return response;
         } catch (HttpStatusCodeException e) {
             log.error("SQD GET 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
-            return parseResponse(e.getResponseBodyAsString());
+            SqdResponse response = parseResponse(e.getResponseBodyAsString());
+            recordCall("GET", path, requestPayload, response, start, traceId);
+            return response;
         } catch (RestClientException e) {
             log.error("SQD GET 请求异常: {}", url, e);
-            return SqdResponse.error("请求异常: " + e.getMessage());
+            String message = "请求异常: " + e.getMessage();
+            recordFailure("GET", path, requestPayload, message, start, traceId);
+            return SqdResponse.error(message);
         }
     }
 
@@ -78,17 +90,25 @@ public class SqdClient {
         HttpHeaders headers = buildHeaders(bodyJson);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(bodyJson, headers);
+        long start = System.currentTimeMillis();
+        String traceId = newTraceId();
 
         try {
             log.debug("SQD POST: {} body: {}", url, bodyJson);
             ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-            return parseResponse(resp.getBody());
+            SqdResponse response = parseResponse(resp.getBody());
+            recordCall("POST", path, bodyJson, response, start, traceId);
+            return response;
         } catch (HttpStatusCodeException e) {
             log.error("SQD POST 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
-            return parseResponse(e.getResponseBodyAsString());
+            SqdResponse response = parseResponse(e.getResponseBodyAsString());
+            recordCall("POST", path, bodyJson, response, start, traceId);
+            return response;
         } catch (RestClientException e) {
             log.error("SQD POST 请求异常: {}", url, e);
-            return SqdResponse.error("请求异常: " + e.getMessage());
+            String message = "请求异常: " + e.getMessage();
+            recordFailure("POST", path, bodyJson, message, start, traceId);
+            return SqdResponse.error(message);
         }
     }
 
@@ -101,17 +121,25 @@ public class SqdClient {
         HttpHeaders headers = buildHeaders(bodyJson);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(bodyJson, headers);
+        long start = System.currentTimeMillis();
+        String traceId = newTraceId();
 
         try {
             log.debug("SQD PUT: {} body: {}", url, bodyJson);
             ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-            return parseResponse(resp.getBody());
+            SqdResponse response = parseResponse(resp.getBody());
+            recordCall("PUT", path, bodyJson, response, start, traceId);
+            return response;
         } catch (HttpStatusCodeException e) {
             log.error("SQD PUT 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
-            return parseResponse(e.getResponseBodyAsString());
+            SqdResponse response = parseResponse(e.getResponseBodyAsString());
+            recordCall("PUT", path, bodyJson, response, start, traceId);
+            return response;
         } catch (RestClientException e) {
             log.error("SQD PUT 请求异常: {}", url, e);
-            return SqdResponse.error("请求异常: " + e.getMessage());
+            String message = "请求异常: " + e.getMessage();
+            recordFailure("PUT", path, bodyJson, message, start, traceId);
+            return SqdResponse.error(message);
         }
     }
 
@@ -122,17 +150,26 @@ public class SqdClient {
         String url = buildUrl(path, params);
         HttpHeaders headers = buildHeaders("");
         HttpEntity<String> entity = new HttpEntity<>(headers);
+        long start = System.currentTimeMillis();
+        String traceId = newTraceId();
+        String requestPayload = toJson(params);
 
         try {
             log.debug("SQD DELETE: {}", url);
             ResponseEntity<String> resp = sqdRestTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
-            return parseResponse(resp.getBody());
+            SqdResponse response = parseResponse(resp.getBody());
+            recordCall("DELETE", path, requestPayload, response, start, traceId);
+            return response;
         } catch (HttpStatusCodeException e) {
             log.error("SQD DELETE 请求失败: {} status={} body={}", url, e.getStatusCode(), e.getResponseBodyAsString());
-            return parseResponse(e.getResponseBodyAsString());
+            SqdResponse response = parseResponse(e.getResponseBodyAsString());
+            recordCall("DELETE", path, requestPayload, response, start, traceId);
+            return response;
         } catch (RestClientException e) {
             log.error("SQD DELETE 请求异常: {}", url, e);
-            return SqdResponse.error("请求异常: " + e.getMessage());
+            String message = "请求异常: " + e.getMessage();
+            recordFailure("DELETE", path, requestPayload, message, start, traceId);
+            return SqdResponse.error(message);
         }
     }
 
@@ -215,5 +252,21 @@ public class SqdClient {
         } catch (Exception e) {
             throw new RuntimeException("JSON序列化失败", e);
         }
+    }
+
+    private void recordCall(String httpMethod, String path, String requestPayload,
+                            SqdResponse response, long start, String traceId) {
+        openApiCallLogService.recordSqdCall(
+                httpMethod, path, requestPayload, response, System.currentTimeMillis() - start, traceId);
+    }
+
+    private void recordFailure(String httpMethod, String path, String requestPayload,
+                               String errorMessage, long start, String traceId) {
+        openApiCallLogService.recordSqdFailure(
+                httpMethod, path, requestPayload, errorMessage, System.currentTimeMillis() - start, traceId);
+    }
+
+    private String newTraceId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 }

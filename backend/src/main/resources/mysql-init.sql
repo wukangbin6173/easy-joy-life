@@ -170,6 +170,123 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
     INDEX idx_created_time (created_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='钱包交易记录表';
 
+-- 管理后台用户表
+CREATE TABLE IF NOT EXISTS admin_users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT '管理员账号',
+    password_hash VARCHAR(100) NOT NULL COMMENT 'BCrypt密码哈希',
+    real_name VARCHAR(50) COMMENT '真实姓名',
+    phone VARCHAR(20) COMMENT '手机号',
+    email VARCHAR(100) COMMENT '邮箱',
+    avatar VARCHAR(500) COMMENT '头像',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态：ACTIVE-正常, DISABLED-禁用',
+    last_login_at DATETIME COMMENT '最后登录时间',
+    last_login_ip VARCHAR(50) COMMENT '最后登录IP',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_admin_users_username (username),
+    INDEX idx_admin_users_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理后台用户表';
+
+-- 管理后台角色表
+CREATE TABLE IF NOT EXISTS admin_roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    role_code VARCHAR(50) NOT NULL UNIQUE COMMENT '角色编码',
+    role_name VARCHAR(50) NOT NULL COMMENT '角色名称',
+    description VARCHAR(200) COMMENT '角色说明',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_admin_roles_role_code (role_code),
+    INDEX idx_admin_roles_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理后台角色表';
+
+-- 管理后台权限点表
+CREATE TABLE IF NOT EXISTS admin_permissions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    permission_code VARCHAR(100) NOT NULL UNIQUE COMMENT '权限编码',
+    permission_name VARCHAR(100) NOT NULL COMMENT '权限名称',
+    module VARCHAR(50) NOT NULL COMMENT '所属模块',
+    description VARCHAR(200) COMMENT '权限说明',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT '状态',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_admin_permissions_code (permission_code),
+    INDEX idx_admin_permissions_module (module)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理后台权限点表';
+
+-- 管理员角色关系表
+CREATE TABLE IF NOT EXISTS admin_user_roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    admin_user_id BIGINT NOT NULL COMMENT '管理员ID',
+    role_id BIGINT NOT NULL COMMENT '角色ID',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_admin_user_role (admin_user_id, role_id),
+    INDEX idx_admin_user_roles_user (admin_user_id),
+    INDEX idx_admin_user_roles_role (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员角色关系表';
+
+-- 角色权限关系表
+CREATE TABLE IF NOT EXISTS admin_role_permissions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    role_id BIGINT NOT NULL COMMENT '角色ID',
+    permission_id BIGINT NOT NULL COMMENT '权限ID',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_admin_role_permission (role_id, permission_id),
+    INDEX idx_admin_role_permissions_role (role_id),
+    INDEX idx_admin_role_permissions_permission (permission_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色权限关系表';
+
+-- 管理后台操作日志表
+CREATE TABLE IF NOT EXISTS admin_operation_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    admin_user_id BIGINT COMMENT '管理员ID',
+    username VARCHAR(50) COMMENT '管理员账号',
+    module VARCHAR(50) COMMENT '模块',
+    action VARCHAR(100) NOT NULL COMMENT '操作动作',
+    target_type VARCHAR(50) COMMENT '对象类型',
+    target_id VARCHAR(64) COMMENT '对象ID',
+    http_method VARCHAR(20) COMMENT 'HTTP方法',
+    request_path VARCHAR(255) COMMENT '请求路径',
+    request_ip VARCHAR(50) COMMENT '请求IP',
+    request_body TEXT COMMENT '请求内容',
+    result_status VARCHAR(20) COMMENT '结果状态',
+    result_message VARCHAR(500) COMMENT '结果说明',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_admin_operation_logs_user (admin_user_id),
+    INDEX idx_admin_operation_logs_module (module),
+    INDEX idx_admin_operation_logs_created (created_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理后台操作日志表';
+
+-- OpenAPI调用日志表
+CREATE TABLE IF NOT EXISTS openapi_call_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    provider VARCHAR(50) NOT NULL COMMENT '第三方供应商，如SQD',
+    http_method VARCHAR(20) NOT NULL COMMENT 'HTTP方法',
+    api_path VARCHAR(255) NOT NULL COMMENT '接口路径',
+    request_payload TEXT COMMENT '请求参数',
+    response_code INT COMMENT '响应码',
+    response_message VARCHAR(500) COMMENT '响应说明',
+    success TINYINT(1) NOT NULL COMMENT '是否成功',
+    error_message TEXT COMMENT '错误信息',
+    duration_ms BIGINT COMMENT '耗时毫秒',
+    trace_id VARCHAR(64) COMMENT '链路ID',
+    called_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '调用时间',
+    INDEX idx_openapi_call_logs_provider (provider),
+    INDEX idx_openapi_call_logs_success (success),
+    INDEX idx_openapi_call_logs_called (called_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='OpenAPI调用日志表';
+
+-- 本地系统配置表（只存本系统配置，不存商起点业务数据）
+CREATE TABLE IF NOT EXISTS system_config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    config_key VARCHAR(100) NOT NULL UNIQUE COMMENT '配置键',
+    config_value VARCHAR(500) NOT NULL COMMENT '配置值',
+    description VARCHAR(200) COMMENT '配置说明',
+    updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_system_config_key (config_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='本地系统配置表';
+
 -- 插入测试用户数据
 INSERT INTO users (openid, nickname, avatar, gender) VALUES 
 ('test_openid_001', '测试用户1', '/images/avatar1.png', 1),

@@ -330,15 +330,15 @@ else
 fi
 
 # 检查HTTPS访问
-if curl -f -s https://xx.aieo.cn/api/stores > /dev/null 2>&1; then
-    check_service 0 "HTTPS访问: https://xx.aieo.cn/api/stores"
+if curl -f -s https://www.quexitai.com/api/stores > /dev/null 2>&1; then
+    check_service 0 "HTTPS访问: https://www.quexitai.com/api/stores"
 else
     check_service 1 "HTTPS访问失败"
 fi
 
 # 检查SSL证书
-if [ -f "/etc/letsencrypt/live/xx.aieo.cn/fullchain.pem" ]; then
-    CERT_EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/xx.aieo.cn/fullchain.pem 2>/dev/null | cut -d'=' -f2)
+if [ -f "/etc/letsencrypt/live/www.quexitai.com/fullchain.pem" ]; then
+    CERT_EXPIRY=$(openssl x509 -enddate -noout -in /etc/letsencrypt/live/www.quexitai.com/fullchain.pem 2>/dev/null | cut -d'=' -f2)
     CERT_EXPIRY_TIMESTAMP=$(date -d "$CERT_EXPIRY" +%s 2>/dev/null)
     CURRENT_TIMESTAMP=$(date +%s)
     DAYS_LEFT=$(( ($CERT_EXPIRY_TIMESTAMP - $CURRENT_TIMESTAMP) / 86400 ))

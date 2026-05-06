@@ -59,8 +59,8 @@ echo ""
 
 # 5. API测试
 echo "5. API访问测试:"
-if curl -f -s https://xx.aieo.cn/api/stores > /dev/null 2>&1; then
-    echo "   ✓ https://xx.aieo.cn/api/stores 可访问"
+if curl -f -s https://www.quexitai.com/api/stores > /dev/null 2>&1; then
+    echo "   ✓ https://www.quexitai.com/api/stores 可访问"
 else
     echo "   ✗ API访问失败"
 fi

@@ -9,11 +9,11 @@ REM Project: EasyJoyLife
 REM ================================================================
 
 REM 配置
-set SERVER_HOST=47.97.179.50
+set SERVER_HOST=quexitai.com
 set SERVER_USER=root
 set SERVER_PATH=/opt/easy-joy-life
 set BACKEND_JAR=easy-joy-life-system-1.0.0.jar
-set SITE_URL=https://xx.aieo.cn
+set SITE_URL=https://www.quexitai.com
 set GIT_BRANCH=main
 set DEEPSEEK_API_KEY=sk-a1374a0606a744c3888ee224b5b8252c
 

@@ -49,8 +49,8 @@ else
     echo "   ✗ 本地API访问失败"
 fi
 
-if curl -f -s https://xx.aieo.cn/api/stores > /dev/null 2>&1; then
-    echo "   ✓ 线上API: https://xx.aieo.cn/api/stores"
+if curl -f -s https://www.quexitai.com/api/stores > /dev/null 2>&1; then
+    echo "   ✓ 线上API: https://www.quexitai.com/api/stores"
 else
     echo "   ✗ 线上API访问失败"
 fi

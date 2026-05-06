@@ -22,7 +22,7 @@ uptime
 ping -c 3 8.8.8.8
 ping -c 3 github.com
 curl -s ifconfig.me
-dig easyjoylife.xin
+dig quexitai.com
 
 # 3. 端口检查
 netstat -tlnp | grep -E ':22|:80|:443|:8080'
@@ -52,7 +52,7 @@ docker-compose --version
 
 # 9. SSL证书
 certbot certificates
-ls -la /etc/letsencrypt/live/easyjoylife.xin/
+ls -la /etc/letsencrypt/live/quexitai.com/
 
 # 10. 项目文件
 ls -la /opt/easy-joy-life/
@@ -67,7 +67,7 @@ docker-compose -f docker-compose.prod.yml logs backend --tail=20
 
 # 12. API测试
 curl http://localhost:8080/api/stores
-curl https://easyjoylife.xin/api/stores
+curl https://quexitai.com/api/stores
 
 # 13. 系统资源
 free -h

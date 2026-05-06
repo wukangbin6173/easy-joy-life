@@ -29,7 +29,7 @@ CREATE TABLE stores (
   latitude DECIMAL(10,6),
   phone VARCHAR(20),
   description TEXT,
-  images VARCHAR(1000),
+  image VARCHAR(200),
   business_hours VARCHAR(500),
   facilities VARCHAR(1000),
   status TINYINT DEFAULT 1,
@@ -46,8 +46,8 @@ CREATE TABLE rooms (
   type VARCHAR(20) NOT NULL,
   capacity INT NOT NULL,
   area DECIMAL(5,2),
-  price_per_hour DECIMAL(8,2) NOT NULL,
-  images VARCHAR(1000),
+  hourly_rate DECIMAL(10,2) NOT NULL,
+  image VARCHAR(200),
   facilities VARCHAR(1000),
   device_id VARCHAR(50),
   lock_type VARCHAR(20) DEFAULT 'wifi',
@@ -161,34 +161,117 @@ CREATE TABLE admins (
 CREATE TABLE system_config (
   id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   config_key VARCHAR(100) NOT NULL,
-  config_value TEXT,
+  config_value VARCHAR(500) NOT NULL,
   description VARCHAR(200),
-  type VARCHAR(20) DEFAULT 'string',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 管理后台用户表
+CREATE TABLE admin_users (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password_hash VARCHAR(100) NOT NULL,
+  real_name VARCHAR(50),
+  phone VARCHAR(20),
+  email VARCHAR(100),
+  avatar VARCHAR(500),
+  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+  last_login_at TIMESTAMP,
+  last_login_ip VARCHAR(50),
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE admin_roles (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  role_code VARCHAR(50) NOT NULL UNIQUE,
+  role_name VARCHAR(50) NOT NULL,
+  description VARCHAR(200),
+  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE admin_permissions (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  permission_code VARCHAR(100) NOT NULL UNIQUE,
+  permission_name VARCHAR(100) NOT NULL,
+  module VARCHAR(50) NOT NULL,
+  description VARCHAR(200),
+  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE admin_user_roles (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  admin_user_id BIGINT NOT NULL,
+  role_id BIGINT NOT NULL,
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_admin_user_role UNIQUE (admin_user_id, role_id)
+);
+
+CREATE TABLE admin_role_permissions (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  role_id BIGINT NOT NULL,
+  permission_id BIGINT NOT NULL,
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_admin_role_permission UNIQUE (role_id, permission_id)
+);
+
+CREATE TABLE admin_operation_logs (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  admin_user_id BIGINT,
+  username VARCHAR(50),
+  module VARCHAR(50),
+  action VARCHAR(100) NOT NULL,
+  target_type VARCHAR(50),
+  target_id VARCHAR(64),
+  http_method VARCHAR(20),
+  request_path VARCHAR(255),
+  request_ip VARCHAR(50),
+  request_body TEXT,
+  result_status VARCHAR(20),
+  result_message VARCHAR(500),
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE openapi_call_logs (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  provider VARCHAR(50) NOT NULL,
+  http_method VARCHAR(20) NOT NULL,
+  api_path VARCHAR(255) NOT NULL,
+  request_payload TEXT,
+  response_code INT,
+  response_message VARCHAR(500),
+  success BOOLEAN NOT NULL,
+  error_message TEXT,
+  duration_ms BIGINT,
+  trace_id VARCHAR(64),
+  called_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 插入初始数据
 INSERT INTO admins (username, password, real_name, role) VALUES 
 ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKTY.5zt6C/DVdyFYST0VDYmZ2Oa', '超级管理员', 'super');
 
-INSERT INTO system_config (config_key, config_value, description, type) VALUES 
-('wechat.appid', '', '微信小程序AppID', 'string'),
-('wechat.secret', '', '微信小程序Secret', 'string'),
-('wechat.mch_id', '', '微信商户号', 'string'),
-('wechat.api_key', '', '微信支付密钥', 'string'),
-('system.name', '易享生活无人棋牌室', '系统名称', 'string'),
-('system.version', '1.0.0', '系统版本', 'string');
+INSERT INTO system_config (config_key, config_value, description) VALUES
+('wechat.appid', '', '微信小程序AppID'),
+('wechat.secret', '', '微信小程序Secret'),
+('wechat.mch_id', '', '微信商户号'),
+('wechat.api_key', '', '微信支付密钥'),
+('system.name', '易享生活无人棋牌室', '系统名称'),
+('system.version', '1.0.0', '系统版本');
 
 -- 插入测试数据
-INSERT INTO stores (name, address, longitude, latitude, phone, description, images, business_hours, facilities) VALUES 
+INSERT INTO stores (name, address, longitude, latitude, phone, description, image, business_hours, facilities) VALUES
 ('易享生活棋牌室(万达店)', '北京市朝阳区建国路93号万达广场3层', 116.447587, 39.937075, '010-12345678', '环境优雅，设施齐全的高端棋牌室', '/images/store-logo-1.jpg', '09:00-02:00', '智能门锁,中央空调,免费WiFi,茶水服务,停车位'),
 ('易享生活棋牌室(中心店)', '北京市海淀区中关村大街27号中关村大厦', 116.310316, 39.983424, '010-87654321', '科技感十足的智能棋牌室', '/images/store-logo-2.jpg', '24小时营业', '智能门锁,新风系统,高速WiFi,咖啡机,充电桩'),
 ('易享生活棋牌室(西单店)', '北京市西城区西单北大街120号西单商场', 116.366794, 39.906901, '010-11223344', '交通便利，停车方便', '/images/store-logo-3.jpg', '10:00-24:00', '智能门锁,空气净化,免费WiFi,小食服务'),
 ('易享生活棋牌室(国贸店)', '北京市朝阳区建国门外大街1号国贸大厦', 116.458564, 39.908347, '010-55667788', '商务人士首选，高端大气', '/images/store-logo-4.jpg', '09:00-01:00', '智能门锁,商务设施,高速WiFi,会议室,秘书服务'),
 ('易享生活棋牌室(三里屯店)', '北京市朝阳区三里屯路19号三里屯太古里', 116.456621, 39.937456, '010-99887766', '时尚潮流，年轻人聚集地', '/images/store-logo-5.jpg', '12:00-03:00', '智能门锁,音响系统,免费WiFi,调酒服务,夜宵');
 
-INSERT INTO rooms (store_id, room_no, name, type, capacity, price_per_hour, images, facilities) VALUES 
+INSERT INTO rooms (store_id, room_no, name, type, capacity, hourly_rate, image, facilities) VALUES
 (1, '101', '梅花厅', '麻将房', 4, 80.00, '/images/room-default.jpg', '自动麻将机,空调,茶水'),
 (1, '102', '兰花厅', '麻将房', 4, 80.00, '/images/room-default.jpg', '自动麻将机,空调,茶水'),
 (1, '103', '竹叶厅', '麻将房', 4, 100.00, '/images/room-default.jpg', '豪华自动麻将机,中央空调,高级茶具'),

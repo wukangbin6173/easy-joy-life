@@ -8,7 +8,7 @@ echo ==========================================
 echo.
 
 REM 服务器信息
-set SERVER_IP=47.97.179.50
+set SERVER_IP=quexitai.com
 set SERVER_USER=root
 
 echo 正在连接到服务器 %SERVER_IP%...

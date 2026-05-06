@@ -25,15 +25,15 @@ chmod +x ssl-auto-setup.sh
 #### 问题症状
 ```
 ❌ 域名解析不匹配
-域名 easyjoylife.xin 解析到: 1.2.3.4
-服务器IP: 121.43.96.127
+域名 quexitai.com 解析到: 1.2.3.4
+服务器IP: quexitai.com
 ```
 
 #### 解决方案
 ```bash
 # 检查DNS解析
-dig easyjoylife.xin @8.8.8.8
-nslookup easyjoylife.xin
+dig quexitai.com @8.8.8.8
+nslookup quexitai.com
 
 # 等待DNS生效 (可能需要24小时)
 # 或联系域名注册商检查A记录配置
@@ -73,11 +73,11 @@ too many certificates already issued for exact set of domains
 certbot certonly --staging \
     --webroot \
     --webroot-path=/var/www/html \
-    -d easyjoylife.xin \
-    -d www.easyjoylife.xin
+    -d quexitai.com \
+    -d www.quexitai.com
 
 # 测试成功后，删除测试证书，申请正式证书
-certbot delete --cert-name easyjoylife.xin
+certbot delete --cert-name quexitai.com
 ```
 
 ### 4. 防火墙阻止访问
@@ -85,7 +85,7 @@ certbot delete --cert-name easyjoylife.xin
 #### 问题症状
 ```
 Connection timed out
-curl: (7) Failed to connect to easyjoylife.xin port 80
+curl: (7) Failed to connect to quexitai.com port 80
 ```
 
 #### 解决方案
@@ -137,7 +137,7 @@ sudo chown -R www-data:www-data /var/www/html
 sudo tee /etc/nginx/sites-available/temp << EOF
 server {
     listen 80;
-    server_name easyjoylife.xin www.easyjoylife.xin;
+    server_name quexitai.com www.quexitai.com;
     root /var/www/html;
     
     location /.well-known/acme-challenge/ {
@@ -153,11 +153,11 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot certonly \
     --webroot \
     --webroot-path=/var/www/html \
-    --email admin@easyjoylife.xin \
+    --email admin@quexitai.com \
     --agree-tos \
     --no-eff-email \
-    -d easyjoylife.xin \
-    -d www.easyjoylife.xin
+    -d quexitai.com \
+    -d www.quexitai.com
 ```
 
 ### 方法2: Standalone方式
@@ -168,11 +168,11 @@ sudo systemctl stop nginx
 # 2. 申请证书
 sudo certbot certonly \
     --standalone \
-    --email admin@easyjoylife.xin \
+    --email admin@quexitai.com \
     --agree-tos \
     --no-eff-email \
-    -d easyjoylife.xin \
-    -d www.easyjoylife.xin
+    -d quexitai.com \
+    -d www.quexitai.com
 
 # 3. 重启Nginx
 sudo systemctl start nginx
@@ -184,10 +184,10 @@ sudo systemctl start nginx
 sudo certbot certonly \
     --manual \
     --preferred-challenges dns \
-    --email admin@easyjoylife.xin \
+    --email admin@quexitai.com \
     --agree-tos \
-    -d easyjoylife.xin \
-    -d www.easyjoylife.xin
+    -d quexitai.com \
+    -d www.quexitai.com
 
 # 按提示添加TXT记录到DNS
 ```
@@ -200,10 +200,10 @@ sudo certbot certonly \
 sudo certbot certificates
 
 # 检查证书文件
-sudo ls -la /etc/letsencrypt/live/easyjoylife.xin/
+sudo ls -la /etc/letsencrypt/live/quexitai.com/
 
 # 测试证书链
-openssl s_client -connect easyjoylife.xin:443 -servername easyjoylife.xin
+openssl s_client -connect quexitai.com:443 -servername quexitai.com
 ```
 
 ### 在线SSL测试工具
@@ -219,7 +219,7 @@ openssl s_client -connect easyjoylife.xin:443 -servername easyjoylife.xin
 sudo certbot renew
 
 # 续期特定证书
-sudo certbot renew --cert-name easyjoylife.xin
+sudo certbot renew --cert-name quexitai.com
 
 # 强制续期 (测试用)
 sudo certbot renew --force-renewal
@@ -257,13 +257,13 @@ sudo journalctl -u nginx -f
 ### 监控证书到期
 ```bash
 # 检查证书到期时间
-sudo certbot certificates | grep -A 5 easyjoylife.xin
+sudo certbot certificates | grep -A 5 quexitai.com
 
 # 创建到期提醒脚本
 cat > /usr/local/bin/ssl-expiry-check.sh << 'EOF'
 #!/bin/bash
 DAYS_BEFORE_EXPIRY=30
-CERT_PATH="/etc/letsencrypt/live/easyjoylife.xin/cert.pem"
+CERT_PATH="/etc/letsencrypt/live/quexitai.com/cert.pem"
 
 if [ -f "$CERT_PATH" ]; then
     EXPIRY_DATE=$(openssl x509 -enddate -noout -in "$CERT_PATH" | cut -d= -f2)
@@ -302,7 +302,7 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo tee /etc/nginx/sites-available/http-only << EOF
 server {
     listen 80;
-    server_name easyjoylife.xin www.easyjoylife.xin;
+    server_name quexitai.com www.quexitai.com;
     
     location / {
         proxy_pass http://127.0.0.1:8080;
@@ -323,8 +323,8 @@ sudo nginx -t && sudo systemctl reload nginx
 
 1. **查看详细日志**: `/var/log/letsencrypt/letsencrypt.log`
 2. **检查Nginx配置**: `sudo nginx -T`
-3. **验证域名解析**: `dig easyjoylife.xin`
-4. **测试端口连通性**: `telnet easyjoylife.xin 80`
+3. **验证域名解析**: `dig quexitai.com`
+4. **测试端口连通性**: `telnet quexitai.com 80`
 5. **联系域名服务商**: 确认DNS配置正确
 
 记住：SSL证书申请需要域名正确解析到服务器IP，这是最关键的前提条件！

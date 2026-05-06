@@ -27,8 +27,8 @@ chmod +x ssl-auto-setup.sh
 ## 🔧 详细功能
 
 ### 域名和证书信息
-- **主域名**: easyjoylife.xin
-- **备用域名**: www.easyjoylife.xin
+- **主域名**: quexitai.com
+- **备用域名**: www.quexitai.com
 - **证书类型**: Let's Encrypt (免费，90天有效期)
 - **自动续期**: 每天凌晨2点检查
 
@@ -62,7 +62,7 @@ chmod +x ssl-auto-setup.sh
 sudo certbot certificates
 
 # 在线测试SSL评级
-# 访问: https://www.ssllabs.com/ssltest/analyze.html?d=easyjoylife.xin
+# 访问: https://www.ssllabs.com/ssltest/analyze.html?d=quexitai.com
 ```
 
 ## 🔄 自动续期机制
@@ -91,10 +91,10 @@ sudo tail -f /var/log/ssl-renewal.log
 #### 1. 域名解析问题
 ```bash
 # 检查DNS解析
-dig easyjoylife.xin @8.8.8.8
-nslookup easyjoylife.xin
+dig quexitai.com @8.8.8.8
+nslookup quexitai.com
 
-# 确保A记录指向: 121.43.96.127
+# 确保A记录指向: quexitai.com
 ```
 
 #### 2. 端口占用问题
@@ -125,7 +125,7 @@ sudo certbot renew --force-renewal
 sudo systemctl reload nginx
 
 # 3. 验证证书
-curl -I https://easyjoylife.xin
+curl -I https://quexitai.com
 ```
 
 #### 回滚到HTTP
@@ -140,7 +140,7 @@ sudo nginx -t && sudo systemctl reload nginx
 ### 证书监控
 ```bash
 # 检查证书到期时间
-openssl x509 -enddate -noout -in /etc/letsencrypt/live/easyjoylife.xin/cert.pem
+openssl x509 -enddate -noout -in /etc/letsencrypt/live/quexitai.com/cert.pem
 
 # 查看所有证书状态
 sudo certbot certificates
@@ -180,7 +180,7 @@ sudo tail -f /var/log/letsencrypt/letsencrypt.log
 1. **查看故障排除指南**: `ssl-troubleshooting.md`
 2. **检查系统日志**: `journalctl -u nginx`
 3. **验证域名解析**: 确保DNS正确配置
-4. **测试网络连通性**: `telnet easyjoylife.xin 443`
+4. **测试网络连通性**: `telnet quexitai.com 443`
 
 ### 联系信息
 - **项目仓库**: https://github.com/wukangbin6173/easy-joy-life

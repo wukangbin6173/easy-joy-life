@@ -36,15 +36,16 @@ public class RoomController {
     private final ObjectMapper objectMapper;
 
     /**
-     * 获取门店预约总开关配置
-     * status: 0=开启预约, 1=关闭预约
+     * 获取门店预约配置（含总开关 status）
+     * status: 0=正常（预约开启）, 1=禁用（预约关闭）
      */
     @GetMapping("/booking-config")
     public ResponseEntity<Map<String, Object>> getBookingConfig(
+            @RequestParam(required = false) Long merchantId,
             @RequestParam Long storeId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            SqdResponse sqd = sqdBookingConfigService.getBookingConfig(storeId);
+            SqdResponse sqd = sqdBookingConfigService.getBookingConfig(merchantId, storeId);
             if (sqd.isSuccess()) {
                 response.put("success", true);
                 response.put("data", sqd.getData());
@@ -57,46 +58,6 @@ public class RoomController {
             log.error("获取门店预约配置失败: storeId={}", storeId, e);
             response.put("success", false);
             response.put("message", "获取门店预约配置失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
-        }
-    }
-
-    /**
-     * 更新门店预约总开关配置
-     * status: 0=开启预约, 1=关闭预约
-     */
-    @PutMapping("/booking-config")
-    public ResponseEntity<Map<String, Object>> updateBookingConfig(
-            @RequestBody Map<String, Object> body) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            Map<String, Object> requestBody = safeBody(body);
-            Integer status = asInteger(requestBody.get("status"));
-            if (status == null) {
-                throw new IllegalArgumentException("请指定预约总开关状态（0-开启 1-关闭）");
-            }
-            if (status != 0 && status != 1) {
-                throw new IllegalArgumentException("预约总开关状态只能为0（开启）或1（关闭）");
-            }
-
-            SqdResponse sqd = sqdBookingConfigService.updateBookingConfig(requestBody);
-            if (sqd.isSuccess()) {
-                response.put("success", true);
-                response.put("message", status == 0 ? "门店预约已开启" : "门店预约已关闭");
-                response.put("data", sqd.getData());
-            } else {
-                response.put("success", false);
-                response.put("message", sqd.getMsg());
-            }
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("更新门店预约配置失败", e);
-            response.put("success", false);
-            response.put("message", "更新门店预约配置失败: " + e.getMessage());
             return ResponseEntity.ok(response);
         }
     }

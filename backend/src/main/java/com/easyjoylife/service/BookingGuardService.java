@@ -57,7 +57,7 @@ public class BookingGuardService {
             return success("no storeId, skip store booking check");
         }
         try {
-            SqdResponse configResp = sqdBookingConfigService.getBookingConfig(storeId);
+            SqdResponse configResp = sqdBookingConfigService.getBookingConfig(null, storeId);
             if (!configResp.isSuccess()) {
                 // 获取配置失败时不阻断，让商起点后端做最终校验
                 return success("config fetch skipped");

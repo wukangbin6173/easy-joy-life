@@ -283,31 +283,36 @@ GET /api/rooms/statistics?merchantId={merchantId}
 | 门店总开关 | 控制整个门店 | 该门店下所有资源都不可预约 |
 | 资源单独开关 | 控制单个房间 | 仅该资源不可预约 |
 
-### 5.1 获取门店预约总开关
+### 5.1 获取门店预约配置
 
 ```
-GET /api/rooms/booking-config?storeId={storeId}
+GET /api/rooms/booking-config?merchantId={merchantId}&storeId={storeId}
 ```
 
-**返回：**
-```json
-{ "success": true, "data": { "status": 0 } }
-```
-
-> ⚠️ status: `0`=预约开启，`1`=预约关闭
-
-### 5.2 修改门店预约总开关
-
-```
-PUT /api/rooms/booking-config
-```
-
-| 字段 | 类型 | 必填 | 说明 |
+| 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| merchantId | Long | 否 | 商户ID |
 | storeId | Long | 是 | 门店ID |
-| status | Integer | 是 | 0=开启预约，1=关闭预约 |
 
-### 5.3 修改单个资源预约开关
+**返回示例：**
+```json
+{
+  "success": true,
+  "data": {
+    "status": 0,
+    "storeId": 456,
+    "autoConfirm": 1,
+    "requirePayment": 0,
+    "maxAdvanceBookingDays": 30,
+    "minAdvanceBookingMinutes": 30,
+    "cancelFreeHours": 24
+  }
+}
+```
+
+> status: `0`=正常（预约开启），`1`=禁用（预约关闭）
+
+### 5.2 修改单个资源预约开关
 
 ```
 PUT /api/rooms/{resourceId}/booking-switch?merchantId={merchantId}
@@ -317,7 +322,7 @@ PUT /api/rooms/{resourceId}/booking-switch?merchantId={merchantId}
 |------|------|------|------|
 | isAcceptBooking | Integer | 是 | 1=接受预约，0=不接受 |
 
-### 5.4 批量修改资源预约开关
+### 5.3 批量修改资源预约开关
 
 ```
 POST /api/rooms/booking-switch/batch

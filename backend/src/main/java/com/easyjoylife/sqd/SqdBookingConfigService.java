@@ -7,11 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 商起点 - 门店预约配置（总开关）
+ * 商起点 - 门店预约配置
  * 
- * 对应商起点 app-api 接口：
- * - GET  /app-api/merchant/my-booking-config/get?storeId=xxx
- * - PUT  /app-api/merchant/my-booking-config/update
+ * 对应商起点开放接口：
+ * - GET /v1/booking/config?merchantId=xxx&storeId=xxx — 查询门店预约配置（OpenAPI签名）
  */
 @Service
 @RequiredArgsConstructor
@@ -21,19 +20,14 @@ public class SqdBookingConfigService {
 
     /**
      * 获取门店预约配置（含总开关 status）
-     * status: 0=开启预约, 1=关闭预约
+     * status: 0=正常（预约开启）, 1=禁用（预约关闭）
      */
-    public SqdResponse getBookingConfig(Long storeId) {
+    public SqdResponse getBookingConfig(Long merchantId, Long storeId) {
         Map<String, Object> params = new HashMap<>();
+        if (merchantId != null) {
+            params.put("merchantId", merchantId);
+        }
         params.put("storeId", storeId);
-        return client.merchantGet("/app-api/merchant/my-booking-config/get", params);
-    }
-
-    /**
-     * 更新门店预约配置（含总开关 status）
-     * status: 0=开启预约, 1=关闭预约
-     */
-    public SqdResponse updateBookingConfig(Map<String, Object> body) {
-        return client.merchantPut("/app-api/merchant/my-booking-config/update", body);
+        return client.get("/v1/booking/config", params);
     }
 }

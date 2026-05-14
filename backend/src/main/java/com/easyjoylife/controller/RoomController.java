@@ -1,6 +1,7 @@
 package com.easyjoylife.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.easyjoylife.sqd.SqdBookingConfigService;
 import com.easyjoylife.sqd.SqdBookingService;
 import com.easyjoylife.sqd.SqdResourceService;
 import com.easyjoylife.sqd.SqdResponse;
@@ -29,9 +30,76 @@ public class RoomController {
 
     private final SqdResourceService sqdResourceService;
     private final SqdBookingService sqdBookingService;
+    private final SqdBookingConfigService sqdBookingConfigService;
     private final OrderCancelLimitService orderCancelLimitService;
     private final BookingGuardService bookingGuardService;
     private final ObjectMapper objectMapper;
+
+    /**
+     * 获取门店预约总开关配置
+     * status: 0=开启预约, 1=关闭预约
+     */
+    @GetMapping("/booking-config")
+    public ResponseEntity<Map<String, Object>> getBookingConfig(
+            @RequestParam Long storeId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            SqdResponse sqd = sqdBookingConfigService.getBookingConfig(storeId);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("获取门店预约配置失败: storeId={}", storeId, e);
+            response.put("success", false);
+            response.put("message", "获取门店预约配置失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 更新门店预约总开关配置
+     * status: 0=开启预约, 1=关闭预约
+     */
+    @PutMapping("/booking-config")
+    public ResponseEntity<Map<String, Object>> updateBookingConfig(
+            @RequestBody Map<String, Object> body) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Map<String, Object> requestBody = safeBody(body);
+            Integer status = asInteger(requestBody.get("status"));
+            if (status == null) {
+                throw new IllegalArgumentException("请指定预约总开关状态（0-开启 1-关闭）");
+            }
+            if (status != 0 && status != 1) {
+                throw new IllegalArgumentException("预约总开关状态只能为0（开启）或1（关闭）");
+            }
+
+            SqdResponse sqd = sqdBookingConfigService.updateBookingConfig(requestBody);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("message", status == 0 ? "门店预约已开启" : "门店预约已关闭");
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("更新门店预约配置失败", e);
+            response.put("success", false);
+            response.put("message", "更新门店预约配置失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
 
     /**
      * 获取商户下的房间（资源）列表
@@ -174,6 +242,16 @@ public class RoomController {
             }
 
             if (merchantId != null && resourceId != null) {
+                // 先校验门店总开关
+                if (storeId != null) {
+                    SqdResponse storeGuard = bookingGuardService.validateStoreBookingEnabled(storeId);
+                    if (!storeGuard.isSuccess()) {
+                        response.put("success", false);
+                        response.put("message", storeGuard.getMsg());
+                        return ResponseEntity.ok(response);
+                    }
+                }
+
                 SqdResponse resourceGuard = bookingGuardService.validateResourceBookable(merchantId, resourceId);
                 if (!resourceGuard.isSuccess()) {
                     response.put("success", false);
@@ -403,6 +481,132 @@ public class RoomController {
             log.error("批量设置房间排班失败", e);
             response.put("success", false);
             response.put("message", "批量设置房间排班失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 设置房间预约开关（是否接受预约）
+     */
+    @PutMapping("/{resourceId}/booking-switch")
+    public ResponseEntity<Map<String, Object>> setBookingSwitch(
+            @PathVariable Long resourceId,
+            @RequestParam Long merchantId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            validatePositive(resourceId, "resourceId");
+            validatePositive(merchantId, "merchantId");
+
+            Map<String, Object> requestBody = safeBody(body);
+            Integer isAcceptBooking = asInteger(
+                    firstText(requestBody.get("isAcceptBooking"), requestBody.get("acceptBooking"),
+                            requestBody.get("bookingEnabled"), requestBody.get("enabled")));
+            if (isAcceptBooking == null) {
+                throw new IllegalArgumentException("请指定预约开关状态（0-关闭 1-开启）");
+            }
+            if (isAcceptBooking != 0 && isAcceptBooking != 1) {
+                throw new IllegalArgumentException("预约开关状态只能为0（关闭）或1（开启）");
+            }
+
+            Map<String, Object> updateBody = new HashMap<>();
+            updateBody.put("isAcceptBooking", isAcceptBooking);
+
+            SqdResponse sqd = sqdResourceService.updateResource(resourceId, merchantId, updateBody);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("message", isAcceptBooking == 1 ? "已开启预约" : "已关闭预约");
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("设置房间预约开关失败: resourceId={}", resourceId, e);
+            response.put("success", false);
+            response.put("message", "设置预约开关失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 批量设置房间预约开关
+     */
+    @PostMapping("/booking-switch/batch")
+    public ResponseEntity<Map<String, Object>> batchSetBookingSwitch(
+            @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Map<String, Object> requestBody = safeBody(body);
+            Long merchantId = asLong(requestBody.get("merchantId"));
+            validatePositive(merchantId, "merchantId");
+
+            List<Long> resourceIds = parseLongList(requestBody.get("resourceIds"));
+            if (resourceIds.isEmpty()) {
+                throw new IllegalArgumentException("请选择需要设置的房间");
+            }
+
+            Integer isAcceptBooking = asInteger(
+                    firstText(requestBody.get("isAcceptBooking"), requestBody.get("acceptBooking"),
+                            requestBody.get("bookingEnabled"), requestBody.get("enabled")));
+            if (isAcceptBooking == null) {
+                throw new IllegalArgumentException("请指定预约开关状态（0-关闭 1-开启）");
+            }
+            if (isAcceptBooking != 0 && isAcceptBooking != 1) {
+                throw new IllegalArgumentException("预约开关状态只能为0（关闭）或1（开启）");
+            }
+
+            Map<String, Object> updateBody = new HashMap<>();
+            updateBody.put("isAcceptBooking", isAcceptBooking);
+
+            List<Map<String, Object>> results = new ArrayList<>();
+            int successCount = 0;
+
+            for (Long resourceId : resourceIds) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("resourceId", resourceId);
+                try {
+                    SqdResponse sqd = sqdResourceService.updateResource(resourceId, merchantId, updateBody);
+                    boolean success = sqd.isSuccess();
+                    item.put("success", success);
+                    item.put("message", success
+                            ? (isAcceptBooking == 1 ? "已开启预约" : "已关闭预约")
+                            : sqd.getMsg());
+                    if (success) {
+                        successCount++;
+                    }
+                } catch (Exception e) {
+                    item.put("success", false);
+                    item.put("message", e.getMessage());
+                }
+                results.add(item);
+            }
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("total", resourceIds.size());
+            data.put("successCount", successCount);
+            data.put("failedCount", resourceIds.size() - successCount);
+            data.put("results", results);
+
+            response.put("success", successCount == resourceIds.size());
+            response.put("message", successCount == resourceIds.size()
+                    ? (isAcceptBooking == 1 ? "批量开启预约成功" : "批量关闭预约成功")
+                    : "部分房间设置失败");
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("批量设置房间预约开关失败", e);
+            response.put("success", false);
+            response.put("message", "批量设置预约开关失败: " + e.getMessage());
             return ResponseEntity.ok(response);
         }
     }

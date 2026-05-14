@@ -1,5 +1,6 @@
 package com.easyjoylife.service;
 
+import com.easyjoylife.sqd.SqdBookingConfigService;
 import com.easyjoylife.sqd.SqdBookingService;
 import com.easyjoylife.sqd.SqdResourceService;
 import com.easyjoylife.sqd.SqdResponse;
@@ -31,14 +32,46 @@ public class BookingGuardService {
 
     private final SqdResourceService sqdResourceService;
     private final SqdBookingService sqdBookingService;
+    private final SqdBookingConfigService sqdBookingConfigService;
 
     public SqdResponse validateResourceAndSlot(Long merchantId, Long storeId, Long resourceId,
                                                String startTime, Integer durationMinutes) {
+        if (storeId != null) {
+            SqdResponse storeBooking = validateStoreBookingEnabled(storeId);
+            if (!storeBooking.isSuccess()) {
+                return storeBooking;
+            }
+        }
         SqdResponse resource = validateResourceBookable(merchantId, resourceId);
         if (!resource.isSuccess()) {
             return resource;
         }
         return validateAvailableSlot(merchantId, storeId, resourceId, startTime, durationMinutes);
+    }
+
+    /**
+     * 校验门店预约总开关是否开启
+     */
+    public SqdResponse validateStoreBookingEnabled(Long storeId) {
+        if (storeId == null) {
+            return success("no storeId, skip store booking check");
+        }
+        try {
+            SqdResponse configResp = sqdBookingConfigService.getBookingConfig(storeId);
+            if (!configResp.isSuccess()) {
+                // 获取配置失败时不阻断，让商起点后端做最终校验
+                return success("config fetch skipped");
+            }
+            Integer status = asInteger(findDeepValueAny(configResp.getData(), "status"));
+            // status=1 表示关闭预约
+            if (status != null && status == 1) {
+                return SqdResponse.error("该门店已关闭预约功能");
+            }
+        } catch (Exception e) {
+            // 异常时不阻断
+            log.warn("校验门店预约总开关异常: storeId={}", storeId, e);
+        }
+        return success("store booking enabled");
     }
 
     public SqdResponse validateResourceBookable(Long merchantId, Long resourceId) {

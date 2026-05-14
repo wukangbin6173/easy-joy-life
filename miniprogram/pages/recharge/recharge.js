@@ -2,6 +2,7 @@ const app = getApp();
 const { request, smsApi } = require('../../utils/api.js');
 const { openCashier } = require('../../utils/payment.js');
 const config = require('../../utils/config.js');
+const { ensureUserIdentity } = require('../../utils/user-session.js');
 
 Page({
   data: {
@@ -33,8 +34,37 @@ Page({
   },
 
   loadCurrentBalance() {
-    const userId = app.globalData.userId;
-    if (!userId) return;
+    const userId = app.globalData.userId || wx.getStorageSync('userId');
+    if (!userId) {
+      ensureUserIdentity().then(() => this.loadCurrentBalance()).catch(err => {
+        console.error('恢复用户身份失败:', err);
+      });
+      return;
+    }
+
+    const merchantId = this.getMerchantId();
+    if (!merchantId) return;
+
+    request('/api/member/recharge/info', {
+      method: 'GET',
+      data: {
+        merchantId,
+        externalUserId: userId
+      }
+    }).then(res => {
+      if ((res.success || res.code == 200) && res.data) {
+        this.setData({
+          currentBalance: this.formatFen(res.data.balance),
+          userPoints: res.data.rewardBalance || res.data.points || 0
+        });
+      }
+    }).catch(err => {
+      console.error('查询会员余额失败，尝试旧钱包余额:', err);
+      this.loadLegacyWalletBalance(userId);
+    });
+  },
+
+  loadLegacyWalletBalance(userId) {
     request(`/api/wallet/${userId}`).then(res => {
       if (res.success) {
         this.setData({
@@ -43,6 +73,20 @@ Page({
         });
       }
     }).catch(() => {});
+  },
+
+  getMerchantId() {
+    return this.data.merchantId ||
+      (app.getActiveMerchantId ? app.getActiveMerchantId() : '') ||
+      app.globalData.currentMerchantId ||
+      app.globalData.defaultMerchantId ||
+      config.DEFAULT_MERCHANT_ID;
+  },
+
+  formatFen(value) {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount)) return '0.00';
+    return (amount / 100).toFixed(2);
   },
 
   formatMoney(value) {

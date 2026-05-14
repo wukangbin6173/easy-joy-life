@@ -3,6 +3,7 @@ const { storeApi, roomApi } = require('../../utils/api.js');
 const config = require('../../utils/config.js');
 const resourceStatus = require('../../utils/resource-status.js');
 const locationUtil = require('../../utils/location.js');
+const bookingModeUtil = require('../../utils/booking-mode.js');
 
 const CATEGORY_CONFIG = {
   all: {
@@ -126,7 +127,7 @@ Page({
 
   loadAllStores(location = this.data.location) {
     this.setData({ loading: true });
-    storeApi.getStores(this.getMerchantId(), 1, 50).then(res => {
+    storeApi.getStores(undefined, 1, 100).then(res => {
       const stores = this.normalizeResponseStores(res);
       this.setStores(stores, location);
     }).catch(err => {
@@ -178,6 +179,7 @@ Page({
 
     this.setData(patch);
     this.applyFilters();
+    this.enrichStoresWithBookingMode(stores);
     this.enrichStoresWithRooms(stores);
   },
 
@@ -191,6 +193,7 @@ Page({
     const coverImage = realImage || meta.fallbackImage || '';
     const distanceValue = this.resolveDistanceValue(store, location);
     const priceInfo = this.getStorePriceInfo(store, meta);
+    const bookingEnabled = bookingModeUtil.resolveBookingEnabled(store);
 
     return {
       ...store,
@@ -221,6 +224,8 @@ Page({
       isFullDay: this.isFullDayStore(store),
       selfServiceText: categoryType === 'carwash' ? '自助洗车' : '可自助开门',
       extraTag: this.getExtraTag(store),
+      bookingEnabled,
+      actionText: this.getStoreActionText(bookingEnabled),
       availableText: store.availableText || '查询中'
     };
   },
@@ -262,6 +267,39 @@ Page({
       app.globalData.currentMerchantId ||
       app.globalData.defaultMerchantId ||
       config.DEFAULT_MERCHANT_ID;
+  },
+
+  getStoreActionText(bookingEnabled) {
+    return bookingEnabled ? '立即预订' : '到店下单';
+  },
+
+  getStoreAvailabilityText(bookingEnabled, availableCount) {
+    if (availableCount === undefined || availableCount === null || availableCount === '') {
+      return bookingEnabled ? '今日可约' : '今日可用';
+    }
+    if (Number(availableCount || 0) <= 0) return bookingEnabled ? '暂无可约' : '暂无可用';
+    return bookingEnabled ? '今日可约' : '今日可用';
+  },
+
+  enrichStoresWithBookingMode(stores) {
+    stores.forEach(store => {
+      const storeId = store.id || store.storeId;
+      if (!storeId) return;
+      storeApi.getStoreWithBookingMode(storeId).then(res => {
+        const latest = (res && res.data) || {};
+        const merged = { ...store, ...latest };
+        const bookingEnabled = bookingModeUtil.resolveBookingEnabled(merged);
+        this.updateStorePartial(store.id, {
+          bookingConfig: merged.bookingConfig,
+          displayConfig: merged.displayConfig,
+          bookingEnabled,
+          actionText: this.getStoreActionText(bookingEnabled),
+          availableText: this.getStoreAvailabilityText(bookingEnabled, store.roomCount)
+        });
+      }).catch(err => {
+        console.warn('加载门店预约配置失败:', storeId, err);
+      });
+    });
   },
 
   resolveDistanceValue(store, location) {
@@ -388,7 +426,7 @@ Page({
       }).catch(err => {
         console.error('加载门店房间失败:', store.merchantId, err);
         this.updateStorePartial(store.id, {
-          availableText: store.roomCount > 0 ? '今日可约' : '暂无可约'
+          availableText: this.getStoreAvailabilityText(store.bookingEnabled, store.roomCount)
         });
       });
     });
@@ -396,7 +434,8 @@ Page({
 
   updateStoreByRooms(store, rooms) {
     const visibleRooms = this.filterRoomsForStore(rooms, store).filter(room => room.isShowInApp !== 0);
-    const roomList = visibleRooms.filter(room => this.isBookableResource(room));
+    const bookingEnabled = bookingModeUtil.resolveBookingEnabled(store);
+    const roomList = visibleRooms.filter(room => this.isBookableResource(room, bookingEnabled));
     const categorySource = roomList.length ? roomList : visibleRooms;
     const categoryTypes = this.detectCategoryTypesFromRooms(categorySource, store.categoryTypes);
     const categoryType = categoryTypes[0] || store.categoryType;
@@ -416,7 +455,9 @@ Page({
       priceText: minPriceInfo.hasPrice ? minPriceInfo.text : store.priceText,
       priceUnitText: minPriceInfo.hasPrice ? minPriceInfo.unitText : store.priceUnitText,
       hasPrice: minPriceInfo.hasPrice || store.hasPrice,
-      availableText: roomList.length > 0 ? '今日可约' : '暂无可约'
+      bookingEnabled,
+      actionText: this.getStoreActionText(bookingEnabled),
+      availableText: this.getStoreAvailabilityText(bookingEnabled, roomList.length)
     });
   },
 
@@ -434,8 +475,8 @@ Page({
       (room.storeInfo && room.storeInfo.id) || '';
   },
 
-  isBookableResource(room = {}) {
-    return resourceStatus.isResourceBookable(room);
+  isBookableResource(room = {}, bookingEnabled = false) {
+    return resourceStatus.isResourceBookable(room, { bookingEnabled });
   },
 
   updateStorePartial(storeId, patch) {
@@ -759,7 +800,7 @@ Page({
       variant: 'service',
       servicePhone: '15157903339',
       serviceTime: '7×24小时在线',
-      serviceDesc: '预约、支付、开门、退款等问题都可以联系人工客服',
+      serviceDesc: '下单/预约、支付、开门、退款等问题都可以联系人工客服',
       showCancel: true,
       cancelText: '知道了',
       confirmText: '拨打电话',

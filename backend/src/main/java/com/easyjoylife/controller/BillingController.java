@@ -3,6 +3,7 @@ package com.easyjoylife.controller;
 import com.easyjoylife.service.PointsService;
 import com.easyjoylife.service.OrderCancelLimitService;
 import com.easyjoylife.service.BookingGuardService;
+import com.easyjoylife.service.BillingOrderSnapshotService;
 import com.easyjoylife.sqd.SqdBillingService;
 import com.easyjoylife.sqd.SqdCustomerService;
 import com.easyjoylife.sqd.SqdMemberService;
@@ -40,6 +41,7 @@ public class BillingController {
     private final PointsService pointsService;
     private final OrderCancelLimitService orderCancelLimitService;
     private final BookingGuardService bookingGuardService;
+    private final BillingOrderSnapshotService billingOrderSnapshotService;
 
     /**
      * 查询房间列表 - 直接使用 /api/rooms 接口
@@ -169,6 +171,9 @@ public class BillingController {
 
             if (sqd.isSuccess()) {
                 Map<String, Object> data = sqd.getDataAsMap();
+                billingOrderSnapshotService.capturePrepaidOrder(
+                        merchantId, storeId, resourceId, externalUserId, startTime, durationMinutes, data);
+                billingOrderSnapshotService.normalizeForClient(data);
                 String cashierUrl = data != null ? (String) data.get("cashierUrl") : null;
                 response.put("success", true);
                 response.put("data", data);
@@ -302,20 +307,24 @@ public class BillingController {
             @RequestParam(defaultValue = "20") Integer pageSize) {
         Map<String, Object> response = new HashMap<>();
         try {
-            SqdResponse sqd;
-            if (externalUserId != null && !externalUserId.trim().isEmpty()) {
-                sqd = sqdBillingService.myOrders(externalUserId.trim(), status, pageNo, pageSize);
-            } else {
-                Map<String, Object> body = new HashMap<>();
-                body.put("merchantId", merchantId);
-                body.put("status", status);
-                body.put("pageNo", pageNo);
-                body.put("pageSize", pageSize);
-                sqd = sqdBillingService.pageOrders(body);
+            String userId = externalUserId != null ? externalUserId.trim() : "";
+            if (userId.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "externalUserId不能为空");
+                return ResponseEntity.ok(response);
             }
+
+            SqdResponse sqd = sqdBillingService.myOrders(userId, status, pageNo, pageSize);
             if (sqd.isSuccess()) {
+                billingOrderSnapshotService.normalizeForClient(sqd.getData());
                 response.put("success", true);
                 response.put("data", sqd.getData());
+            } else if (isMethodNotSupported(sqd)) {
+                log.warn("商起点用户订单列表接口返回 405，降级为空列表: externalUserId={}, merchantId={}, msg={}",
+                        userId, merchantId, sqd.getMsg());
+                response.put("success", true);
+                response.put("data", emptyOrderPage(pageNo, pageSize));
+                response.put("message", "订单列表暂不可用，已返回空列表");
             } else {
                 response.put("success", false);
                 response.put("message", sqd.getMsg());
@@ -339,6 +348,7 @@ public class BillingController {
         try {
             SqdResponse sqd = sqdBillingService.getOrder(orderId);
             if (sqd.isSuccess()) {
+                billingOrderSnapshotService.normalizeForClient(sqd.getData());
                 response.put("success", true);
                 response.put("data", sqd.getData());
             } else {
@@ -614,6 +624,25 @@ public class BillingController {
 
     private String cleanMessage(String msg) {
         return msg == null || msg.trim().isEmpty() ? "请稍后重试" : msg.trim();
+    }
+
+    private boolean isMethodNotSupported(SqdResponse sqd) {
+        if (sqd == null) {
+            return false;
+        }
+        String msg = sqd.getMsg();
+        return sqd.getCode() == 405
+                || (msg != null && (msg.contains("Request method") || msg.contains("请求方法不正确")));
+    }
+
+    private Map<String, Object> emptyOrderPage(Integer pageNo, Integer pageSize) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("list", java.util.Collections.emptyList());
+        data.put("records", java.util.Collections.emptyList());
+        data.put("total", 0);
+        data.put("pageNo", pageNo);
+        data.put("pageSize", pageSize);
+        return data;
     }
 
     private SqdResponse successResponse(String msg) {

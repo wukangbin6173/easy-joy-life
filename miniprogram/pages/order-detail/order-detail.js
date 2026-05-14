@@ -1,5 +1,5 @@
 const app = getApp();
-const { request, storeApi, roomApi } = require('../../utils/api.js');
+const { request, storeApi, roomApi, iotApi } = require('../../utils/api.js');
 const { openCashier } = require('../../utils/payment.js');
 const config = require('../../utils/config.js');
 
@@ -40,23 +40,49 @@ Page({
 
   onLoad(options) {
     this.setData({ orderId: options.orderId });
+    this._fromPayment = options.fromPayment === '1';
+    this._isLoadingOrder = false;
     this.loadOrderDetail(options.orderId);
   },
 
   onShow() {
-    if (this.data.orderId) this.loadOrderDetail(this.data.orderId);
+    // 避免和 onLoad 的加载重复
+    if (this.data.orderId && !this._isLoadingOrder) {
+      this.loadOrderDetail(this.data.orderId);
+    }
   },
 
   loadOrderDetail(orderId) {
+    if (this._isLoadingOrder) return;
+    this._isLoadingOrder = true;
     this.setData({ loading: true });
     request(`/api/billing/order/${orderId}`).then(res => {
       const o = res.data || {};
       const statusInfo = STATUS_MAP[o.status] || { text: '未知', desc: '' };
       const order = this.formatOrder(o, statusInfo);
       this.setData({ order, loading: false });
+      this._isLoadingOrder = false;
       this.enrichOrder(order);
+      // 支付成功后自动提示开门
+      if (this._fromPayment && order.showUnlock) {
+        this._fromPayment = false;
+        setTimeout(() => {
+          wx.showModal({
+            title: '支付成功',
+            content: '是否立即远程开门？',
+            confirmText: '立即开门',
+            cancelText: '稍后再说',
+            success: (res) => {
+              if (res.confirm) {
+                wx.navigateTo({ url: `/pages/unlock/unlock?orderId=${this.data.orderId}&autoStart=1` });
+              }
+            }
+          });
+        }, 300);
+      }
     }).catch(() => {
       this.setData({ loading: false });
+      this._isLoadingOrder = false;
       wx.showToast({ title: '加载失败', icon: 'none' });
     });
   },
@@ -444,11 +470,32 @@ Page({
   endUsage() {
     wx.showModal({
       title: '确认退房',
-      content: '确定要退房结算吗？',
+      content: '确定要退房结算吗？退房后设备将自动断电关锁。',
       success: (res) => {
         if (res.confirm) {
-          wx.showLoading({ title: '处理中...' });
-          request(`/api/billing/order/${this.data.orderId}/end`, { method: 'POST' }).then(() => {
+          wx.showLoading({ title: '正在关闭设备...', mask: true });
+          const order = this.data.order || {};
+          const merchantId = order.merchantId || (app.getActiveMerchantId && app.getActiveMerchantId()) || config.DEFAULT_MERCHANT_ID;
+          const resourceId = order.resourceId || order.roomId;
+
+          // 先通过 IoT 关闭设备（断电/锁门），再调结算接口
+          const endIot = resourceId
+            ? iotApi.executeAndPoll({
+                merchantId: Number(merchantId),
+                resourceId: Number(resourceId),
+                orderId: this.data.orderId,
+                actionType: 'END_USAGE'
+              }).then(() => {
+                wx.showLoading({ title: '正在结算...', mask: true });
+              }).catch(err => {
+                console.warn('IoT退房指令失败，继续结算:', err.message);
+                wx.showLoading({ title: '正在结算...', mask: true });
+              })
+            : Promise.resolve();
+
+          endIot.then(() => {
+            return request(`/api/billing/order/${this.data.orderId}/end`, { method: 'POST' });
+          }).then(() => {
             wx.hideLoading();
             wx.showToast({ title: '退房成功', icon: 'success' });
             this.loadOrderDetail(this.data.orderId);

@@ -54,7 +54,7 @@ Page({
                 ...card,
                 cardNoMasked: card.cardNo, // 后端已经遮罩过了
                 bankCode: bankCode,
-                bankLogo: bankInfo ? bankInfo.logo : '/images/bank-card-icon.png',
+                bankLogo: '/images/绑定信息.png',
                 bankColor: bankInfo ? bankInfo.color : '#6C63FF'
               };
             }),

@@ -8,7 +8,7 @@ const DEFAULT_EMPTY_IMAGE = '/images/提示.png';
 const config = {
   // 开发环境
   development: {
-    baseUrl: 'http://47.97.179.50:8080',
+    baseUrl: 'https://www.quexitai.com',
     assetBaseUrl: ASSET_BASE_URL,
     uploadBaseUrl: ASSET_BASE_URL,
     debug: true,

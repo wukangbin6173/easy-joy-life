@@ -1,4 +1,4 @@
-const DEFAULT_AVATAR = '/images/default-avatar.png';
+const DEFAULT_AVATAR = '/images/我的.png';
 const config = require('./config.js');
 const UPLOAD_ASSET_BASE_URL = 'https://www.quexitai.com';
 

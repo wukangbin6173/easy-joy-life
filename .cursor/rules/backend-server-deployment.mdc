@@ -1,0 +1,23 @@
+---
+description: 当前后端服务器部署信息与发布注意事项
+alwaysApply: true
+---
+
+# 后端服务器部署信息
+
+- 当前线上后端主机：`root@47.97.179.50`。
+- 当前小程序/线上 API 域名：`https://www.quexitai.com`；`https://xx.aieo.cn` 属于旧域名/历史配置，最近验证为 Nginx 502，不要优先使用它做线上判断。
+- 真实运行路径：`/opt/easyjoylife/app.jar`，工作目录应为 `/opt/easyjoylife`。
+- 当前运行方式：直接 Java 进程，不是 Docker，也不是 `easy-joy-life-backend.service`。
+- 进程命令形态：`java -Xmx512m -Xms256m -jar /opt/easyjoylife/app.jar --spring.profiles.active=prod`。
+- 主要运行日志：`/var/log/easyjoylife.log`；应用文件日志在 `/opt/easyjoylife/logs/application.log`（若启用 `logging.file.name=logs/application.log`）。
+- 当前服务器 Java：JDK 21；本地 Windows 曾因 JDK 25 编译报 `TypeTag :: UNKNOWN`，打包优先用服务器 JDK 21 或本地 JDK 21。
+
+## 发布约定
+
+- 发布前先确认当前进程：`ssh root@47.97.179.50 "ps aux | grep -E 'easyjoylife|app.jar' | grep -v grep"`。
+- 若本地无法用 JDK 21 打包，可把 `backend/` 上传到服务器临时目录，用服务器 JDK 21 + 临时 Maven 构建，再替换 `/opt/easyjoylife/app.jar`。
+- 替换 jar 前必须备份：`cp /opt/easyjoylife/app.jar /opt/easyjoylife/app.jar.bak-$(date +%Y%m%d-%H%M%S)`。
+- 重启时在 `/opt/easyjoylife` 目录启动，避免相对日志目录落到 `/root`。
+- 部署后验证：`curl -sS "https://www.quexitai.com/api/stores?merchantId=23&pageNo=1&pageSize=50"`，并查看 `/var/log/easyjoylife.log` 中的 `SqdClient` / `SQD GET` / `SQD 业务失败` 日志。
+- 不要默认执行 `deploy/deploy-backend-systemd.sh` 或 Docker 部署脚本；当前服务器未使用这些方式运行后端。

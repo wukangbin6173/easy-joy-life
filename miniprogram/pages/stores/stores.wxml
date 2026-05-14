@@ -3,7 +3,7 @@
   <!-- 搜索栏 -->
   <view class="search-bar">
     <view class="search-input-wrapper">
-      <image class="search-icon" src="/images/search.png" />
+      <image class="search-icon" src="/images/找门店.png" />
       <input 
         class="search-input" 
         placeholder="搜索门店名称或地址"
@@ -12,7 +12,7 @@
         confirm-type="search"
       />
       <view class="clear-btn" wx:if="{{searchKeyword}}" bindtap="onClearSearch">
-        <image src="/images/close.png" />
+        <image src="/images/提示-1.png" />
       </view>
     </view>
   </view>
@@ -32,7 +32,7 @@
 
   <!-- 位置授权提示 -->
   <view class="location-auth" wx:if="{{showLocationAuth}}">
-    <image class="location-icon" src="/images/location.png" />
+    <image class="location-icon" src="/images/定位.png" />
     <text class="auth-text">开启位置权限，为您推荐附近门店</text>
     <button class="auth-btn" bindtap="onLocationAuth">去授权</button>
   </view>
@@ -66,7 +66,7 @@
             <button class="action-btn navigate-btn" catchtap="onNavigate" data-store="{{item}}">
               导航
             </button>
-            <button class="action-btn book-btn" catchtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">预订</button>
+            <button class="action-btn book-btn" catchtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">{{item.actionText || '到店下单'}}</button>
           </view>
         </view>
       </view>

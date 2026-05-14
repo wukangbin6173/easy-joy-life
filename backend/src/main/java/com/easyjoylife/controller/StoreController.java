@@ -127,6 +127,56 @@ public class StoreController {
     }
 
     /**
+     * 获取门店预约模式
+     */
+    @GetMapping("/{storeId}/booking-mode")
+    public ResponseEntity<Map<String, Object>> getBookingMode(@PathVariable Long storeId) {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> bookingConfig = new HashMap<>();
+        Map<String, Object> displayConfig = new HashMap<>();
+
+        bookingConfig.put("status", 1);
+        displayConfig.put("showBooking", false);
+        data.put("storeId", storeId);
+        data.put("bookingConfig", bookingConfig);
+        data.put("displayConfig", displayConfig);
+
+        try {
+            SqdResponse booking = sqdMerchantService.getBookingConfig(storeId);
+            if (booking.isSuccess()) {
+                Map<String, Object> bookingData = booking.getDataAsMap();
+                Integer status = readInteger(bookingData, "status");
+                if (status != null) {
+                    bookingConfig.put("status", status);
+                }
+            } else {
+                log.warn("获取商起点预约配置失败: storeId={} msg={}", storeId, booking.getMsg());
+            }
+
+            SqdResponse display = sqdMerchantService.getBusinessDisplayConfig(storeId);
+            if (display.isSuccess()) {
+                Map<String, Object> displayData = display.getDataAsMap();
+                Boolean showBooking = readBoolean(displayData, "showBooking");
+                if (showBooking != null) {
+                    displayConfig.put("showBooking", showBooking);
+                }
+            } else {
+                log.warn("获取商起点展示配置失败: storeId={} msg={}", storeId, display.getMsg());
+            }
+
+            response.put("success", true);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("获取门店预约模式失败: storeId={}", storeId, e);
+            response.put("success", true);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
      * 创建门店
      */
     @PostMapping
@@ -274,5 +324,46 @@ public class StoreController {
             response.put("message", "商户注册失败: " + e.getMessage());
             return ResponseEntity.ok(response);
         }
+    }
+
+    private Integer readInteger(Map<String, Object> data, String key) {
+        if (data == null || !data.containsKey(key)) {
+            return null;
+        }
+        Object value = data.get(key);
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt(((String) value).trim());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private Boolean readBoolean(Map<String, Object> data, String key) {
+        if (data == null || !data.containsKey(key)) {
+            return null;
+        }
+        Object value = data.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue() != 0;
+        }
+        if (value instanceof String) {
+            String text = ((String) value).trim();
+            if ("true".equalsIgnoreCase(text) || "1".equals(text)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(text) || "0".equals(text)) {
+                return false;
+            }
+        }
+        return null;
     }
 }

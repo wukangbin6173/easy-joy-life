@@ -16,20 +16,20 @@
         <text>{{store.address || '暂无地址'}}</text>
         <text class="arrow">›</text>
       </view>
-      <text class="current-time">当前：今天 {{startTime || '--:--'}}-{{endTime || '--:--'}} · {{packageName || '按小时预约'}}</text>
+      <text class="current-time">当前：今天 {{startTime || '--:--'}}-{{endTime || '--:--'}} · {{packageName || flowText.defaultPackageName || '按小时使用'}}</text>
     </view>
   </view>
 
   <view class="filters">
     <view class="filter active">全部</view>
-    <view class="filter">当前可约</view>
+    <view class="filter">{{flowText.currentFilterText || '当前可用'}}</view>
   </view>
 
   <view class="legend">
-    <view><text class="dot available"></text>可约</view>
-    <view><text class="dot booked"></text>已预约</view>
+    <view><text class="dot available"></text>{{flowText.legendAvailable || '可用'}}</view>
+    <view><text class="dot booked"></text>{{flowText.legendBooked || '使用中'}}</view>
     <view><text class="dot cleaning"></text>待清洁</view>
-    <view><text class="dot disabled"></text>不可约</view>
+    <view><text class="dot disabled"></text>{{flowText.legendDisabled || '不可用'}}</view>
   </view>
 
   <view class="loading" wx:if="{{loading}}">加载中...</view>
@@ -47,7 +47,7 @@
         </view>
         <text class="status {{item.statusClass}}">{{item.availabilityText}}</text>
         <text class="support" wx:if="{{item.supportText}}">{{item.supportText}}</text>
-        <view class="timeline-label">今日时段</view>
+        <view class="timeline-label">{{flowText.timelineLabel || '今日时段'}}</view>
         <view class="timeline-hours">
           <text>12</text><text>14</text><text>16</text><text>18</text><text>20</text><text>22</text><text>24</text>
         </view>
@@ -69,7 +69,7 @@
   <view class="bottom-bar">
     <view class="selected">
       <text>已选：{{selectedRoom.name || serviceMeta.selectPlaceholder}}</text>
-      <text class="sub">今天 {{startTime || '--:--'}}-{{endTime || '--:--'}} · {{packageName || '按小时预约'}}</text>
+      <text class="sub">今天 {{startTime || '--:--'}}-{{endTime || '--:--'}} · {{packageName || flowText.defaultPackageName || '按小时使用'}}</text>
     </view>
     <button class="confirm" bindtap="confirmSelect">确认选择</button>
   </view>

@@ -58,9 +58,9 @@
   <view class="bottom-bar" wx:if="{{room.id}}">
     <button class="ghost-btn" bindtap="goBack">返回</button>
     <button class="primary-btn" bindtap="bookRoom" disabled="{{!room.bookable}}">
-      <block wx:if="{{!room.bookable}}">暂不可约</block>
+      <block wx:if="{{!room.bookable}}">{{flowText.disabledButton || '暂不可用'}}</block>
       <block wx:elif="{{selectMode}}">选择该{{serviceMeta.resourceLabel || '资源'}}</block>
-      <block wx:else>去预订</block>
+      <block wx:else>{{flowText.orderButton || '去下单'}}</block>
     </button>
   </view>
 </view>

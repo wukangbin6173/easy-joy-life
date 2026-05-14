@@ -1,15 +1,15 @@
 // 银行配置信息
 const BANK_CONFIG = {
-  'icbc': { name: '工商银行', color: '#C8161D', logo: '/images/banks/icbc.png' },
-  'ccb': { name: '建设银行', color: '#003D7C', logo: '/images/banks/ccb.png' },
-  'abc': { name: '农业银行', color: '#00843D', logo: '/images/banks/abc.png' },
-  'boc': { name: '中国银行', color: '#B8292F', logo: '/images/banks/boc.png' },
-  'cmb': { name: '招商银行', color: '#D32F2F', logo: '/images/banks/cmb.png' },
-  'comm': { name: '交通银行', color: '#0066B3', logo: '/images/banks/comm.png' },
-  'psbc': { name: '邮储银行', color: '#00853F', logo: '/images/banks/psbc.png' },
-  'cib': { name: '兴业银行', color: '#003D7C', logo: '/images/banks/cib.png' },
-  'spdb': { name: '浦发银行', color: '#003D7C', logo: '/images/banks/spdb.png' },
-  'citic': { name: '中信银行', color: '#D32F2F', logo: '/images/banks/citic.png' }
+  'icbc': { name: '工商银行', color: '#C8161D', logo: '/images/绑定信息.png' },
+  'ccb': { name: '建设银行', color: '#003D7C', logo: '/images/绑定信息.png' },
+  'abc': { name: '农业银行', color: '#00843D', logo: '/images/绑定信息.png' },
+  'boc': { name: '中国银行', color: '#B8292F', logo: '/images/绑定信息.png' },
+  'cmb': { name: '招商银行', color: '#D32F2F', logo: '/images/绑定信息.png' },
+  'comm': { name: '交通银行', color: '#0066B3', logo: '/images/绑定信息.png' },
+  'psbc': { name: '邮储银行', color: '#00853F', logo: '/images/绑定信息.png' },
+  'cib': { name: '兴业银行', color: '#003D7C', logo: '/images/绑定信息.png' },
+  'spdb': { name: '浦发银行', color: '#003D7C', logo: '/images/绑定信息.png' },
+  'citic': { name: '中信银行', color: '#D32F2F', logo: '/images/绑定信息.png' }
 };
 
 // 根据卡号前缀识别银行

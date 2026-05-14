@@ -599,6 +599,46 @@ page {
   flex: none;
 }
 
+.booking-entry {
+  margin: 0 20rpx 18rpx;
+  padding: 20rpx 22rpx;
+  border: 1rpx solid #dbeee5;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  background: #f7fffb;
+  box-sizing: border-box;
+}
+
+.booking-entry-title {
+  display: block;
+  color: #202722;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.booking-entry-sub {
+  display: block;
+  margin-top: 6rpx;
+  color: #738079;
+  font-size: 22rpx;
+  line-height: 1.35;
+}
+
+.booking-entry-action {
+  flex-shrink: 0;
+  min-width: 72rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  color: #fff;
+  background: #08A85C;
+  font-size: 22rpx;
+  line-height: 48rpx;
+  text-align: center;
+}
+
 .method-card {
   position: relative;
   flex: 1;
@@ -663,16 +703,19 @@ page {
 .duration-chip {
   min-width: 0;
   width: 100%;
-  height: 48rpx;
-  padding: 0 8rpx;
+  min-height: 48rpx;
+  padding: 6rpx 6rpx;
   border-radius: 8rpx;
   color: #333;
   font-size: 22rpx;
-  line-height: 48rpx;
+  line-height: 1.2;
   text-align: center;
   border: 1rpx solid #e6ebe8;
   background: #fff;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .booking-date-tab.active,
@@ -721,6 +764,9 @@ page {
 .end-time {
   color: #08A85C;
   font-size: 22rpx;
+  max-width: 270rpx;
+  line-height: 1.25;
+  text-align: right;
 }
 
 .package-duration-note {
@@ -839,7 +885,7 @@ page {
   background: #08A85C;
 }
 
-/* 预约支付确认弹窗 */
+/* 下单支付确认弹窗 */
 .confirm-mask {
   position: fixed;
   left: 0;
@@ -1015,7 +1061,7 @@ page {
   background: linear-gradient(135deg, #28bd71 0%, #08A85C 100%);
 }
 
-/* ===== 预订弹窗（全屏，完全仿截图） ===== */
+/* ===== 下单弹窗（全屏，完全仿截图） ===== */
 .booking-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; }
 .booking-popup {
   position: fixed; left: 0; right: 0; top: 0; bottom: 0;
@@ -1103,3 +1149,105 @@ page {
 .send-code-btn::after { border: none; }
 .modal-confirm-btn { width: 100%; height: 88rpx; background: #F5A623; color: #fff; border-radius: 44rpx; font-size: 32rpx; }
 .modal-confirm-btn::after { border: none; }
+
+/* 预约关闭提示条 */
+.booking-notice-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  padding: 16rpx 22rpx;
+  border-radius: 10rpx;
+  color: #8a6d3b;
+  font-size: 24rpx;
+  background: #fdf8ed;
+  border: 1rpx solid #f5e6c8;
+}
+
+.booking-notice-icon {
+  flex-shrink: 0;
+  margin-right: 12rpx;
+  font-size: 26rpx;
+  color: #d4a94b;
+}
+
+.booking-notice-text {
+  line-height: 1.4;
+}
+
+/* 页面加载骨架屏 */
+.page-loading {
+  padding: 0 20rpx;
+}
+
+.skeleton-hero {
+  height: 220rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(90deg, #eef5f1 25%, #f5faf7 50%, #eef5f1 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  margin-bottom: 16rpx;
+}
+
+.skeleton-card {
+  padding: 24rpx;
+  border-radius: 18rpx;
+  background: #fff;
+  margin-bottom: 16rpx;
+}
+
+.skeleton-line {
+  height: 28rpx;
+  border-radius: 6rpx;
+  background: linear-gradient(90deg, #eef5f1 25%, #f5faf7 50%, #eef5f1 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  margin-bottom: 18rpx;
+}
+
+.skeleton-line.long { width: 80%; }
+.skeleton-line.medium { width: 55%; }
+.skeleton-line.short { width: 35%; }
+.skeleton-line:last-child { margin-bottom: 0; }
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 所有资源不可用引导面板 */
+.all-unavailable-panel {
+  text-align: center;
+  padding: 40rpx 20rpx;
+}
+
+.all-unavailable-text {
+  display: block;
+  color: #5a6560;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.all-unavailable-hint {
+  display: block;
+  margin-top: 12rpx;
+  color: #8a938e;
+  font-size: 23rpx;
+}
+
+.all-unavailable-action {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 12rpx 36rpx;
+  border-radius: 999rpx;
+  color: #08A85C;
+  font-size: 24rpx;
+  border: 1rpx solid #08A85C;
+}
+
+/* 时间为空时的引导提示 */
+.time-empty-hint {
+  display: block;
+  margin-top: 8rpx;
+  color: #08A85C;
+  font-size: 22rpx;
+}

@@ -10,7 +10,7 @@
   <view class="user-card">
     <view class="avatar-wrap">
       <image class="avatar" wx:if="{{displayAvatar && !avatarLoadFailed}}" src="{{displayAvatar}}" mode="aspectFill" binderror="onAvatarError"></image>
-      <image class="avatar avatar-default" wx:else src="/images/default-avatar.png" mode="aspectFill"></image>
+      <image class="avatar avatar-default" wx:else src="/images/我的.png" mode="aspectFill"></image>
       <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" loading="{{savingAvatar}}" disabled="{{savingAvatar}}"></button>
     </view>
     <view class="user-main" bindtap="onAvatarTap">

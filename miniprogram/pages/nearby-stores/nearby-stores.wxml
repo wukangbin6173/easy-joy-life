@@ -87,7 +87,7 @@
               <text>{{item.availableText}}</text>
             </view>
           </view>
-          <button class="book-btn" catchtap="goStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">立即预约</button>
+          <button class="book-btn" catchtap="goStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">{{item.actionText || '到店下单'}}</button>
         </view>
       </view>
     </view>

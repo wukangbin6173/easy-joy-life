@@ -3,7 +3,7 @@
   <view class="login-box">
     <!-- Logo -->
     <view class="logo-section">
-      <image class="logo" src="/images/logo.png" mode="aspectFit" />
+      <image class="logo" src="/images/无人棋牌室.png" mode="aspectFit" />
       <text class="app-name">雀玺棋牌室</text>
       <text class="app-desc">完善个人信息，享受更多服务</text>
     </view>
@@ -30,15 +30,15 @@
     <!-- 特色介绍 -->
     <view class="features">
       <view class="feature-item">
-        <image class="feature-icon" src="/images/feature-24h.png" />
+        <image class="feature-icon" src="/images/时间.png" />
         <text class="feature-text">24小时营业</text>
       </view>
       <view class="feature-item">
-        <image class="feature-icon" src="/images/feature-smart.png" />
+        <image class="feature-icon" src="/images/智能开门.png" />
         <text class="feature-text">智能开门</text>
       </view>
       <view class="feature-item">
-        <image class="feature-icon" src="/images/feature-clean.png" />
+        <image class="feature-icon" src="/images/独立包装.png" />
         <text class="feature-text">环境整洁</text>
       </view>
     </view>

@@ -144,10 +144,11 @@ Page({
     const openid = app.globalData.openid;
     const userInfo = app.globalData.userInfo;
     const phone = userInfo && userInfo.phone;
+    const merchantId = app.getActiveMerchantId ? app.getActiveMerchantId() : '';
 
     if (openid && phone) {
       // 已登录且有手机号，直接跳充值页
-      wx.navigateTo({ url: '/pages/recharge/recharge' });
+      wx.navigateTo({ url: `/pages/recharge/recharge?merchantId=${merchantId || ''}` });
     } else {
       // 没有登录或没有手机号，弹验证窗口
       this.setData({ showPhoneModal: true, modalPhone: '', modalCode: '', modalCountdown: 0 });
@@ -248,7 +249,8 @@ Page({
       wx.setStorageSync('userInfo', userInfo);
       this.setData({ showPhoneModal: false, modalLoading: false });
       wx.showToast({ title: '绑定成功', icon: 'success' });
-      setTimeout(() => wx.navigateTo({ url: '/pages/recharge/recharge' }), 1000);
+      const merchantId = app.getActiveMerchantId ? app.getActiveMerchantId() : '';
+      setTimeout(() => wx.navigateTo({ url: `/pages/recharge/recharge?merchantId=${merchantId || ''}` }), 1000);
     }).catch(err => {
       this.setData({ modalLoading: false });
       wx.showToast({ title: err.message || '验证失败', icon: 'none' });

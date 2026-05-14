@@ -70,10 +70,7 @@
             <text class="store-address">{{item.address}}</text>
           </view>
           <view class="store-tags">
-            <text class="store-tag">营业中</text>
-            <text class="store-tag">24小时</text>
-            <text class="store-tag">可自助开门</text>
-            <text class="store-tag">{{item.extraTag}}</text>
+            <text class="store-tag" wx:for="{{item.displayTags}}" wx:key="*this">{{item}}</text>
           </view>
           <view class="store-bottom">
             <view class="price-line">
@@ -92,7 +89,7 @@
                 <text>{{item.availableText}}</text>
               </view>
             </view>
-            <view class="book-btn {{item.canBook === false ? 'muted' : ''}}" catchtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">{{item.canBook === false ? '查看门店' : '立即预订'}}</view>
+            <view class="book-btn {{item.canBook === false ? 'muted' : ''}}" catchtap="onStoreDetail" data-id="{{item.id}}" data-merchantid="{{item.merchantId}}">{{item.canBook === false ? '查看门店' : (item.actionText || '到店下单')}}</view>
           </view>
         </view>
       </view>
@@ -120,7 +117,7 @@
     </view>
     <view class="dock-item" bindtap="contactService">
       <image class="dock-icon" src="/images/联系客服.png" mode="aspectFit"></image>
-      <text class="dock-title">联系客服</text>
+      <text class="dock-title">平台客服</text>
       <text class="dock-sub">7×24小时在线</text>
     </view>
   </view>

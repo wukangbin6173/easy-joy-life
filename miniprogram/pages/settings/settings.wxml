@@ -1,6 +1,6 @@
 <view class="container">
   <view class="version-card">
-    <image class="app-logo" src="/images/logo.png" mode="aspectFit"></image>
+    <image class="app-logo" src="/images/无人棋牌室.png" mode="aspectFit"></image>
     <text class="app-name">雀玺</text>
     <text class="version">v0.1</text>
   </view>

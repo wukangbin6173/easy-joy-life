@@ -5,7 +5,21 @@
     <text class="nav-title">门店详情</text>
   </view>
 
-  <view class="hero-card">
+  <!-- 页面加载骨架屏 -->
+  <view class="page-loading" wx:if="{{pageLoading}}">
+    <view class="skeleton-hero"></view>
+    <view class="skeleton-card">
+      <view class="skeleton-line long"></view>
+      <view class="skeleton-line medium"></view>
+      <view class="skeleton-line short"></view>
+    </view>
+    <view class="skeleton-card">
+      <view class="skeleton-line long"></view>
+      <view class="skeleton-line medium"></view>
+    </view>
+  </view>
+
+  <view class="hero-card" wx:if="{{!pageLoading}}">
     <swiper class="store-swiper" indicator-dots="{{false}}" circular="{{true}}">
       <swiper-item wx:for="{{store.images}}" wx:key="*this">
         <image class="store-cover" src="{{item}}" mode="aspectFill"></image>
@@ -14,7 +28,7 @@
     <view class="image-count">1/{{store.images.length || 1}}</view>
   </view>
 
-  <view class="store-card">
+  <view class="store-card" wx:if="{{!pageLoading}}">
     <view class="store-title-row">
       <view class="store-title-block">
         <text class="store-name">{{store.name || '门店信息待同步'}}</text>
@@ -69,7 +83,12 @@
     </view>
   </view>
 
-  <view class="panel room-panel">
+  <view class="booking-notice-bar" wx:if="{{!pageLoading && !bookingEnabled}}">
+    <text class="booking-notice-icon">ℹ</text>
+    <text class="booking-notice-text">该门店暂不支持在线预约，欢迎到店使用</text>
+  </view>
+
+  <view class="panel room-panel" wx:if="{{!pageLoading}}">
     <view class="panel-heading">
       <view class="panel-heading-main">
         <view class="panel-title room-panel-title">{{serviceMeta.resourcePanelTitle}}</view>
@@ -103,7 +122,7 @@
               <text class="room-unit">{{item.priceUnitText || serviceMeta.priceUnitText}}</text>
             </view>
             <view class="room-select-btn {{item.selected ? 'selected' : ''}} {{!item.bookable ? 'disabled' : ''}}" catchtap="chooseRoomDirect" data-index="{{index}}">
-              {{!item.bookable ? '不可约' : (item.selected ? '已选' : '选择')}}
+              {{!item.bookable ? (flowText.disabledText || '不可用') : (item.selected ? '已选' : '选择')}}
             </view>
           </view>
         </view>
@@ -118,7 +137,7 @@
 
   <view class="panel" wx:if="{{selectedRoom.id}}">
     <view class="method-header">
-      <view class="panel-title method-title">选择预约方式</view>
+      <view class="panel-title method-title">{{flowText.methodTitle || '选择使用方式'}}</view>
       <view class="method-intro-scroll" wx:if="{{selectedPackageIntro}}">
         <view class="method-intro-track">
           <text class="method-intro">{{selectedPackageIntro}}</text>
@@ -139,7 +158,7 @@
 
   <view class="panel date-panel" wx:if="{{selectedRoom.id}}">
     <view class="date-header-row">
-      <view class="panel-title date-title">选择日期</view>
+      <view class="panel-title date-title">{{flowText.dateTitle || '到店使用日期'}}</view>
       <view class="booking-date-tabs date-tabs-inline">
         <view
           class="booking-date-tab {{selectedDate === item.value ? 'active' : ''}}"
@@ -154,25 +173,34 @@
     </view>
   </view>
 
+  <view class="booking-entry" wx:if="{{bookingEnabled && selectedRoom.id}}" bindtap="goBookingPage">
+    <view>
+      <text class="booking-entry-title">预订页面</text>
+      <text class="booking-entry-sub">该门店已开启预订功能，可提前填写预订信息</text>
+    </view>
+    <text class="booking-entry-action">进入</text>
+  </view>
+
   <view class="panel" wx:if="{{selectedRoom.id}}">
-    <view class="panel-title">选择开始时间</view>
+    <view class="panel-title">{{flowText.timeTitle || '选择使用时间'}}</view>
     <view class="time-grid" wx:if="{{displayStartTimeOptions.length}}">
       <view
-        class="time-chip {{startHour === item.hour ? 'active' : ''}} {{item.disabled ? 'disabled' : ''}}"
+        class="time-chip {{startHour === item.hour ? 'active' : ''}}"
         wx:for="{{displayStartTimeOptions}}"
         wx:key="hour"
         bindtap="selectStartTime"
         data-hour="{{item.hour}}"
-        data-disabled="{{item.disabled}}"
       >
         <text>{{item.label}}</text>
-        <text wx:if="{{item.disabled}}" class="disabled-text">(不可约)</text>
       </view>
     </view>
     <view class="expand-line" wx:if="{{startTimeHasMore}}" bindtap="toggleStartTimeExpand">
       {{showAllStartTimes ? '收起时间' : '选择更多时间'}}
     </view>
-    <view class="time-empty" wx:if="{{!displayStartTimeOptions.length}}">{{timeOptionsEmptyText}}</view>
+    <view class="time-empty" wx:if="{{!displayStartTimeOptions.length}}">
+      <text>{{timeOptionsEmptyText}}</text>
+      <text class="time-empty-hint" wx:if="{{dates.length > 1}}">试试切换其他日期</text>
+    </view>
 
     <view class="duration-row">
       <view class="panel-title small">{{bookingMode == 'package' ? '套餐时长' : '选择时长'}}</view>
@@ -194,7 +222,7 @@
     </block>
   </view>
 
-  <view class="panel intro-panel">
+  <view class="panel intro-panel" wx:if="{{!pageLoading}}">
     <view class="panel-title">门店介绍</view>
     <text class="intro-text">{{store.description || '门店介绍待同步'}}</text>
     <view class="intro-tags" wx:if="{{store.displayTags && store.displayTags.length}}">
@@ -202,11 +230,18 @@
     </view>
   </view>
 
-  <view class="panel notice-panel">
-    <view class="panel-title">预约须知</view>
-    <text>· 支付前请选择{{serviceMeta.resourceLabel}}、预约方式、时间与时长，完成后不可更改。</text>
-    <text>· 该服务支持预约成功后自助使用，请在有效时间内完成支付。</text>
+  <view class="panel notice-panel" wx:if="{{!pageLoading}}">
+    <view class="panel-title">{{flowText.noticeTitle || '到店下单须知'}}</view>
+    <text>· {{flowText.noticeSelectText}}</text>
+    <text>· {{flowText.noticeUse || '支付成功后可自助使用，请在有效时间内完成支付。'}}</text>
     <text>· 订单超时未支付，系统将自动释放资源。</text>
+  </view>
+
+  <!-- 所有房间不可用时的引导 -->
+  <view class="panel all-unavailable-panel" wx:if="{{!pageLoading && rooms.length > 0 && !selectedRoom.id}}">
+    <text class="all-unavailable-text">当前所有{{serviceMeta.resourceLabel || '资源'}}暂不可用</text>
+    <text class="all-unavailable-hint">可稍后再试，或联系客服了解详情</text>
+    <view class="all-unavailable-action" bindtap="contactService">联系客服</view>
   </view>
 
   <view class="bottom-bar" wx:if="{{selectedRoom.id}}">
@@ -220,20 +255,20 @@
     </view>
     <view class="bottom-actions">
       <button class="recharge-btn" bindtap="goToRecharge">充值优惠</button>
-      <button class="confirm-btn" bindtap="confirmBooking">确认预约并支付</button>
+      <button class="confirm-btn" bindtap="confirmBooking">{{flowText.confirmButton || '确认下单并支付'}}</button>
     </view>
   </view>
 </view>
 
-<!-- 预约支付确认弹窗 -->
+<!-- 下单支付确认弹窗 -->
 <view class="confirm-mask" wx:if="{{showConfirmModal}}" catchtap="closeConfirmModal"></view>
 <view class="confirm-modal" wx:if="{{showConfirmModal}}" catchtap="noop">
   <view class="confirm-close" bindtap="closeConfirmModal">×</view>
   <view class="confirm-head">
     <image class="confirm-icon" src="/images/预约成功.png" mode="aspectFit"></image>
     <view class="confirm-title-wrap">
-      <text class="confirm-title">确认预订</text>
-      <text class="confirm-subtitle">请核对以下预约信息，确认无误后继续支付</text>
+      <text class="confirm-title">{{flowText.confirmTitle || '确认下单'}}</text>
+      <text class="confirm-subtitle">{{flowText.confirmSubtitle || '请核对以下下单信息，确认无误后继续支付'}}</text>
     </view>
   </view>
 
@@ -251,11 +286,11 @@
       <text class="confirm-value">{{confirmInfo.roomName}}</text>
     </view>
     <view class="confirm-row">
-      <text class="confirm-label">预约方式</text>
+      <text class="confirm-label">{{flowText.methodLabel || '使用方式'}}</text>
       <text class="confirm-value">{{confirmInfo.packageName}}</text>
     </view>
     <view class="confirm-row">
-      <text class="confirm-label">日期</text>
+      <text class="confirm-label">{{flowText.dateLabel || '使用日期'}}</text>
       <text class="confirm-value">{{confirmInfo.dateText}}</text>
     </view>
     <view class="confirm-row">
@@ -283,7 +318,7 @@
 
   <view class="confirm-actions">
     <button class="confirm-cancel-btn" bindtap="closeConfirmModal">取消</button>
-    <button class="confirm-pay-btn" bindtap="confirmAndPay">确认并支付</button>
+    <button class="confirm-pay-btn" bindtap="confirmAndPay">{{flowText.confirmButton || '确认并支付'}}</button>
   </view>
 </view>
 

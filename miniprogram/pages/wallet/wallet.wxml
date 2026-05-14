@@ -35,11 +35,11 @@
       <text class="action-text">提现</text>
     </view>
     <view class="action-item" bindtap="goToTransfer">
-      <image class="action-icon" src="/images/transfer-icon.png"></image>
+      <image class="action-icon" src="/images/费用.png"></image>
       <text class="action-text">转账</text>
     </view>
     <view class="action-item" bindtap="goToRecords">
-      <image class="action-icon" src="/images/record-icon.png"></image>
+      <image class="action-icon" src="/images/订单查看.png"></image>
       <text class="action-text">明细</text>
     </view>
   </view>
@@ -54,7 +54,7 @@
     <view class="transaction-list">
       <view class="transaction-item" wx:for="{{transactions}}" wx:key="id">
         <view class="transaction-icon">
-          <image src="/images/{{item.type}}-icon.png" mode="aspectFit"></image>
+          <image src="{{item.type === 'income' ? '/images/店内余额.png' : '/images/费用.png'}}" mode="aspectFit"></image>
         </view>
         <view class="transaction-info">
           <text class="transaction-title">{{item.title}}</text>
@@ -68,7 +68,7 @@
 
     <!-- 空状态 -->
     <view class="empty-state" wx:if="{{transactions.length === 0}}">
-      <image class="empty-icon" src="/images/empty-transaction.png"></image>
+      <image class="empty-icon" src="/images/提示.png"></image>
       <text class="empty-text">暂无交易记录</text>
     </view>
   </view>
@@ -77,7 +77,7 @@
   <view class="wallet-features">
     <view class="feature-item" bindtap="goToBankCard">
       <view class="feature-icon">
-        <image src="/images/bank-card-icon.png" mode="aspectFit"></image>
+        <image src="/images/绑定信息.png" mode="aspectFit"></image>
       </view>
       <view class="feature-info">
         <text class="feature-title">银行卡管理</text>
@@ -88,7 +88,7 @@
     
     <view class="feature-item" bindtap="goToPayPassword">
       <view class="feature-icon">
-        <image src="/images/password-icon.png" mode="aspectFit"></image>
+        <image src="/images/验证码.png" mode="aspectFit"></image>
       </view>
       <view class="feature-info">
         <text class="feature-title">支付密码</text>

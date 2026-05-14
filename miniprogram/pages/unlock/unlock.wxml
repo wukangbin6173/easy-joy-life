@@ -1,6 +1,6 @@
 <view class="container">
   <view class="unlock-header">
-    <image class="lock-icon" src="/images/smart-lock.png" mode="aspectFit"></image>
+    <image class="lock-icon" src="/images/智能开门.png" mode="aspectFit"></image>
     <text class="title">智能开门</text>
     <text class="subtitle">{{room.name}}</text>
   </view>
@@ -8,50 +8,50 @@
   <view class="unlock-methods">
     <view class="method-item" bindtap="unlockByCode">
       <view class="method-icon">
-        <image src="/images/password-icon.png" mode="aspectFit"></image>
+        <image src="/images/验证码.png" mode="aspectFit"></image>
       </view>
       <view class="method-info">
         <text class="method-title">密码开门</text>
         <text class="method-desc">在门锁上输入开门密码</text>
       </view>
       <view class="method-action">
-        <text class="unlock-code">{{unlockCode}}</text>
+        <text class="unlock-code">{{unlockCode || '—'}}</text>
       </view>
     </view>
 
-    <view class="method-item" bindtap="unlockByBluetooth">
+    <view class="method-item {{iotLoading ? 'loading' : ''}}" bindtap="unlockRemote">
       <view class="method-icon">
-        <image src="/images/bluetooth-icon.png" mode="aspectFit"></image>
+        <image src="/images/快捷开门.png" mode="aspectFit"></image>
       </view>
       <view class="method-info">
-        <text class="method-title">蓝牙开门</text>
-        <text class="method-desc">靠近门锁自动开启</text>
+        <text class="method-title">远程开门</text>
+        <text class="method-desc">通过云端下发指令开锁</text>
       </view>
       <view class="method-action">
-        <button class="unlock-btn" size="mini">开门</button>
+        <button class="unlock-btn {{iotLoading ? 'disabled' : ''}}" size="mini" disabled="{{iotLoading}}">{{iotLoading ? '执行中' : '开门'}}</button>
       </view>
     </view>
 
     <view class="method-item" bindtap="unlockByQR">
       <view class="method-icon">
-        <image src="/images/qr-icon.png" mode="aspectFit"></image>
+        <image src="/images/扫一扫.png" mode="aspectFit"></image>
       </view>
       <view class="method-info">
         <text class="method-title">扫码开门</text>
-        <text class="method-desc">扫描门锁二维码开门</text>
+        <text class="method-desc">扫描门锁二维码后远程开锁</text>
       </view>
       <view class="method-action">
-        <button class="unlock-btn" size="mini">扫码</button>
+        <button class="unlock-btn" size="mini" disabled="{{iotLoading}}">扫码</button>
       </view>
     </view>
   </view>
 
   <view class="unlock-status" wx:if="{{unlockStatus}}">
     <view class="status-icon success" wx:if="{{unlockStatus === 'success'}}">
-      <image src="/images/success-icon.png" mode="aspectFit"></image>
+      <image src="/images/开门成功.png" mode="aspectFit"></image>
     </view>
     <view class="status-icon error" wx:if="{{unlockStatus === 'error'}}">
-      <image src="/images/error-icon.png" mode="aspectFit"></image>
+      <image src="/images/提示.png" mode="aspectFit"></image>
     </view>
     <text class="status-text">{{unlockMessage}}</text>
   </view>

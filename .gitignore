@@ -33,6 +33,7 @@ npm-debug.log*
 *.temp
 *.swp
 *.swo
+old/
 
 # 敏感信息
 application-prod.yml

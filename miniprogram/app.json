@@ -6,6 +6,7 @@
     "pages/select-room/select-room",
     "pages/room-schedule/room-schedule",
     "pages/room-detail/room-detail",
+    "pages/booking/booking",
     "pages/orders/orders",
     "pages/order-detail/order-detail",
     "pages/unlock/unlock",

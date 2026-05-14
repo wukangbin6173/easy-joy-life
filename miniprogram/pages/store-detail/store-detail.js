@@ -4,10 +4,13 @@ const { ensureUserIdentity } = require('../../utils/user-session.js');
 const resourceStatus = require('../../utils/resource-status.js');
 const config = require('../../utils/config.js');
 const locationUtil = require('../../utils/location.js');
+const bookingModeUtil = require('../../utils/booking-mode.js');
 const app = getApp();
 
 const DEFAULT_STORE_IMAGE = config.DEFAULT_STORE_IMAGE;
 const DEFAULT_ROOM_IMAGE = config.DEFAULT_ROOM_IMAGE;
+const DAY_MINUTES = 24 * 60;
+const TIMELINE_WINDOW_MINUTES = DAY_MINUTES * 2;
 
 const SERVICE_META = {
   mahjong: {
@@ -17,7 +20,7 @@ const SERVICE_META = {
     resourceLabel: '包间',
     resourcePanelTitle: '选择包间',
     moreResourceText: '查看更多包间',
-    emptyResourceText: '暂无可预约包间',
+    emptyResourceText: '暂无可用包间',
     priceUnitText: '/小时起',
     fallbackImage: DEFAULT_ROOM_IMAGE
   },
@@ -28,7 +31,7 @@ const SERVICE_META = {
     resourceLabel: '球台',
     resourcePanelTitle: '选择球台',
     moreResourceText: '查看更多球台',
-    emptyResourceText: '暂无可预约球台',
+    emptyResourceText: '暂无可用球台',
     priceUnitText: '/小时起',
     fallbackImage: '/images/台球预约.png'
   },
@@ -39,18 +42,18 @@ const SERVICE_META = {
     resourceLabel: '洗车服务',
     resourcePanelTitle: '选择洗车服务',
     moreResourceText: '查看更多服务',
-    emptyResourceText: '暂无可预约洗车服务',
+    emptyResourceText: '暂无可用洗车服务',
     priceUnitText: '/次起',
     fallbackImage: '/images/自助洗车.png'
   },
   generic: {
     type: 'generic',
     categoryTitle: '服务',
-    projectName: '预约服务',
+    projectName: '到店使用',
     resourceLabel: '资源',
-    resourcePanelTitle: '选择预约资源',
+    resourcePanelTitle: '选择资源',
     moreResourceText: '查看更多资源',
-    emptyResourceText: '暂无可预约资源',
+    emptyResourceText: '暂无可用资源',
     priceUnitText: '/小时起',
     fallbackImage: DEFAULT_ROOM_IMAGE
   }
@@ -68,14 +71,16 @@ Page({
     // 时间轴
     timelineHours: [],
     defaultTimeline: [],
-    // 预订弹窗
+    // 下单弹窗
     showBooking: false,
+    bookingEnabled: false,
+    flowText: {},
     selectedRoom: {},
     bookingMode: 'time',
     roomCount: 1,
     dates: [],
     selectedDate: '',
-    selectedDateLabel: '今天',
+    selectedDateLabel: '今日到店',
     // 时长快捷筛选
     selectedDuration: 0,
     // 时间格子
@@ -134,7 +139,9 @@ Page({
     showConfirmModal: false,
     confirmInfo: {},
     isFavorited: false,
-    serviceMeta: SERVICE_META.generic
+    serviceMeta: SERVICE_META.generic,
+    pageLoading: true,
+    submitError: ''
   },
 
   onLoad(options) {
@@ -168,21 +175,28 @@ Page({
 
   // ========== 初始化 ==========
 
-  initDates() {
-    const labels = ['今天', '明天'];
+  initDates(preserveSelected = false) {
+    const bookingEnabled = this.data.bookingEnabled;
+    const labels = bookingEnabled ? ['今天', '明天'] : ['今日到店'];
+    const d = new Date();
     const dates = [];
-    for (let i = 0; i < 2; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
+    const dateCount = bookingEnabled ? 2 : 1;
+    for (let i = 0; i < dateCount; i++) {
+      const current = new Date(d);
+      current.setDate(d.getDate() + i);
+      const mm = String(current.getMonth() + 1).padStart(2, '0');
+      const dd = String(current.getDate()).padStart(2, '0');
       dates.push({
-        value: this.formatDateValue(d),
+        value: this.formatDateValue(current),
         label: labels[i] || `${mm}-${dd}`,
         short: `${mm}-${dd}`
       });
     }
-    this.setData({ dates, selectedDate: dates[0].value, selectedDateLabel: dates[0].label });
+    const current = preserveSelected
+      ? dates.find(item => item.value === this.data.selectedDate)
+      : null;
+    const selected = current || dates[0];
+    this.setData({ dates, selectedDate: selected.value, selectedDateLabel: selected.label });
   },
 
   formatDateValue(date) {
@@ -190,6 +204,13 @@ Page({
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
+  },
+
+  getDateByOffset(dateStr, offsetDays = 0) {
+    const base = new Date(String(dateStr || this.formatDateValue(new Date())).replace(/-/g, '/'));
+    const date = Number.isNaN(base.getTime()) ? new Date() : base;
+    date.setDate(date.getDate() + offsetDays);
+    return this.formatDateValue(date);
   },
 
   initTimeline() {
@@ -235,7 +256,7 @@ Page({
     if (preferredHour !== undefined && preferredHour !== null && preferredHour >= 0) {
       startIndex = source.findIndex(item => Number(item.hour) === Number(preferredHour));
     }
-    if (startIndex < 0) startIndex = source.findIndex(item => !item.disabled);
+    if (startIndex < 0) startIndex = 0;
     if (startIndex < 0) startIndex = 0;
 
     return {
@@ -254,7 +275,7 @@ Page({
 
   refreshStartTimeOptions(room = this.data.selectedRoom) {
     const options = this.buildStartTimeOptions(room);
-    const first = options.find(item => !item.disabled);
+    const first = options[0];
     const preferredHour = first ? first.hour : this.data.startHour;
     const timeDisplayState = this.getStartTimeDisplayState(options, this.data.showAllStartTimes, preferredHour);
     if (!first) {
@@ -266,7 +287,7 @@ Page({
         endHour: -1,
         endTimeStr: '',
         totalPrice: 0,
-        timeOptionsEmptyText: options.length ? '当前没有可用开始时间' : '暂无真实可约时间'
+        timeOptionsEmptyText: this.data.flowText.timeEmptyText || '暂无可用时间'
       });
       return;
     }
@@ -300,9 +321,7 @@ Page({
     const stepMinutes = 60;
 
     intervals.forEach(interval => {
-      const latestStart = interval.status === 'available'
-        ? interval.end - durationMinutes
-        : interval.end - stepMinutes;
+      const latestStart = interval.end - stepMinutes;
       for (let startMinutes = interval.start; startMinutes <= latestStart; startMinutes += stepMinutes) {
         const rangeAvailable = interval.status === 'available' &&
           this.isTimeRangeAvailable(startMinutes / 60, safeDuration, room);
@@ -310,11 +329,13 @@ Page({
         const packageReason = rangeAvailable
           ? this.getPackageUnavailableReason(selectedPackage, startMinutes / 60, endHour)
           : '';
+        const disabled = !rangeAvailable || !!packageReason || startMinutes <= currentMinutes;
+        if (disabled) return;
         const option = {
           minutes: startMinutes,
           hour: startMinutes / 60,
-          label: this.formatMinutes(startMinutes),
-          disabled: !rangeAvailable || !!packageReason || startMinutes <= currentMinutes,
+          label: this.formatHourValue(startMinutes / 60),
+          disabled: false,
           disabledReason: packageReason,
           status: interval.status
         };
@@ -352,9 +373,14 @@ Page({
   buildSlotIntervals(room = {}) {
     const slots = Array.isArray(room.timelineSlots) ? room.timelineSlots : [];
     return slots.map(slot => {
-      const start = this.parseSlotMinutes(slot.startTime || slot.start || slot.beginTime || slot.time);
+      const dayOffset = Number(slot.dayOffset || 0);
+      const start = Number.isFinite(Number(slot.startMinutes))
+        ? Number(slot.startMinutes)
+        : this.parseSlotMinutes(slot.startTime || slot.start || slot.beginTime || slot.time, dayOffset);
       if (start < 0) return null;
-      const end = this.parseSlotMinutes(slot.endTime || slot.end || slot.finishTime || slot.endAt);
+      const end = Number.isFinite(Number(slot.endMinutes))
+        ? Number(slot.endMinutes)
+        : this.parseSlotMinutes(slot.endTime || slot.end || slot.finishTime || slot.endAt, dayOffset);
       const status = this.normalizeSlotStatus(this.getSlotStatusValue(slot), slot);
       return {
         start,
@@ -368,7 +394,7 @@ Page({
     const safeHours = Math.max(1, Number(hours) || 1);
     const startMinutes = Math.round(Number(startHour) * 60);
     const endMinutes = startMinutes + Math.round(safeHours * 60);
-    if (!Number.isFinite(startMinutes) || startMinutes < 0 || endMinutes > 24 * 60) return false;
+    if (!Number.isFinite(startMinutes) || startMinutes < 0 || endMinutes > TIMELINE_WINDOW_MINUTES) return false;
     if (this.isSelectedDateToday() && startMinutes <= this.getCurrentMinutesForSelectedDate()) return false;
 
     const intervals = this.buildSlotIntervals(room);
@@ -387,7 +413,7 @@ Page({
 
   findFirstAvailableStartForDuration(hours, room = this.data.selectedRoom, packageForTime) {
     const options = this.buildStartTimeOptions(room, hours, packageForTime);
-    const first = options.find(item => !item.disabled);
+    const first = options[0];
     return first ? first.hour : -1;
   },
 
@@ -397,18 +423,20 @@ Page({
     return now.getHours() * 60 + now.getMinutes();
   },
 
-  parseSlotMinutes(value) {
+  parseSlotMinutes(value, dayOffset = 0) {
+    const offsetMinutes = Math.max(0, Number(dayOffset) || 0) * DAY_MINUTES;
     if (value === undefined || value === null || value === '') return -1;
     if (typeof value === 'number') {
       const minutes = value > 24 ? value : value * 60;
-      return Math.max(0, Math.min(24 * 60, Math.floor(minutes)));
+      return Math.max(0, Math.min(TIMELINE_WINDOW_MINUTES, Math.floor(minutes + offsetMinutes)));
     }
-    const match = String(value).match(/T?(\d{1,2}):(\d{2})/) || String(value).match(/\b(\d{1,2}):(\d{2})\b/);
+    const text = String(value);
+    const match = text.match(/[T\s](\d{1,2}):(\d{2})/) || text.match(/^(\d{1,2}):(\d{2})/) || text.match(/\b(\d{1,2}):(\d{2})\b/);
     if (!match) return -1;
     const hour = Number(match[1]);
     const minute = Number(match[2]);
     if (!Number.isFinite(hour) || !Number.isFinite(minute)) return -1;
-    return Math.max(0, Math.min(24 * 60, hour * 60 + minute));
+    return Math.max(0, Math.min(TIMELINE_WINDOW_MINUTES, hour * 60 + minute + offsetMinutes));
   },
 
   isSelectedDateToday() {
@@ -424,14 +452,37 @@ Page({
     return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   },
 
+  formatClockMinutes(minutes) {
+    const normalized = ((Math.round(Number(minutes) || 0) % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES;
+    const hour = Math.floor(normalized / 60);
+    const minute = normalized % 60;
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  },
+
+  formatDisplayMinutes(minutes) {
+    const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
+    const dayOffset = Math.floor(safeMinutes / DAY_MINUTES);
+    const prefix = dayOffset > 0 ? (dayOffset === 1 ? '次日 ' : `${dayOffset}天后 `) : '';
+    return `${prefix}${this.formatClockMinutes(safeMinutes)}`;
+  },
+
   formatHourValue(hourValue) {
-    return this.formatMinutes(Math.round(hourValue * 60));
+    return this.formatDisplayMinutes(Math.round(hourValue * 60));
+  },
+
+  buildDateTimeValue(dateStr, hourValue) {
+    const baseDate = String(dateStr || this.formatDateValue(new Date()));
+    const safeMinutes = Math.max(0, Math.round(Number(hourValue || 0) * 60));
+    const dayOffset = Math.floor(safeMinutes / DAY_MINUTES);
+    const actualDate = this.getDateByOffset(baseDate, dayOffset);
+    return `${actualDate}T${this.formatClockMinutes(safeMinutes)}:00`;
   },
 
   // ========== 数据加载 ==========
 
   loadStoreDetail() {
-    storeApi.getStoreById(this.data.storeId).then(res => {
+    this.setData({ pageLoading: true });
+    storeApi.getStoreWithBookingMode(this.data.storeId).then(res => {
       let store = res.data || {};
       store.name = store.storeName || store.name;
       const validCover = store.coverUrl && !store.coverUrl.startsWith('file://') ? store.coverUrl : null;
@@ -439,8 +490,8 @@ Page({
       store.images = validCover ? [validCover] : (validLogo ? [validLogo] : [DEFAULT_STORE_IMAGE]);
       store.phone = store.contactPhone || store.phone;
       store.description = this.resolveStoreDescription(store);
-      const serviceMeta = this.getServiceMeta(store);
-      store.categoryTitle = serviceMeta.categoryTitle;
+      const flow = this.applyFlowMode(store);
+      store.categoryTitle = flow.serviceMeta.categoryTitle;
       store.displayTags = this.buildStoreTags(store);
       // 计算距离
       const loc = app.globalData.currentLocation;
@@ -454,7 +505,7 @@ Page({
       this.setData({
         store,
         merchantId: resolvedMerchantId || this.data.merchantId,
-        serviceMeta
+        pageLoading: false
       }, () => {
         this.loadRooms();
         if (resolvedMerchantId || this.data.merchantId) this.loadWalletInfo();
@@ -462,6 +513,7 @@ Page({
     }).catch(err => {
       console.error('加载门店详情失败:', err);
       this.setData({
+        pageLoading: false,
         store: {
           name: '门店信息待同步',
           images: [DEFAULT_STORE_IMAGE],
@@ -484,24 +536,25 @@ Page({
       else if (Array.isArray(data)) rooms = data;
 
       rooms = this.filterRoomsForCurrentStore(rooms).filter(room => room.isShowInApp !== 0);
-      const serviceMeta = this.getServiceMeta(this.data.store, rooms);
+      const flow = this.applyFlowMode(this.data.store, rooms);
+      const serviceMeta = flow.serviceMeta;
       const store = {
         ...this.data.store,
         categoryTitle: serviceMeta.categoryTitle,
         displayTags: this.buildStoreTags(this.data.store)
       };
-      rooms = rooms.map((room, index) => this.normalizeRoom(room, index, serviceMeta));
+      rooms = rooms.map((room, index) => this.normalizeRoom(room, index, serviceMeta, flow.bookingEnabled));
       this.setData({ serviceMeta, store });
 
       // Prefer schedule-based available slots, then fall back to the billing timeline.
       const dateStr = this.data.selectedDate || this.formatDateValue(new Date());
-      const timelinePromises = rooms.map(room => this.loadRoomAvailability(room, dateStr));
+      const timelinePromises = rooms.map(room => this.loadRoomAvailability(room, dateStr, flow.bookingEnabled));
 
       Promise.all(timelinePromises).then(() => {
         this.applyLocalPaidBooking(rooms, dateStr);
-        const sortedRooms = this.sortRoomsByBookable(rooms);
+        const sortedRooms = this.sortRoomsByBookable(rooms, flow.bookingEnabled);
         this.setData({ rooms: sortedRooms, selectedRoom: {} });
-        this.ensureSelectedRoom(sortedRooms);
+        this.ensureSelectedRoom(sortedRooms, flow.bookingEnabled);
       });
     }).catch(err => {
       console.error('加载房间失败:', err);
@@ -509,8 +562,8 @@ Page({
     });
   },
 
-  loadRoomAvailability(room, dateStr) {
-    if (!room || !room.id || !this.isResourceBookable(room)) {
+  loadRoomAvailability(room, dateStr, bookingEnabled = this.data.bookingEnabled) {
+    if (!room || !room.id || !this.isResourceBookable(room, bookingEnabled)) {
       room.timeline = [];
       room.timelineSlots = [];
       return Promise.resolve();
@@ -522,11 +575,36 @@ Page({
       const { request } = require('../../utils/api.js');
       return request(`/api/billing/timeline/${room.id}?date=${dateStr}`).then(r => {
         const slots = this.extractTimelineSlots(r.data || r);
-        this.applyRoomTimelineSlots(room, slots);
+        this.applyRoomTimelineSlots(room, slots, 0, false);
       }).catch(() => {
         room.timeline = [];
         room.timelineSlots = [];
       });
+    };
+
+    const loadNextBillingTimeline = () => {
+      const { request } = require('../../utils/api.js');
+      const nextDateStr = this.getDateByOffset(dateStr, 1);
+      return request(`/api/billing/timeline/${room.id}?date=${nextDateStr}`).then(r => {
+        const slots = this.extractTimelineSlots(r.data || r);
+        this.applyRoomTimelineSlots(room, slots, 1, true);
+      }).catch(() => {});
+    };
+
+    const loadNextTimeline = () => {
+      const nextDateStr = this.getDateByOffset(dateStr, 1);
+      return roomApi.getAvailableSlots(merchantId, room.id, nextDateStr, {
+        storeId,
+        durationMinutes: 60,
+        slotStepMinutes: 60
+      }).then(res => {
+        const slots = this.extractAvailableSlots(res.data || res);
+        if (slots.length) {
+          this.applyRoomTimelineSlots(room, slots, 1, true);
+          return null;
+        }
+        return loadNextBillingTimeline();
+      }).catch(() => loadNextBillingTimeline());
     };
 
     if (!merchantId) return loadBillingTimeline();
@@ -538,20 +616,23 @@ Page({
     }).then(res => {
       const slots = this.extractAvailableSlots(res.data || res);
       if (slots.length) {
-        this.applyRoomTimelineSlots(room, slots.map(slot => this.normalizeAvailableSlot(slot)).filter(Boolean));
-        return null;
+        this.applyRoomTimelineSlots(room, slots, 0, false);
+        return loadNextTimeline();
       }
-      return loadBillingTimeline();
-    }).catch(() => loadBillingTimeline());
+      return loadBillingTimeline().then(loadNextTimeline);
+    }).catch(() => loadBillingTimeline().then(loadNextTimeline));
   },
 
-  applyRoomTimelineSlots(room, slots = []) {
+  applyRoomTimelineSlots(room, slots = [], dayOffset = 0, append = false) {
     const normalizedSlots = (Array.isArray(slots) ? slots : [])
-      .map(slot => this.normalizeAvailableSlot(slot))
+      .map(slot => this.normalizeAvailableSlot(slot, dayOffset))
       .filter(Boolean);
 
-    room.timelineSlots = normalizedSlots;
-    if (normalizedSlots.length) {
+    room.timelineSlots = append
+      ? (Array.isArray(room.timelineSlots) ? room.timelineSlots : []).concat(normalizedSlots)
+      : normalizedSlots;
+    if (room.timelineSlots.length) {
+      const allSlots = room.timelineSlots;
       const pricedSlot = normalizedSlots.find(slot => slot.price || slot.unitPrice);
       if (pricedSlot) {
         const timelinePrice = this.normalizePrice(pricedSlot.price || pricedSlot.unitPrice);
@@ -560,7 +641,7 @@ Page({
           room.priceText = this.formatPrice(timelinePrice);
         }
       }
-      room.timeline = this.normalizeTimeline(normalizedSlots);
+      room.timeline = this.normalizeTimeline(allSlots);
     } else {
       room.timeline = [];
     }
@@ -580,22 +661,29 @@ Page({
     return [];
   },
 
-  normalizeAvailableSlot(slot) {
+  normalizeAvailableSlot(slot, dayOffset = 0) {
     const item = slot && typeof slot === 'object' ? slot : { startTime: slot };
     const startTime = item.startTime || item.start || item.beginTime || item.begin || item.time || item.slotTime;
     if (startTime === undefined || startTime === null || startTime === '') return null;
 
-    const startMinutes = this.parseSlotMinutes(startTime);
+    const safeDayOffset = Math.max(0, Number(dayOffset) || 0);
+    const startMinutes = this.parseSlotMinutes(startTime, safeDayOffset);
     if (startMinutes < 0) return null;
 
     const rawEnd = item.endTime || item.end || item.finishTime || item.finish || item.endAt;
-    const endMinutes = rawEnd ? this.parseSlotMinutes(rawEnd) : Math.min(24 * 60, startMinutes + 60);
+    const parsedEnd = rawEnd ? this.parseSlotMinutes(rawEnd, safeDayOffset) : -1;
+    const endMinutes = parsedEnd >= 0
+      ? (parsedEnd > startMinutes ? parsedEnd : parsedEnd + DAY_MINUTES)
+      : Math.min(TIMELINE_WINDOW_MINUTES, startMinutes + 60);
     const status = this.normalizeSlotStatus(this.getSlotStatusValue(item), item);
 
     return {
       ...item,
-      startTime: this.formatMinutes(startMinutes),
-      endTime: endMinutes > startMinutes ? this.formatMinutes(endMinutes) : this.formatMinutes(Math.min(24 * 60, startMinutes + 60)),
+      dayOffset: safeDayOffset,
+      startMinutes,
+      endMinutes,
+      startTime: this.formatDisplayMinutes(startMinutes),
+      endTime: this.formatDisplayMinutes(endMinutes),
       status
     };
   },
@@ -644,7 +732,7 @@ Page({
       (room.storeInfo && room.storeInfo.id) || '';
   },
 
-  normalizeRoom(room, index, serviceMeta) {
+  normalizeRoom(room, index, serviceMeta, bookingEnabled = this.data.bookingEnabled) {
     const tags = this.parseTags(room.tags || room.labels || room.featureTags);
     const price = this.normalizePrice(room.unitPrice || room.price || room.pricePerHour || room.hourPrice);
     const image = this.pickResourceImage(room, serviceMeta);
@@ -660,17 +748,17 @@ Page({
       shortDesc: this.getResourceShortDesc(room, tags),
       tagList: tags.slice(0, 2),
       rawStatusText: resourceStatus.collectStatusText(room),
-      bookable: this.isResourceBookable(room),
-      statusClass: resourceStatus.getResourceStatusClass(room),
-      statusText: this.getResourceStatusText(room),
+      bookable: this.isResourceBookable(room, bookingEnabled),
+      statusClass: this.getResourceStatusClass(room, bookingEnabled),
+      statusText: this.getResourceStatusText(room, bookingEnabled),
       sortIndex: index
     };
   },
 
-  sortRoomsByBookable(rooms = []) {
+  sortRoomsByBookable(rooms = [], bookingEnabled = this.data.bookingEnabled) {
     return [...rooms].sort((a, b) => {
-      const aRank = this.isResourceBookable(a) ? 0 : 1;
-      const bRank = this.isResourceBookable(b) ? 0 : 1;
+      const aRank = this.isResourceBookable(a, bookingEnabled) ? 0 : 1;
+      const bRank = this.isResourceBookable(b, bookingEnabled) ? 0 : 1;
       if (aRank !== bRank) return aRank - bRank;
       return Number(a.sortIndex || 0) - Number(b.sortIndex || 0);
     });
@@ -716,12 +804,16 @@ Page({
     return this.compactText(source, 8);
   },
 
-  getResourceStatusText(room) {
-    return resourceStatus.getResourceStatusText(room);
+  getResourceStatusText(room, bookingEnabled = this.data.bookingEnabled) {
+    return resourceStatus.getResourceStatusText(room, { bookingEnabled });
   },
 
-  isResourceBookable(room = {}) {
-    return resourceStatus.isResourceBookable(room);
+  getResourceStatusClass(room, bookingEnabled = this.data.bookingEnabled) {
+    return resourceStatus.getResourceStatusClass(room, { bookingEnabled });
+  },
+
+  isResourceBookable(room = {}, bookingEnabled = this.data.bookingEnabled) {
+    return resourceStatus.isResourceBookable(room, { bookingEnabled });
   },
 
   compactText(value, maxLength) {
@@ -776,6 +868,94 @@ Page({
     return '';
   },
 
+  getFlowText(bookingEnabled = this.data.bookingEnabled) {
+    return bookingEnabled
+      ? {
+          methodTitle: '选择预约方式',
+          dateTitle: '选择日期',
+          timeTitle: '选择开始时间',
+          noticeTitle: '预约须知',
+          noticeSelect: '支付前请选择{resourceLabel}、预约方式、时间与时长，完成后不可更改。',
+          noticeUse: '预约成功后可自助使用，请在有效时间内完成支付。',
+          confirmButton: '确认预约并支付',
+          confirmTitle: '确认预订',
+          confirmSubtitle: '请核对以下预约信息，确认无误后继续支付',
+          methodLabel: '预约方式',
+          dateLabel: '日期',
+          defaultPackageName: '按小时预约',
+          projectName: '预约服务',
+          cashierTitle: '预订支付',
+          successTitle: '预订成功',
+          disabledText: '不可约',
+          timeEmptyText: '暂无真实可约时间',
+          loadingTimeText: '正在加载可约时间',
+          unavailableRoomText: '当前资源不可约',
+          unavailableRangeText: '所选时间段已不可约，请重新选择',
+          packageIntro: '按套餐价预约',
+          hourlyIntro: '按实际选择的连续可约时长计费',
+          allDayText: '全天可约',
+          availableRangePrefix: '可约时段',
+          dateRequiredText: '请选择预约日期',
+          submitLoadingTitle: '预约提交中...',
+          submitSuccessWithEmptyCashier: '预约成功，收银台链接为空',
+          serviceDesc: '预约、支付、开门、退款等问题都可以联系人工客服'
+        }
+      : {
+          methodTitle: '选择使用方式',
+          dateTitle: '到店使用日期',
+          timeTitle: '选择使用时间',
+          noticeTitle: '到店下单须知',
+          noticeSelect: '到店后请选择{resourceLabel}、使用方式、开始时间与时长，完成后不可更改。',
+          noticeUse: '支付成功后可自助使用，请在有效时间内完成支付。',
+          confirmButton: '确认下单并支付',
+          confirmTitle: '确认下单',
+          confirmSubtitle: '请核对以下下单信息，确认无误后继续支付',
+          methodLabel: '使用方式',
+          dateLabel: '使用日期',
+          defaultPackageName: '按小时使用',
+          projectName: '到店使用',
+          cashierTitle: '下单支付',
+          successTitle: '下单成功',
+          disabledText: '不可用',
+          timeEmptyText: '暂无可用时间',
+          loadingTimeText: '正在加载可用时间',
+          unavailableRoomText: '当前资源不可用',
+          unavailableRangeText: '所选时间段不可用，请重新选择',
+          packageIntro: '按套餐价使用',
+          hourlyIntro: '按实际选择的连续可用时长计费',
+          allDayText: '全天可用',
+          availableRangePrefix: '可用时段',
+          dateRequiredText: '请选择使用日期',
+          submitLoadingTitle: '下单中...',
+          submitSuccessWithEmptyCashier: '下单成功，收银台链接为空',
+          serviceDesc: '下单、支付、开门、退款等问题都可以联系人工客服'
+        };
+  },
+
+  applyFlowMode(store = this.data.store, rooms = this.data.rooms) {
+    const bookingEnabled = bookingModeUtil.resolveBookingEnabled(store);
+    const flowText = this.getFlowText(bookingEnabled);
+    const baseMeta = this.getServiceMeta(store, rooms);
+    const serviceMeta = {
+      ...baseMeta,
+      projectName: baseMeta.type === 'generic' ? flowText.projectName : baseMeta.projectName,
+      resourcePanelTitle: baseMeta.type === 'generic' && bookingEnabled ? '选择预约资源' : baseMeta.resourcePanelTitle,
+      emptyResourceText: this.getEmptyResourceText(baseMeta, bookingEnabled)
+    };
+    flowText.noticeSelectText = flowText.noticeSelect.replace('{resourceLabel}', serviceMeta.resourceLabel || '资源');
+    const modeChanged = bookingEnabled !== this.data.bookingEnabled;
+    this.setData({ bookingEnabled, flowText, serviceMeta }, () => this.initDates(!modeChanged));
+    return { bookingEnabled, flowText, serviceMeta };
+  },
+
+  getEmptyResourceText(meta = this.data.serviceMeta, bookingEnabled = this.data.bookingEnabled) {
+    const resource = meta.resourceLabel || '资源';
+    if (meta.type === 'mahjong') return bookingEnabled ? '暂无可预约包间' : '暂无可用包间';
+    if (meta.type === 'billiards') return bookingEnabled ? '暂无可预约球台' : '暂无可用球台';
+    if (meta.type === 'carwash') return bookingEnabled ? '暂无可预约洗车服务' : '暂无可用洗车服务';
+    return bookingEnabled ? `暂无可预约${resource}` : `暂无可用${resource}`;
+  },
+
   getServiceMeta(store = {}, rooms = []) {
     const roomText = rooms.map(room => [
       room.resourceName,
@@ -803,7 +983,7 @@ Page({
     return SERVICE_META.generic;
   },
 
-  ensureSelectedRoom(rooms) {
+  ensureSelectedRoom(rooms, bookingEnabled = this.data.bookingEnabled) {
     if (!rooms || !rooms.length) {
       this.setData({
         selectedRoom: {},
@@ -821,9 +1001,9 @@ Page({
     }
     const currentId = this.data.selectedRoom && this.data.selectedRoom.id;
     const currentRoom = rooms.find(item => `${item.id}` === `${currentId}`);
-    const room = currentRoom && this.isResourceBookable(currentRoom)
+    const room = currentRoom && this.isResourceBookable(currentRoom, bookingEnabled)
       ? currentRoom
-      : rooms.find(item => this.isResourceBookable(item));
+      : rooms.find(item => this.isResourceBookable(item, bookingEnabled));
     if (!room) {
       this.setData({
         rooms: this.markSelectedRooms(rooms, {}),
@@ -1038,8 +1218,8 @@ Page({
 
   applySelectedRoom(room) {
     if (!room || !room.id) return false;
-    if (!this.isResourceBookable(room)) {
-      wx.showToast({ title: '当前资源不可约', icon: 'none' });
+    if (!this.isResourceBookable(room, this.data.bookingEnabled)) {
+      wx.showToast({ title: this.data.flowText.unavailableRoomText || '当前资源不可用', icon: 'none' });
       return false;
     }
     const existingRoom = this.data.rooms.find(item => `${item.id}` === `${room.id}`);
@@ -1118,6 +1298,25 @@ Page({
     });
   },
 
+  goBookingPage() {
+    if (!this.data.bookingEnabled) {
+      wx.showToast({ title: '该门店暂未开启预订', icon: 'none' });
+      return;
+    }
+    const room = this.data.selectedRoom || {};
+    if (!room.id) {
+      wx.showToast({ title: `请选择${this.data.serviceMeta.resourceLabel || '资源'}`, icon: 'none' });
+      return;
+    }
+    const params = [
+      `roomId=${room.id || ''}`,
+      `resourceId=${room.id || ''}`,
+      `storeId=${this.data.storeId || this.getRoomStoreId(room) || ''}`,
+      `merchantId=${this.data.merchantId || room.merchantId || ''}`
+    ].join('&');
+    wx.navigateTo({ url: `/pages/booking/booking?${params}` });
+  },
+
   onRoomTap(e) {
     const room = e.currentTarget.dataset.room;
     this.setData({
@@ -1166,7 +1365,7 @@ Page({
       endHour: -1,
       endTimeStr: '',
       totalPrice: 0,
-      timeOptionsEmptyText: '正在加载可约时间'
+      timeOptionsEmptyText: this.data.flowText.loadingTimeText || '正在加载可用时间'
     });
     this.loadRooms();
   },
@@ -1250,7 +1449,7 @@ Page({
       ? this.data.startHour
       : this.findFirstAvailableStartForDuration(hours, this.data.selectedRoom, hourlyTimeFilter);
     if (startHour < 0) {
-      wx.showToast({ title: '当前时长暂无连续可约时间', icon: 'none' });
+      wx.showToast({ title: this.data.bookingEnabled ? '当前时长暂无连续可约时间' : '当前时长暂无连续可用时间', icon: 'none' });
       return;
     }
     this.setData({
@@ -1331,15 +1530,16 @@ Page({
     const parts = [];
     const customIntro = pkg.rawIntro || (pkg._introGenerated ? '' : pkg.intro) || pkg.packageDesc || pkg.packageDescription || pkg.description || pkg.remark || pkg.memo || '';
     const hours = Math.max(1, Number(pkg.hours || 1));
+    const flowText = this.data.flowText || this.getFlowText(this.data.bookingEnabled);
     if (customIntro) {
       parts.push(customIntro);
     } else if (pkg.isPackagePrice) {
-      parts.push(`${hours}小时套餐，按套餐价预约`);
+      parts.push(`${hours}小时套餐，${flowText.packageIntro || '按套餐价使用'}`);
     } else {
-      parts.push('按实际选择的连续可约时长计费');
+      parts.push(flowText.hourlyIntro || '按实际选择的连续可用时长计费');
     }
     const timeRange = this.formatPackageTimeRange(pkg);
-    parts.push(timeRange ? `可用时段 ${timeRange}` : '全天可约');
+    parts.push(timeRange ? `${flowText.availableRangePrefix || '可用时段'} ${timeRange}` : (flowText.allDayText || '全天可用'));
     const dayText = this.formatApplicableDays(pkg.applicableDays);
     if (dayText) parts.push(dayText);
     return parts.join(' · ');
@@ -1418,25 +1618,26 @@ Page({
     const hours = Number(this.data.selectedHours || 0);
     const startHour = Number(this.data.startHour);
     const endHour = Number(this.data.endHour);
+    const flowText = this.data.flowText || this.getFlowText(this.data.bookingEnabled);
     const fail = (title) => {
       if (showToast) wx.showToast({ title, icon: 'none' });
       return false;
     };
 
     if (!room.id) return fail(`请选择${this.data.serviceMeta.resourceLabel}`);
-    if (!this.isResourceBookable(room)) return fail('当前资源不可约');
-    if (!this.data.selectedDate) return fail('请选择日期');
+    if (!this.isResourceBookable(room, this.data.bookingEnabled)) return fail(flowText.unavailableRoomText || '当前资源不可用');
+    if (!this.data.selectedDate) return fail(flowText.dateRequiredText || '请选择使用日期');
     if (!Number.isFinite(hours) || hours <= 0 || !Number.isFinite(startHour) || endHour <= startHour) {
       return fail('请选择时间');
     }
     if (!this.isTimeRangeAvailable(startHour, hours, room)) {
-      return fail('所选时间段已不可约，请重新选择');
+      return fail(flowText.unavailableRangeText || '所选时间段不可用，请重新选择');
     }
     const packageReason = this.getPackageUnavailableReason(pkg, startHour, endHour);
     if (packageReason) {
       return fail(packageReason);
     }
-    if (Number(this.data.totalPrice || 0) <= 0) return fail('价格信息异常，请重新选择');
+    if (Number(this.data.totalPrice || 0) < 0) return fail('价格信息异常，请重新选择');
     return true;
   },
 
@@ -1648,7 +1849,7 @@ Page({
     if (!Number.isFinite(price) || price <= 0) return [];
     const desc = this.data.serviceMeta.type === 'carwash' ? '次起' : '小时起';
     return [{
-      name: '按小时预约',
+      name: (this.data.flowText && this.data.flowText.defaultPackageName) || '按小时使用',
       price,
       desc,
       hours: 1,
@@ -1832,15 +2033,19 @@ Page({
     const user = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
     const phone = user.phone || '';
     const contactName = user.nickname || '微信用户';
+    const flowText = this.data.flowText || this.getFlowText(this.data.bookingEnabled);
+    const contactText = phone && phone !== '未绑定手机号'
+      ? `${contactName} ${this.maskPhone(phone)}`
+      : `${contactName}（手机号待绑定）`;
     return {
       project: this.data.serviceMeta.projectName,
       storeName: this.data.store.name || '门店信息待同步',
       roomName: this.data.selectedRoom.name || this.data.serviceMeta.resourceLabel,
-      packageName: this.data.selectedPackageName || '预约服务',
+      packageName: this.data.selectedPackageName || flowText.defaultPackageName || flowText.projectName || '到店使用',
       dateText: this.getConfirmDateText(),
       timeText: `${this.data.startTimeStr} - ${this.data.endTimeStr}`,
       durationText: `${this.data.selectedHours}小时`,
-      contactText: `${contactName} ${this.maskPhone(phone)}`,
+      contactText,
       amount: this.data.totalPrice || 0
     };
   },
@@ -1913,7 +2118,8 @@ Page({
     if (!this.validateBookingSelection()) return;
 
     if (merchantId) {
-      wx.showLoading({ title: '下单中...' });
+      const flowText = this.data.flowText || this.getFlowText(this.data.bookingEnabled);
+      wx.showLoading({ title: flowText.submitLoadingTitle || '下单中...' });
 
       ensureUserIdentity({ refresh: true }).then(identity => {
         const userId = identity.userId;
@@ -1935,7 +2141,7 @@ Page({
         if (selectedPackage && selectedPackage.isPackagePrice && selectedPackage.packageId) {
           const pkg = selectedPackage;
           const sh = this.data.startHour >= 0 ? this.data.startHour : new Date().getHours();
-          const startTime = `${selectedDate}T${this.formatHourValue(sh)}:00`;
+          const startTime = this.buildDateTimeValue(selectedDate, sh);
           apiPath = '/api/billing/order/package';
           apiData = {
             ...commonData,
@@ -1947,7 +2153,7 @@ Page({
           const sh = this.data.startHour;
           const eh = this.data.endHour;
           if (sh < 0 || eh <= sh) throw new Error('请选择开始和结束时间');
-          const startTime = `${selectedDate}T${this.formatHourValue(sh)}:00`;
+          const startTime = this.buildDateTimeValue(selectedDate, sh);
           const durationMinutes = Math.round((eh - sh) * 60);
           apiPath = '/api/billing/order/prepaid';
           apiData = {
@@ -1977,6 +2183,11 @@ Page({
             startTime: apiData.startTime,
             durationMinutes: apiData.durationMinutes || Math.round((this.data.selectedHours || 1) * 60),
             amount: Math.round(Number(this.data.totalPrice || 0) * 100),
+            cashierUrl,
+            tradeNo,
+            paymentTradeNo: tradeNo,
+            payExpireAt: this.pickDeep(payload, ['payExpireAt', 'payExpireTime', 'payDeadline', 'paymentDeadline', 'unlockDeadline', 'deadline']),
+            unlockDeadline: this.pickDeep(payload, ['unlockDeadline', 'unlockDeadlineTime']),
             createdAt: Date.now()
           };
           wx.setStorageSync('pendingBillingBooking', bookingSnapshot);
@@ -1989,26 +2200,36 @@ Page({
             startTime: apiData.startTime,
             durationMinutes: bookingSnapshot.durationMinutes,
             amount: bookingSnapshot.amount,
-            title: '预订支付'
+            title: flowText.cashierTitle || '下单支付'
           });
         } else {
-          wx.showToast({ title: '下单成功，收银台链接为空', icon: 'none' });
+          wx.showToast({ title: flowText.submitSuccessWithEmptyCashier || '下单成功，收银台链接为空', icon: 'none' });
           this.loadWalletInfo();
         }
       }).catch(err => {
         wx.hideLoading();
-        const message = err.message || '下单失败';
+        const message = err.message || `${this.data.bookingEnabled ? '预订' : '下单'}失败`;
         if (message.indexOf('手机号') >= 0) {
           this.setData({ showPhoneModal: true, modalPhone: '', modalCode: '', modalCountdown: 0 });
         }
-        wx.showToast({ title: message, icon: 'none' });
+        this.setData({ submitError: message });
+        wx.showModal({
+          title: `${this.data.bookingEnabled ? '预订' : '下单'}失败`,
+          content: message,
+          confirmText: '重试',
+          cancelText: '关闭',
+          success: (res) => {
+            if (res.confirm) this.submitBooking();
+          }
+        });
       });
 
     } else {
       wx.showLoading({ title: '提交中...' });
       setTimeout(() => {
         wx.hideLoading();
-        wx.showToast({ title: '预订成功', icon: 'success' });
+        const flowText = this.data.flowText || this.getFlowText(this.data.bookingEnabled);
+        wx.showToast({ title: flowText.successTitle || '下单成功', icon: 'success' });
         this.setData({ showBooking: false });
       }, 1000);
     }
@@ -2126,7 +2347,7 @@ Page({
       variant: 'service',
       servicePhone: '15157903339',
       serviceTime: '7×24小时在线',
-      serviceDesc: '预约、支付、开门、退款等问题都可以联系人工客服',
+      serviceDesc: (this.data.flowText && this.data.flowText.serviceDesc) || '下单/预约、支付、开门、退款等问题都可以联系人工客服',
       showCancel: true,
       cancelText: '知道了',
       confirmText: '拨打电话',

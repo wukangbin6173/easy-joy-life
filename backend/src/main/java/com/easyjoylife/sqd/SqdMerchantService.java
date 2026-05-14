@@ -68,6 +68,20 @@ public class SqdMerchantService {
         return client.get("/v1/stores/" + storeId + "/business-hours", null);
     }
 
+    /** Get merchant-side booking config for a store. */
+    public SqdResponse getBookingConfig(Long storeId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("storeId", storeId);
+        return client.merchantGet("/app-api/merchant/my-booking-config/get", params);
+    }
+
+    /** Get merchant-side business display config for a store. */
+    public SqdResponse getBusinessDisplayConfig(Long storeId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("storeId", storeId);
+        return client.merchantGet("/app-api/merchant/business-display-config/get", params);
+    }
+
     /** 商户注册（入驻） */
     public SqdResponse registerMerchant(Map<String, Object> body) {
         return client.post("/v1/merchants/register", body);

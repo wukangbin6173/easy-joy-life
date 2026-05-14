@@ -24,7 +24,7 @@
       
       <view class="record-item" wx:for="{{item.records}}" wx:key="id" wx:for-item="record">
         <view class="record-icon">
-          <image src="/images/{{record.type}}-icon.png" mode="aspectFit"></image>
+          <image src="{{record.type === 'income' ? '/images/店内余额.png' : '/images/费用.png'}}" mode="aspectFit"></image>
         </view>
         <view class="record-info">
           <text class="record-title">{{record.title}}</text>
@@ -50,7 +50,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{groupedRecords.length === 0 && !loading}}">
-    <image class="empty-icon" src="/images/empty-transaction.png"></image>
+    <image class="empty-icon" src="/images/提示.png"></image>
     <text class="empty-text">暂无交易记录</text>
   </view>
 

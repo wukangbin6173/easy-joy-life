@@ -241,7 +241,7 @@ Page({
       list = this.mergeLocalPaidOrder(list);
       const normalizedList = list.map(order => ({
         ...order,
-        status: this.normalizeOrderStatus(order.status || order.orderStatus || order.payStatus || order.tradeStatus)
+        status: this.resolveOrderStatus(order)
       })).map(order => this.enrichOrderDisplay(order, roomMap, storeMap, merchant));
       const totalOrders = normalizedList.filter(o => o.status !== 60).length;
       const currentOrder = this.pickCurrentOrder(normalizedList);
@@ -426,20 +426,57 @@ Page({
     }, ...list];
   },
 
+  resolveOrderStatus(order = {}) {
+    const orderStatus = this.pickFirstValue(order, ['status', 'orderStatus', 'billingStatus', 'orderState']);
+    const normalizedOrderStatus = this.normalizeOrderStatus(orderStatus);
+    if (normalizedOrderStatus !== null) return normalizedOrderStatus;
+
+    const paymentStatus = this.pickFirstValue(order, ['payStatus', 'paymentStatus', 'tradeStatus', 'cashierStatus']);
+    const normalizedPaymentStatus = this.normalizePaymentStatus(paymentStatus);
+    if (normalizedPaymentStatus !== null) return normalizedPaymentStatus;
+
+    return null;
+  },
+
   normalizeOrderStatus(status) {
-    if (status === undefined || status === null || status === '') return 40;
+    if (status === undefined || status === null || status === '') return null;
     const value = Number(status);
     if (!Number.isNaN(value)) return value;
 
     const text = String(status).toUpperCase();
-    if (['WAIT_PAY', 'PENDING', 'NOTPAY', 'UNPAID'].includes(text)) return 0;
+    if (['WAIT_PAY', 'WAITING_PAY', 'WAIT_PAYMENT', 'WAITING_PAYMENT', 'PENDING', 'PENDING_PAY', 'PENDING_PAYMENT', 'NOTPAY', 'NOT_PAY', 'UNPAID', 'UN_PAID', 'TO_BE_PAID', 'CREATED'].includes(text)) return 0;
     if (['PAID', 'WAIT_USE', 'WAITING_USE', 'RESERVED', 'BOOKED'].includes(text)) return 10;
     if (['USING', 'IN_USE', 'STARTED'].includes(text)) return 20;
     if (['COMPLETED', 'FINISHED', 'DONE'].includes(text)) return 40;
     if (['REFUNDING', 'REFUND_APPLY'].includes(text)) return 50;
     if (['REFUNDED'].includes(text)) return 55;
     if (['CLOSED', 'CANCEL', 'CANCELED', 'CANCELLED'].includes(text)) return 60;
-    return 40;
+    return null;
+  },
+
+  normalizePaymentStatus(status) {
+    if (status === undefined || status === null || status === '') return null;
+    const value = Number(status);
+    if (!Number.isNaN(value)) {
+      if (value === 0 || value === 1) return 0;
+      if (value === 2) return 10;
+      if (value === 3 || value === -1) return 60;
+      return null;
+    }
+
+    const text = String(status).toUpperCase();
+    if (['WAIT_PAY', 'WAITING_PAY', 'WAIT_PAYMENT', 'WAITING_PAYMENT', 'PENDING', 'PENDING_PAY', 'PENDING_PAYMENT', 'NOTPAY', 'NOT_PAY', 'UNPAID', 'UN_PAID', 'TO_BE_PAID', 'CREATED'].includes(text)) return 0;
+    if (['SUCCESS', 'PAY_SUCCESS', 'PAID', 'TRADE_SUCCESS', 'PAYED'].includes(text)) return 10;
+    if (['CLOSED', 'CANCEL', 'CANCELED', 'CANCELLED', 'FAILED', 'FAIL', 'PAY_FAIL', 'TRADE_CLOSED'].includes(text)) return 60;
+    return null;
+  },
+
+  pickFirstValue(obj, keys) {
+    for (const key of keys) {
+      const value = obj && obj[key];
+      if (value !== undefined && value !== null && value !== '') return value;
+    }
+    return undefined;
   },
 
   parseDate(value) {

@@ -3,6 +3,16 @@
   padding-bottom: 120rpx;
 }
 
+.booking-disabled {
+  margin-top: 40rpx;
+  padding: 48rpx 30rpx;
+  border-radius: 10rpx;
+  color: #666;
+  background: white;
+  font-size: 28rpx;
+  text-align: center;
+}
+
 .room-info {
   background: white;
   border-radius: 10rpx;

@@ -10,7 +10,7 @@
       <view class="card-content" style="background: linear-gradient(135deg, {{item.bankColor || '#667eea'}} 0%, {{item.bankColor || '#764ba2'}} 100%);">
         <view class="card-header">
           <view class="bank-info">
-            <image class="bank-logo" src="{{item.bankLogo || '/images/bank-card-icon.png'}}" mode="aspectFit"></image>
+            <image class="bank-logo" src="{{item.bankLogo || '/images/绑定信息.png'}}" mode="aspectFit"></image>
             <view class="bank-details">
               <text class="bank-name">{{item.bankName}}</text>
               <text class="card-type">{{item.cardType}}</text>
@@ -64,7 +64,7 @@
   <!-- 温馨提示 -->
   <view class="tips-section">
     <view class="tips-title">
-      <image class="tips-icon" src="/images/info-icon.png"></image>
+      <image class="tips-icon" src="/images/提示.png"></image>
       <text>温馨提示</text>
     </view>
     <view class="tips-content">

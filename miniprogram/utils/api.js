@@ -30,17 +30,26 @@ function request(url, options = {}) {
           if (typeof data === 'string') {
             try { data = JSON.parse(data); } catch(e) {}
           }
+          if (typeof data === 'string') {
+            const contentType = String((res.header && (res.header['Content-Type'] || res.header['content-type'])) || '');
+            if (contentType.includes('text/html') || data.trim().startsWith('<!DOCTYPE') || data.trim().startsWith('<html')) {
+              const error = new Error('接口未返回JSON数据');
+              error.data = data;
+              reject(error);
+              return;
+            }
+          }
 
           // 兼容多种响应格式
           if (url.includes('/auth/wechat/login') || url.includes('/auth/wechat/test') || url.includes('/auth/wechat/phone')) {
             resolve(data);
           } else if (data && data.success) {
             resolve(data);
-          } else if (data && data.code == 200) {
+          } else if (data && (data.code == 0 || data.code == 200)) {
             resolve(data);
           } else {
             console.error('API业务错误:', data);
-            const error = new Error(data?.message || '请求失败');
+            const error = new Error(data?.message || data?.msg || '请求失败');
             error.data = data;
             reject(error);
           }
@@ -153,6 +162,38 @@ const storeApi = {
     return request(`/api/stores/${storeId}`, {
       method: 'GET',
       data: { _t: Date.now() }
+    });
+  },
+
+  // 小程序可访问的门店预约模式接口；后端在该接口内按商起点文档读取预约配置/行业展示配置。
+  getStoreBookingMode(storeId) {
+    return request(`/api/stores/${storeId}/booking-mode`, {
+      method: 'GET',
+      data: { _t: Date.now() }
+    });
+  },
+
+  // 门店详情 + 预约/展示配置，供小程序判断预约/到店模式。
+  getStoreWithBookingMode(storeId) {
+    return this.getStoreById(storeId).then(res => {
+      const store = (res && res.data) || {};
+      if (store.bookingConfig || store.displayConfig || store.showBooking !== undefined) return res;
+
+      return this.getStoreBookingMode(storeId).then(modeRes => {
+        const mode = (modeRes && modeRes.data) || {};
+        return {
+          ...res,
+          data: {
+            ...store,
+            ...mode,
+            bookingConfig: mode.bookingConfig || mode.config || store.bookingConfig,
+            displayConfig: mode.displayConfig || store.displayConfig
+          }
+        };
+      }).catch(err => {
+        console.warn('加载门店预约配置失败:', err);
+        return res;
+      });
     });
   },
 
@@ -525,6 +566,79 @@ const walletApi = {
   }
 };
 
+/**
+ * IoT 设备控制API - 开锁/开电源等
+ */
+const iotApi = {
+  // 执行设备动作（开门/退房）
+  execute(data) {
+    return request('/api/iot/actions/execute', {
+      method: 'POST',
+      data
+    });
+  },
+
+  // 查询动作执行结果
+  getActionStatus(actionNo) {
+    return request(`/api/iot/actions/${actionNo}`);
+  },
+
+  /**
+   * 执行动作并轮询结果
+   * @param {Object} data - { merchantId, resourceId, orderId, actionType }
+   * @param {Object} options - { maxRetries: 5, interval: 2000 }
+   * @returns {Promise} 成功时 resolve 动作结果，失败时 reject
+   */
+  executeAndPoll(data, options = {}) {
+    const maxRetries = options.maxRetries || 5;
+    const interval = options.interval || 2000;
+
+    return this.execute(data).then(res => {
+      const actionNo = (res.data && res.data.actionNo) || res.actionNo;
+      if (!actionNo) {
+        return Promise.reject(new Error('未获取到操作编号'));
+      }
+
+      return new Promise((resolve, reject) => {
+        let retryCount = 0;
+
+        const poll = () => {
+          this.getActionStatus(actionNo).then(statusRes => {
+            const result = statusRes.data || statusRes;
+            const status = Number(result.status);
+
+            if (status === 20) {
+              // 成功
+              resolve(result);
+            } else if (status === 40 || status === 50) {
+              // 失败
+              reject(new Error(result.message || result.failReason || '设备操作失败'));
+            } else {
+              // 仍在执行中
+              retryCount++;
+              if (retryCount >= maxRetries) {
+                reject(new Error('设备响应超时，请稍后重试'));
+              } else {
+                setTimeout(poll, interval);
+              }
+            }
+          }).catch(err => {
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              reject(err);
+            } else {
+              setTimeout(poll, interval);
+            }
+          });
+        };
+
+        // 首次轮询延迟一下，给设备反应时间
+        setTimeout(poll, interval);
+      });
+    });
+  }
+};
+
 module.exports = {
   request,
   uploadFile,
@@ -537,5 +651,6 @@ module.exports = {
   walletApi,
   smsApi,
   bankCardApi,
-  payPasswordApi
+  payPasswordApi,
+  iotApi
 };

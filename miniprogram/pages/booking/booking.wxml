@@ -1,10 +1,14 @@
 <view class="container">
-  <view class="room-info">
+  <view class="booking-disabled" wx:if="{{!bookingEnabled}}">
+    <text>该门店暂未开启预订</text>
+  </view>
+
+  <view class="room-info" wx:if="{{bookingEnabled}}">
     <text class="room-name">{{room.name}}</text>
     <text class="room-price">¥{{room.price}}/小时</text>
   </view>
 
-  <view class="booking-form">
+  <view class="booking-form" wx:if="{{bookingEnabled}}">
     <view class="form-item">
       <text class="label">预订日期</text>
       <picker mode="date" value="{{bookingDate}}" bindchange="onDateChange">
@@ -37,7 +41,7 @@
     </view>
   </view>
 
-  <view class="price-summary">
+  <view class="price-summary" wx:if="{{bookingEnabled}}">
     <view class="summary-item">
       <text class="label">使用时长：</text>
       <text class="value">{{duration}}小时</text>
@@ -48,7 +52,7 @@
     </view>
   </view>
 
-  <view class="booking-actions">
+  <view class="booking-actions" wx:if="{{bookingEnabled}}">
     <button class="confirm-btn" bindtap="confirmBooking">确认预订</button>
   </view>
 </view>

@@ -4,6 +4,7 @@ const config = require('../../utils/config.js');
 const resourceStatus = require('../../utils/resource-status.js');
 const userProfile = require('../../utils/user-profile.js');
 const locationUtil = require('../../utils/location.js');
+const bookingModeUtil = require('../../utils/booking-mode.js');
 
 const CATEGORY_CONFIG = {
   mahjong: {
@@ -182,8 +183,8 @@ Page({
 
   loadStores() {
     this.setData({ loading: true });
-    const merchantId = this.getMerchantId();
-    storeApi.getStores(merchantId, 1, 50).then(res => {
+    const fallbackMerchantId = this.getMerchantId();
+    storeApi.getStores(undefined, 1, 100).then(res => {
       console.log('门店接口返回:', JSON.stringify(res).substring(0, 200));
       let stores = [];
       const data = res.data;
@@ -195,13 +196,14 @@ Page({
       stores = stores.map((store, index) => {
         // 字段适配：商起点用 storeName，前端用 name
         store.name = store.storeName || store.name;
-        store.merchantId = store.merchantId || store.merchantID || merchantId;
+        store.merchantId = store.merchantId || store.merchantID || fallbackMerchantId;
         // coverUrl 优先，logoUrl 过滤掉本地 file:// 路径，都没有用默认图
         const validCover = store.coverUrl && !store.coverUrl.startsWith('file://') ? store.coverUrl : null;
         const validLogo = store.logoUrl && !store.logoUrl.startsWith('file://') ? store.logoUrl : null;
         store.phone = store.contactPhone || store.phone;
         store.categoryTypes = this.detectCategoryTypes(store);
         store.categoryType = store.categoryTypes[0];
+        const bookingEnabled = bookingModeUtil.resolveBookingEnabled(store);
         const coverImage = validCover || validLogo || this.getCategoryMeta(store.categoryType).fallbackImage;
         store.coverImage = coverImage;
         store.images = coverImage ? [coverImage] : [];
@@ -210,7 +212,10 @@ Page({
         store.serviceName = this.getStoreServiceName(store);
         store.serviceUnit = this.getCategoryMeta(store.categoryType).serviceUnit;
         store.extraTag = this.getCategoryMeta(store.categoryType).extraTag;
-        store.availableText = this.getCategoryMeta(store.categoryType).availableText;
+        store.displayTags = this.buildStoreDisplayTags(store);
+        store.bookingEnabled = bookingEnabled;
+        store.availableText = this.getStoreAvailabilityText(bookingEnabled, store.roomCount);
+        store.actionText = this.getStoreActionText(bookingEnabled);
         const priceInfo = this.getStorePriceInfo(store);
         store.priceYuan = priceInfo.text;
         store.hasPrice = priceInfo.hasPrice;
@@ -236,10 +241,11 @@ Page({
       this.setData({ allStores: displayStores, loading: false });
       this.applyCategory(this.data.activeCategory);
       wx.stopPullDownRefresh();
+      this.enrichStoresWithBookingMode(displayStores);
 
       // 异步查每个门店的房间数量，查到了再更新
       displayStores.forEach((store, index) => {
-        const storeMerchantId = store.merchantId || merchantId;
+        const storeMerchantId = store.merchantId || fallbackMerchantId;
         if (!storeMerchantId) return;
         roomApi.getRooms(storeMerchantId, 1, 50, store.id || store.storeId).then(r => {
           const list = this.extractRoomList(r.data);
@@ -293,8 +299,87 @@ Page({
     return CATEGORY_CONFIG[category] || CATEGORY_CONFIG.mahjong;
   },
 
+  getStoreActionText(bookingEnabled) {
+    return bookingEnabled ? '立即预订' : '到店下单';
+  },
+
+  getStoreAvailabilityText(bookingEnabled, availableCount) {
+    if (availableCount === undefined || availableCount === null || availableCount === '') {
+      return bookingEnabled ? '今日可约' : '今日可用';
+    }
+    if (Number(availableCount || 0) <= 0) return bookingEnabled ? '暂无可约' : '暂无可用';
+    return bookingEnabled ? '今日可约' : '今日可用';
+  },
+
+  enrichStoresWithBookingMode(stores) {
+    stores.forEach(store => {
+      const storeId = store.id || store.storeId;
+      if (!storeId) return;
+      storeApi.getStoreWithBookingMode(storeId).then(res => {
+        const latest = (res && res.data) || {};
+        const merged = { ...store, ...latest };
+        const bookingEnabled = bookingModeUtil.resolveBookingEnabled(merged);
+        this.updateStorePartial(store, {
+          bookingConfig: merged.bookingConfig,
+          displayConfig: merged.displayConfig,
+          bookingEnabled,
+          availableText: this.getStoreAvailabilityText(bookingEnabled, store.roomCount),
+          actionText: this.getStoreActionText(bookingEnabled)
+        });
+      }).catch(err => {
+        console.warn('加载门店预约配置失败:', storeId, err);
+      });
+    });
+  },
+
+  updateStorePartial(targetStore, patch) {
+    const targetId = String((targetStore && (targetStore.id || targetStore.storeId)) || '');
+    const allStores = this.data.allStores.map(store => {
+      const storeId = String(store.id || store.storeId || '');
+      return targetId && storeId === targetId ? { ...store, ...patch } : store;
+    });
+    this.setData({ allStores });
+    this.applyCategory(this.data.activeCategory);
+  },
+
   getStoreServiceName(store) {
     return this.getCategoryMeta(store.categoryType).serviceName;
+  },
+
+  buildStoreDisplayTags(store = {}) {
+    const tags = [];
+    // 营业状态
+    const status = store.businessStatus || store.storeStatus || store.status;
+    const statusText = String(status || '').toLowerCase();
+    if (statusText === 'closed' || statusText === '已打烊' || statusText === '休息中') {
+      tags.push('已打烊');
+    } else {
+      tags.push('营业中');
+    }
+    // 营业时间
+    const hours = store.businessHours || store.openHours || store.workTime || '';
+    if (hours && String(hours).includes('24')) {
+      tags.push('24小时');
+    }
+    // 自助开门
+    const selfService = store.selfService || store.isSelfService || store.autoOpen || store.smartLock;
+    if (selfService === true || selfService === 1 || selfService === '1') {
+      tags.push('可自助开门');
+    }
+    // 门店自定义标签
+    const customTags = store.tags || store.labels || store.featureTags || '';
+    if (customTags) {
+      const parsed = Array.isArray(customTags) ? customTags : String(customTags).split(/[,，、|/]+/).filter(Boolean);
+      parsed.slice(0, 2).forEach(tag => {
+        if (!tags.includes(tag)) tags.push(tag);
+      });
+    }
+    // 兜底：如果没有自定义标签，用分类默认标签
+    if (tags.length < 3) {
+      const extraTag = this.getCategoryMeta(store.categoryType).extraTag;
+      if (extraTag && !tags.includes(extraTag)) tags.push(extraTag);
+    }
+    return tags.slice(0, 4);
   },
 
   getStorePrice(store) {
@@ -373,7 +458,9 @@ Page({
       serviceName: meta.serviceName,
       serviceUnit: meta.serviceUnit,
       extraTag: meta.extraTag,
-      availableText: meta.availableText,
+      bookingEnabled: !!store.bookingEnabled,
+      availableText: store.availableText || this.getStoreAvailabilityText(store.bookingEnabled, store.roomCount),
+      actionText: store.actionText || this.getStoreActionText(store.bookingEnabled),
       priceYuan: store.priceYuan,
       hasPrice: !!store.hasPrice,
       priceUnitText: store.priceUnitText || '起',
@@ -383,7 +470,8 @@ Page({
 
   updateStoreRooms(targetStore, rooms) {
     const visibleRooms = this.filterRoomsForStore(rooms, targetStore).filter(room => room.isShowInApp !== 0);
-    const roomList = visibleRooms.filter(room => this.isBookableResource(room));
+    const bookingEnabled = bookingModeUtil.resolveBookingEnabled(targetStore);
+    const roomList = visibleRooms.filter(room => this.isBookableResource(room, bookingEnabled));
     const categoryRoomCounts = {};
     const roomCategoryTypes = [];
     roomList.forEach(room => {
@@ -411,7 +499,9 @@ Page({
             categoryRoomCounts,
             categoryTypes: roomCategoryTypes.length ? roomCategoryTypes : store.categoryTypes,
             categoryType,
-            availableText: roomList.length ? meta.availableText : '暂无可约',
+            bookingEnabled,
+            availableText: this.getStoreAvailabilityText(bookingEnabled, roomList.length),
+            actionText: this.getStoreActionText(bookingEnabled),
             canBook: roomList.length > 0,
             priceYuan: minPriceInfo.hasPrice ? minPriceInfo.text : store.priceYuan,
             hasPrice: minPriceInfo.hasPrice || !!store.hasPrice,
@@ -443,8 +533,8 @@ Page({
       (room.storeInfo && room.storeInfo.id) || '';
   },
 
-  isBookableResource(room = {}) {
-    return resourceStatus.isResourceBookable(room);
+  isBookableResource(room = {}, bookingEnabled = false) {
+    return resourceStatus.isResourceBookable(room, { bookingEnabled });
   },
 
   getFallbackStores() {
@@ -508,7 +598,8 @@ Page({
   },
 
   goToRecharge() {
-    wx.navigateTo({ url: '/pages/recharge/recharge' });
+    const merchantId = this.getMerchantId();
+    wx.navigateTo({ url: `/pages/recharge/recharge?merchantId=${merchantId || ''}` });
   },
 
   contactService() {
@@ -517,7 +608,7 @@ Page({
       variant: 'service',
       servicePhone: '15157903339',
       serviceTime: '7×24小时在线',
-      serviceDesc: '预约、支付、开门、退款等问题都可以联系人工客服',
+      serviceDesc: '下单/预约、支付、开门、退款等问题都可以联系人工客服',
       showCancel: true,
       cancelText: '知道了',
       confirmText: '拨打电话',

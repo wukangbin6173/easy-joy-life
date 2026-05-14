@@ -24,6 +24,14 @@ function normalizeCashierUrl(url) {
   return String(url || '').replace(/^http:\/\/pay\.test-client\.xuancore\.com/i, 'https://pay.test-client.xuancore.com');
 }
 
+function pickFirstValue(source, fields) {
+  for (const field of fields) {
+    const value = source && source[field];
+    if (value !== undefined && value !== null && value !== '') return value;
+  }
+  return undefined;
+}
+
 function appendCashierHost(url) {
   if (!url) return '';
 
@@ -188,7 +196,7 @@ Page({
     const last = getCashierMessage(messages);
     if (!last) return;
 
-    const status = normalizePayStatus(last.status || last.payStatus || last.tradeStatus);
+    const status = normalizePayStatus(pickFirstValue(last, ['status', 'payStatus', 'tradeStatus']));
     if (status === 'success') {
       if (this.data.orderId && !this.data.rechargeId) {
         this.checkPayResult({ silent: false });
@@ -229,6 +237,8 @@ Page({
       wx.removeStorageSync('pendingBillingBooking');
       wx.setStorageSync('lastPaidBooking', {
         orderId: this.data.orderId,
+        tradeNo: this.data.tradeNo,
+        paymentTradeNo: this.data.tradeNo,
         merchantId: this.data.merchantId,
         resourceId: this.data.resourceId,
         startTime: this.data.startTime,
@@ -242,7 +252,10 @@ Page({
     clearTimeout(this._finishTimer);
     this._finishTimer = setTimeout(() => {
       if (this.data.orderId && !this.data.rechargeId) {
-        wx.switchTab({ url: '/pages/orders/orders' });
+        // 支付成功后跳转到订单详情页，用户可以直接开门
+        wx.redirectTo({
+          url: `/pages/order-detail/order-detail?orderId=${this.data.orderId}&fromPayment=1`
+        });
         return;
       }
 
@@ -283,7 +296,7 @@ Page({
       this.setData({ checking: false });
 
       const payload = result.payload;
-      const rawStatus = payload.status || payload.orderStatus || payload.payStatus || payload.tradeStatus || payload.paymentStatus;
+      const rawStatus = pickFirstValue(payload, ['status', 'orderStatus', 'payStatus', 'tradeStatus', 'paymentStatus']);
       const status = result.source === 'billing'
         ? normalizeBillingOrderStatus(rawStatus)
         : normalizePayStatus(rawStatus);

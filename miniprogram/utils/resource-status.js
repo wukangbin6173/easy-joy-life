@@ -18,6 +18,9 @@ const BOOKED_KEYWORDS = [
   '\u5df2\u9884\u7ea6', '\u5df2\u7ea6', '\u5360\u7528', '\u4f7f\u7528\u4e2d',
   '\u5df2\u652f\u4ed8', 'booked', 'reserved', 'occupied', 'using', 'paid'
 ];
+const BOOKING_ONLY_DISABLED_KEYWORDS = [
+  '\u4e0d\u53ef\u7ea6', 'unreservable', 'not bookable', 'not reservable'
+];
 
 const RESOURCE_STATUS_CODE_KEYS = [
   'status',
@@ -74,6 +77,20 @@ function includesAny(text, keywords) {
   return keywords.some(keyword => normalized.includes(normalizeText(keyword)));
 }
 
+function isBookingMode(options = {}) {
+  return !!(options && options.bookingEnabled === true);
+}
+
+function includesDisabledStatus(text, options = {}) {
+  const normalized = normalizeText(text);
+  const bookingMode = isBookingMode(options);
+  return DISABLED_KEYWORDS.some(keyword => {
+    const normalizedKeyword = normalizeText(keyword);
+    if (!bookingMode && BOOKING_ONLY_DISABLED_KEYWORDS.includes(normalizedKeyword)) return false;
+    return normalized.includes(normalizedKeyword);
+  });
+}
+
 function isOffFlag(value) {
   return value === 0 || value === false ||
     value === '0' || value === 'false' || value === 'FALSE' ||
@@ -119,12 +136,13 @@ function collectStatusText(room = {}) {
   return values.join(' ');
 }
 
-function hasBlockedFlag(room = {}) {
-  if (isOffFlag(room.isAcceptBooking) || isOffFlag(room.acceptBooking) || isOffFlag(room.bookingEnabled)) return true;
+function hasBlockedFlag(room = {}, options = {}) {
+  const bookingMode = isBookingMode(options);
+  if (bookingMode && (isOffFlag(room.isAcceptBooking) || isOffFlag(room.acceptBooking) || isOffFlag(room.bookingEnabled))) return true;
   if (isOffFlag(room.isEnabled) || isOffFlag(room.enabled)) return true;
   if (isOffFlag(room.isShowInApp) || isOffFlag(room.showInApp)) return true;
   if (isOffFlag(room.isAvailable) || isOffFlag(room.available)) return true;
-  if (isOffFlag(room.bookable) || isOffFlag(room.canBook) || isOffFlag(room.canBooking) || isOffFlag(room.canReserve)) return true;
+  if (bookingMode && (isOffFlag(room.bookable) || isOffFlag(room.canBook) || isOffFlag(room.canBooking) || isOffFlag(room.canReserve))) return true;
   if (isOnFlag(room.isDeleted) || isOnFlag(room.deleted)) return true;
   return false;
 }
@@ -139,45 +157,45 @@ function hasBlockedStatusCode(room = {}) {
   return false;
 }
 
-function isResourceBookable(room = {}) {
+function isResourceBookable(room = {}, options = {}) {
   if (!room || typeof room !== 'object') return false;
-  if (hasBlockedFlag(room)) return false;
+  if (hasBlockedFlag(room, options)) return false;
   if (hasBlockedStatusCode(room)) return false;
 
   const statusText = collectStatusText(room);
   if (includesAny(statusText, CLEANING_KEYWORDS)) return false;
   if (includesAny(statusText, MAINTENANCE_KEYWORDS)) return false;
-  if (includesAny(statusText, DISABLED_KEYWORDS)) return false;
+  if (includesDisabledStatus(statusText, options)) return false;
   if (includesAny(statusText, REST_KEYWORDS)) return false;
   if (includesAny(statusText, BOOKED_KEYWORDS)) return false;
 
   return true;
 }
 
-function getResourceStatusText(room = {}) {
+function getResourceStatusText(room = {}, options = {}) {
   const statusText = collectStatusText(room);
   const resourceStatusCode = getResourceStatusCode(room);
   const roomStatusCode = getRoomStatusCode(room);
 
   if (includesAny(statusText, CLEANING_KEYWORDS) || roomStatusCode === 3) return '\u5f85\u6e05\u6d01';
   if (includesAny(statusText, MAINTENANCE_KEYWORDS) || resourceStatusCode === 3) return '\u7ef4\u62a4\u4e2d';
-  if (includesAny(statusText, DISABLED_KEYWORDS) || resourceStatusCode === 4) return '\u5df2\u505c\u7528';
+  if (includesDisabledStatus(statusText, options) || resourceStatusCode === 4) return '\u5df2\u505c\u7528';
   if (includesAny(statusText, REST_KEYWORDS) || resourceStatusCode === 5 || roomStatusCode === 5) return '\u4f11\u606f\u4e2d';
-  if (includesAny(statusText, BOOKED_KEYWORDS) || resourceStatusCode === 1 || roomStatusCode === 1) return '\u9884\u8ba2\u4e2d';
+  if (includesAny(statusText, BOOKED_KEYWORDS) || resourceStatusCode === 1 || roomStatusCode === 1) return '\u4f7f\u7528\u4e2d';
   if (resourceStatusCode === 2 || roomStatusCode === 2) return '\u4f7f\u7528\u4e2d';
-  if (hasBlockedFlag(room)) return '\u4e0d\u53ef\u7ea6';
-  if (!isResourceBookable(room)) return '\u4e0d\u53ef\u7ea6';
-  return '\u53ef\u7ea6';
+  if (hasBlockedFlag(room, options)) return '\u4e0d\u53ef\u7528';
+  if (!isResourceBookable(room, options)) return '\u4e0d\u53ef\u7528';
+  return '\u53ef\u7528';
 }
 
-function getResourceStatusClass(room = {}) {
+function getResourceStatusClass(room = {}, options = {}) {
   const statusText = collectStatusText(room);
   const resourceStatusCode = getResourceStatusCode(room);
   const roomStatusCode = getRoomStatusCode(room);
 
   if (includesAny(statusText, CLEANING_KEYWORDS) || roomStatusCode === 3) return 'cleaning';
   if (includesAny(statusText, BOOKED_KEYWORDS) || resourceStatusCode === 1 || resourceStatusCode === 2 || roomStatusCode === 1 || roomStatusCode === 2) return 'booked';
-  if (!isResourceBookable(room)) return 'disabled';
+  if (!isResourceBookable(room, options)) return 'disabled';
   return 'available';
 }
 

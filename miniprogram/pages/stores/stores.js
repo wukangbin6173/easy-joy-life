@@ -4,6 +4,7 @@ const { storeApi, roomApi } = require('../../utils/api.js');
 const config = require('../../utils/config.js');
 const resourceStatus = require('../../utils/resource-status.js');
 const locationUtil = require('../../utils/location.js');
+const bookingModeUtil = require('../../utils/booking-mode.js');
 
 const CATEGORY_CONFIG = {
   all: { title: '全部', keywords: [] },
@@ -72,8 +73,8 @@ Page({
 
   loadStores() {
     this.setData({ loading: true });
-    const merchantId = this.getMerchantId();
-    storeApi.getStores(merchantId, 1, 50).then(response => {
+    const fallbackMerchantId = this.getMerchantId();
+    storeApi.getStores(undefined, 1, 100).then(response => {
       let stores = [];
       const data = response.data;
       if (data && Array.isArray(data.list)) stores = data.list;
@@ -83,14 +84,18 @@ Page({
       stores = stores.map((store, index) => {
         // 字段适配：商起点用 storeName，前端用 name
         store.name = store.storeName || store.name;
-        store.merchantId = store.merchantId || store.merchantID || merchantId;
+        store.merchantId = store.merchantId || store.merchantID || fallbackMerchantId;
         const validCover = store.coverUrl && !store.coverUrl.startsWith('file://') ? store.coverUrl : null;
         const validLogo = store.logoUrl && !store.logoUrl.startsWith('file://') ? store.logoUrl : null;
         store.phone = store.contactPhone || store.phone;
         store.categoryTypes = this.detectCategoryTypes(store);
         store.categoryType = store.categoryTypes[0];
+        const bookingEnabled = bookingModeUtil.resolveBookingEnabled(store);
         store.categoryTitle = CATEGORY_CONFIG[store.categoryType].title;
         store.serviceName = CATEGORY_CONFIG[store.categoryType].serviceName;
+        store.bookingEnabled = bookingEnabled;
+        store.actionText = this.getStoreActionText(bookingEnabled);
+        store.availableText = this.getStoreAvailabilityText(bookingEnabled, store.roomCount);
         store.images = validCover ? [validCover] : (validLogo ? [validLogo] : [CATEGORY_CONFIG[store.categoryType].fallbackImage]);
         store.displayName = store.name || '门店信息待同步';
 
@@ -103,7 +108,8 @@ Page({
 
       this.setData({ allStores: stores, loading: false });
       this.applyFilters();
-      this.enrichStoresWithRooms(stores, merchantId);
+      this.enrichStoresWithBookingMode(stores);
+      this.enrichStoresWithRooms(stores, fallbackMerchantId);
     }).catch(error => {
       console.error('加载门店失败:', error);
       this.setData({ loading: false });
@@ -199,6 +205,39 @@ Page({
       config.DEFAULT_MERCHANT_ID;
   },
 
+  getStoreActionText(bookingEnabled) {
+    return bookingEnabled ? '立即预订' : '到店下单';
+  },
+
+  getStoreAvailabilityText(bookingEnabled, availableCount) {
+    if (availableCount === undefined || availableCount === null || availableCount === '') {
+      return bookingEnabled ? '今日可约' : '今日可用';
+    }
+    if (Number(availableCount || 0) <= 0) return bookingEnabled ? '暂无可约' : '暂无可用';
+    return bookingEnabled ? '今日可约' : '今日可用';
+  },
+
+  enrichStoresWithBookingMode(stores) {
+    stores.forEach(store => {
+      const storeId = store.id || store.storeId;
+      if (!storeId) return;
+      storeApi.getStoreWithBookingMode(storeId).then(res => {
+        const latest = (res && res.data) || {};
+        const merged = { ...store, ...latest };
+        const bookingEnabled = bookingModeUtil.resolveBookingEnabled(merged);
+        this.updateStorePartial(store, {
+          bookingConfig: merged.bookingConfig,
+          displayConfig: merged.displayConfig,
+          bookingEnabled,
+          actionText: this.getStoreActionText(bookingEnabled),
+          availableText: this.getStoreAvailabilityText(bookingEnabled, store.roomCount)
+        });
+      }).catch(err => {
+        console.warn('加载门店预约配置失败:', storeId, err);
+      });
+    });
+  },
+
   enrichStoresWithRooms(stores, fallbackMerchantId) {
     stores.forEach(store => {
       const merchantId = store.merchantId || fallbackMerchantId;
@@ -218,7 +257,8 @@ Page({
 
   updateStoreRooms(targetStore, rooms) {
     const visibleRooms = this.filterRoomsForStore(rooms, targetStore).filter(room => room.isShowInApp !== 0);
-    const roomList = visibleRooms.filter(room => this.isBookableResource(room));
+    const bookingEnabled = bookingModeUtil.resolveBookingEnabled(targetStore);
+    const roomList = visibleRooms.filter(room => this.isBookableResource(room, bookingEnabled));
     const categoryTypes = this.detectCategoryTypesFromRooms(roomList.length ? roomList : visibleRooms, targetStore.categoryTypes);
     const categoryType = categoryTypes[0] || targetStore.categoryType || 'mahjong';
     const meta = CATEGORY_CONFIG[categoryType] || CATEGORY_CONFIG.mahjong;
@@ -232,8 +272,21 @@ Page({
         categoryType,
         categoryTitle: meta.title,
         serviceName: meta.serviceName,
-        roomCount: roomList.length || store.roomCount || 0
+        roomCount: roomList.length || store.roomCount || 0,
+        bookingEnabled,
+        actionText: this.getStoreActionText(bookingEnabled),
+        availableText: this.getStoreAvailabilityText(bookingEnabled, roomList.length)
       };
+    });
+    this.setData({ allStores });
+    this.applyFilters();
+  },
+
+  updateStorePartial(targetStore, patch) {
+    const targetId = String((targetStore && (targetStore.id || targetStore.storeId)) || '');
+    const allStores = this.data.allStores.map(store => {
+      const storeId = String(store.id || store.storeId || '');
+      return targetId && storeId === targetId ? { ...store, ...patch } : store;
     });
     this.setData({ allStores });
     this.applyFilters();
@@ -253,8 +306,8 @@ Page({
       (room.storeInfo && room.storeInfo.id) || '';
   },
 
-  isBookableResource(room = {}) {
-    return resourceStatus.isResourceBookable(room);
+  isBookableResource(room = {}, bookingEnabled = false) {
+    return resourceStatus.isResourceBookable(room, { bookingEnabled });
   },
 
   detectCategoryTypesFromRooms(rooms, fallbackTypes) {

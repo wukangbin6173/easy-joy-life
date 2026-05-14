@@ -1,6 +1,7 @@
 const { storeApi, roomApi, request } = require('../../utils/api.js');
 const resourceStatus = require('../../utils/resource-status.js');
 const config = require('../../utils/config.js');
+const bookingModeUtil = require('../../utils/booking-mode.js');
 const app = getApp();
 
 const SERVICE_META = {
@@ -39,7 +40,7 @@ const SERVICE_META = {
     categoryTitle: '服务',
     resourceLabel: '资源',
     selectPlaceholder: '请选择资源',
-    selectPageTitle: '选择预约资源',
+    selectPageTitle: '选择资源',
     emptyText: '暂无可展示资源',
     priceUnitText: '/小时起',
     fallbackImage: config.DEFAULT_ROOM_IMAGE
@@ -60,10 +61,14 @@ Page({
     endTime: '',
     hours: '',
     packageName: '',
+    bookingEnabled: false,
+    flowText: {},
     serviceMeta: SERVICE_META.generic
   },
 
   onLoad(options = {}) {
+    const bookingEnabled = false;
+    const serviceMeta = this.getModeServiceMeta(this.buildMetaFromOptions(options, bookingEnabled), bookingEnabled);
     this.setData({
       storeId: options.storeId || '',
       merchantId: options.merchantId || '',
@@ -72,13 +77,50 @@ Page({
       endTime: options.endTime || '',
       hours: options.hours || '',
       packageName: decodeURIComponent(options.packageName || ''),
-      serviceMeta: this.buildMetaFromOptions(options)
+      bookingEnabled,
+      flowText: this.getFlowText(bookingEnabled),
+      serviceMeta
     });
     if (this.data.merchantId && app.setActiveMerchantId) app.setActiveMerchantId(this.data.merchantId);
     this.loadPageData();
   },
 
-  buildMetaFromOptions(options = {}) {
+  resolveBookingEnabled(...sources) {
+    return bookingModeUtil.resolveBookingEnabled(...sources);
+  },
+
+  getFlowText(bookingEnabled = this.data.bookingEnabled) {
+    return bookingEnabled
+      ? {
+          defaultPackageName: '按小时预约',
+          currentFilterText: '当前可约',
+          legendAvailable: '可约',
+          legendBooked: '已预约',
+          legendDisabled: '不可约',
+          unavailableRoomText: '当前资源不可约',
+          timelineLabel: '今日可约时段'
+        }
+      : {
+          defaultPackageName: '按小时使用',
+          currentFilterText: '当前可用',
+          legendAvailable: '可用',
+          legendBooked: '使用中',
+          legendDisabled: '不可用',
+          unavailableRoomText: '当前资源不可用',
+          timelineLabel: '今日时段'
+        };
+  },
+
+  getModeServiceMeta(meta = SERVICE_META.generic, bookingEnabled = this.data.bookingEnabled) {
+    const resourceLabel = meta.resourceLabel || '资源';
+    return {
+      ...meta,
+      selectPageTitle: bookingEnabled ? `选择预约${resourceLabel}` : (meta.selectPageTitle || `选择${resourceLabel}`),
+      emptyText: bookingEnabled ? `暂无可预约${resourceLabel}` : (meta.emptyText || `暂无可展示${resourceLabel}`)
+    };
+  },
+
+  buildMetaFromOptions(options = {}, bookingEnabled = false) {
     const resourceLabel = decodeURIComponent(options.resourceLabel || '');
     const categoryTitle = decodeURIComponent(options.categoryTitle || '');
     const priceUnitText = decodeURIComponent(options.priceUnitText || '');
@@ -89,9 +131,9 @@ Page({
       ...base,
       resourceLabel: resourceLabel || base.resourceLabel,
       categoryTitle: categoryTitle || base.categoryTitle,
-      selectPageTitle: resourceLabel ? `选择${resourceLabel}` : base.selectPageTitle,
+      selectPageTitle: resourceLabel ? `${bookingEnabled ? '选择预约' : '选择'}${resourceLabel}` : base.selectPageTitle,
       selectPlaceholder: resourceLabel ? `请选择${resourceLabel}` : base.selectPlaceholder,
-      emptyText: resourceLabel ? `暂无可展示${resourceLabel}` : base.emptyText,
+      emptyText: resourceLabel ? `${bookingEnabled ? '暂无可预约' : '暂无可展示'}${resourceLabel}` : base.emptyText,
       priceUnitText: priceUnitText || base.priceUnitText
     };
   },
@@ -110,15 +152,18 @@ Page({
 
   loadStore() {
     if (!this.data.storeId) return Promise.resolve();
-    return storeApi.getStoreById(this.data.storeId).then(res => {
+    return storeApi.getStoreWithBookingMode(this.data.storeId).then(res => {
       const store = res.data || {};
       store.name = store.storeName || store.name;
       const cover = this.pickImage(store.coverUrl || store.logoUrl || (store.images && store.images[0]));
-      const serviceMeta = this.getServiceMeta(store);
+      const bookingEnabled = this.resolveBookingEnabled(store);
+      const serviceMeta = this.getModeServiceMeta(this.getServiceMeta(store), bookingEnabled);
       store.categoryTitle = serviceMeta.categoryTitle;
       this.setData({
         store,
         storeCover: cover || config.DEFAULT_STORE_IMAGE,
+        bookingEnabled,
+        flowText: this.getFlowText(bookingEnabled),
         serviceMeta
       });
     }).catch(err => {
@@ -138,22 +183,28 @@ Page({
         ? data.list
         : (data && Array.isArray(data.records) ? data.records : (Array.isArray(data) ? data : []));
       const scopedRooms = this.filterRoomsForCurrentStore(rawRooms);
-      const serviceMeta = this.getServiceMeta(this.data.store, scopedRooms);
+      const bookingEnabled = this.resolveBookingEnabled(this.data.store);
+      const serviceMeta = this.getModeServiceMeta(this.getServiceMeta(this.data.store, scopedRooms), bookingEnabled);
       const rooms = scopedRooms
         .filter(room => room.isShowInApp !== 0)
-        .map((room, index) => this.normalizeRoom(room, index, serviceMeta));
-      const sortedRooms = this.sortRoomsByBookable(rooms);
+        .map((room, index) => this.normalizeRoom(room, index, serviceMeta, bookingEnabled));
+      const sortedRooms = this.sortRoomsByBookable(rooms, bookingEnabled);
 
-      this.setData({ rooms: sortedRooms, serviceMeta });
-      this.ensureSelectedRoom(sortedRooms);
+      this.setData({
+        rooms: sortedRooms,
+        bookingEnabled,
+        flowText: this.getFlowText(bookingEnabled),
+        serviceMeta
+      });
+      this.ensureSelectedRoom(sortedRooms, bookingEnabled);
       return this.loadRoomTimelines(sortedRooms);
     }).catch(err => {
-      console.error('加载预约资源失败:', err);
+      console.error('加载资源失败:', err);
       this.setData({ rooms: [] });
     });
   },
 
-  normalizeRoom(room, index, serviceMeta) {
+  normalizeRoom(room, index, serviceMeta, bookingEnabled = this.data.bookingEnabled) {
     const tags = this.parseTags(room.tags);
     const image = this.pickImage(room.resourcePhoto || room.image || room.coverUrl);
     const price = room.unitPrice || room.price || room.pricePerHour || room.hourPrice;
@@ -168,18 +219,18 @@ Page({
       tagList: tags.slice(0, 2),
       supportText: this.getSupportText(room, tags),
       rawStatusText: resourceStatus.collectStatusText(room),
-      bookable: this.isResourceBookable(room),
-      availabilityText: this.getAvailabilityText(room),
-      statusClass: this.getStatusClass(room),
+      bookable: this.isResourceBookable(room, bookingEnabled),
+      availabilityText: this.getAvailabilityText(room, bookingEnabled),
+      statusClass: this.getStatusClass(room, bookingEnabled),
       sortIndex: index,
       timeline: this.buildEmptyTimeline()
     };
   },
 
-  sortRoomsByBookable(rooms = []) {
+  sortRoomsByBookable(rooms = [], bookingEnabled = this.data.bookingEnabled) {
     return [...rooms].sort((a, b) => {
-      const aRank = this.isResourceBookable(a) ? 0 : 1;
-      const bRank = this.isResourceBookable(b) ? 0 : 1;
+      const aRank = this.isResourceBookable(a, bookingEnabled) ? 0 : 1;
+      const bRank = this.isResourceBookable(b, bookingEnabled) ? 0 : 1;
       if (aRank !== bRank) return aRank - bRank;
       return Number(a.sortIndex || 0) - Number(b.sortIndex || 0);
     });
@@ -223,21 +274,25 @@ Page({
   },
 
   loadRoomTimeline(room, date) {
+    const loadBillingTimeline = () => (
+      request(`/api/billing/timeline/${room.id}?date=${date}`).then(res => {
+        const timeline = this.normalizeTimeline(res.data || res);
+        this.updateRoom(room.id, { timeline });
+      }).catch(err => {
+        console.error('加载资源时间轴失败', room.id, err);
+      })
+    );
+
     return roomApi.getAvailableSlots(this.data.merchantId, room.id, date, {
       storeId: this.data.storeId,
       durationMinutes: Math.max(60, Number(this.data.hours || 1) * 60),
       slotStepMinutes: 60
     }).then(res => {
+      if (!this.extractTimelineSlots(res.data || res).length) return loadBillingTimeline();
       const timeline = this.normalizeTimeline(res.data || res);
       this.updateRoom(room.id, { timeline });
-    }).catch(() => (
-      request(`/api/billing/timeline/${room.id}?date=${date}`).then(res => {
-        const timeline = this.normalizeTimeline(res.data || res);
-        this.updateRoom(room.id, { timeline });
-      }).catch(err => {
-        console.error('加载资源时间轴失败:', room.id, err);
-      })
-    ));
+      return null;
+    }).catch(() => loadBillingTimeline());
   },
 
   normalizeTimeline(data) {
@@ -338,15 +393,15 @@ Page({
     if (this.data.selectedRoomId == roomId) this.ensureSelectedRoom(rooms);
   },
 
-  ensureSelectedRoom(rooms) {
+  ensureSelectedRoom(rooms, bookingEnabled = this.data.bookingEnabled) {
     if (!rooms.length) {
       this.setData({ selectedRoom: {}, selectedRoomId: '' });
       return;
     }
     const currentRoom = rooms.find(item => `${item.id}` === `${this.data.selectedRoomId}`);
-    const room = currentRoom && this.isResourceBookable(currentRoom)
+    const room = currentRoom && this.isResourceBookable(currentRoom, bookingEnabled)
       ? currentRoom
-      : rooms.find(item => this.isResourceBookable(item));
+      : rooms.find(item => this.isResourceBookable(item, bookingEnabled));
     this.setData({
       selectedRoomId: room ? room.id : '',
       selectedRoom: room || {}
@@ -357,8 +412,8 @@ Page({
     const id = e.currentTarget.dataset.id;
     const room = this.data.rooms.find(item => `${item.id}` === `${id}`);
     if (!room) return;
-    if (!this.isResourceBookable(room)) {
-      wx.showToast({ title: '当前资源不可约', icon: 'none' });
+    if (!this.isResourceBookable(room, this.data.bookingEnabled)) {
+      wx.showToast({ title: this.data.flowText.unavailableRoomText || '当前资源不可用', icon: 'none' });
       return;
     }
     this.setData({ selectedRoomId: id, selectedRoom: room });
@@ -369,8 +424,8 @@ Page({
       wx.showToast({ title: `请选择${this.data.serviceMeta.resourceLabel}`, icon: 'none' });
       return;
     }
-    if (!this.isResourceBookable(this.data.selectedRoom)) {
-      wx.showToast({ title: '当前资源不可约', icon: 'none' });
+    if (!this.isResourceBookable(this.data.selectedRoom, this.data.bookingEnabled)) {
+      wx.showToast({ title: this.data.flowText.unavailableRoomText || '当前资源不可用', icon: 'none' });
       return;
     }
     const eventChannel = this.getOpenerEventChannel && this.getOpenerEventChannel();
@@ -410,16 +465,26 @@ Page({
     return this.compactText(room.description || tags.join(' / '), 18);
   },
 
-  getAvailabilityText(room) {
-    return resourceStatus.getResourceStatusText(room);
+  getAvailabilityText(room, bookingEnabled = this.data.bookingEnabled) {
+    return this.normalizeFlowStatusText(resourceStatus.getResourceStatusText(room, { bookingEnabled }), bookingEnabled);
   },
 
-  getStatusClass(room) {
-    return resourceStatus.getResourceStatusClass(room);
+  getStatusClass(room, bookingEnabled = this.data.bookingEnabled) {
+    return resourceStatus.getResourceStatusClass(room, { bookingEnabled });
   },
 
-  isResourceBookable(room = {}) {
-    return resourceStatus.isResourceBookable(room);
+  normalizeFlowStatusText(text = '', bookingEnabled = this.data.bookingEnabled) {
+    let result = String(text || '');
+    if (bookingEnabled) {
+      result = result.replace(/使用中/g, '已预约').replace(/不可用/g, '不可约').replace(/可用/g, '可约');
+    } else {
+      result = result.replace(/已预约/g, '使用中').replace(/不可约/g, '不可用').replace(/可约/g, '可用');
+    }
+    return result;
+  },
+
+  isResourceBookable(room = {}, bookingEnabled = this.data.bookingEnabled) {
+    return resourceStatus.isResourceBookable(room, { bookingEnabled });
   },
 
   getTodayDate() {

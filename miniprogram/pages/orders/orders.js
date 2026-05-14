@@ -14,6 +14,8 @@ const STATUS_MAP = {
   60: { text: '已取消', key: 'cancelled' }
 };
 
+const UNKNOWN_STATUS = { text: '未知', key: 'unknown' };
+
 const STATUS_TABS = [
   { key: 'all', label: '全部' },
   { key: 'pendingPay', label: '待支付' },
@@ -47,6 +49,7 @@ const TYPE_KEYWORDS = {
 const EMPTY_ORDER_IMAGE = '/images/提示.png';
 
 const PAY_EXPIRE_MINUTES = 15;
+const LOCAL_PAID_OVERLAY_MS = 30 * 60 * 1000;
 
 Page({
   data: {
@@ -96,8 +99,9 @@ Page({
   },
 
   loadOrders() {
+    const loadSeq = (this._loadOrdersSeq || 0) + 1;
+    this._loadOrdersSeq = loadSeq;
     const userId = app.globalData.userId || wx.getStorageSync('userId');
-    const merchantId = this.getActiveMerchantId();
     console.log('loadOrders userId:', userId);
     if (!userId) {
       this.setData({ loading: true });
@@ -118,57 +122,92 @@ Page({
       .map(id => String(id))
       .filter((id, index, arr) => arr.indexOf(id) === index);
     const detailOrdersPromise = Promise.all(detailIds.map(id =>
-      request(`/api/billing/order/${id}`).catch(err => {
+      this.safeRequest(`/api/billing/order/${id}`, {}, `load billing order detail ${id}`).then(res => {
+        return res;
+      }).catch(err => {
         console.warn('load billing order detail failed:', id, err);
         return null;
       })
     ));
+    const merchantIds = this.getOrderMerchantIds();
 
     Promise.all([
-      request(`/api/billing/order/list?externalUserId=${encodeURIComponent(userId)}&merchantId=${merchantId}&pageNo=1&pageSize=100`),
-      request(`/api/rooms?merchantId=${merchantId}&pageNo=1&pageSize=50`),
-      request(`/api/stores?merchantId=${merchantId}&pageNo=1&pageSize=50`).catch(() => null),
-      request(`/api/stores/merchants/${merchantId}`).catch(() => null),
+      Promise.all(merchantIds.map(merchantId => this.loadOrderBundle(merchantId, userId))),
       detailOrdersPromise
-    ]).then(([orderRes, roomRes, storeRes, merchantRes, detailOrderResList]) => {
-      const roomList = this.extractResponseList(roomRes);
+    ]).then(([bundles, detailOrderResList]) => {
+      if (loadSeq !== this._loadOrdersSeq) return;
       const roomMap = {};
-      roomList.forEach(r => {
-        roomMap[r.id] = {
-          name: r.resourceName || r.name || '',
-          image: (r.resourcePhoto && !r.resourcePhoto.startsWith('file://')) ? r.resourcePhoto : '',
-          tags: r.tags || '',
-          capacity: r.capacity || r.maxCapacity || r.peopleNum || '',
-          storeId: r.storeId || ''
-        };
-      });
-      const storeMap = this.buildRemoteStoreMap(storeRes);
-      const merchant = (merchantRes && merchantRes.data && !Array.isArray(merchantRes.data))
-        ? merchantRes.data
-        : (merchantRes || {});
+      const storeMap = {};
+      const merchantMap = {};
+      let list = [];
 
-      let list = this.extractResponseList(orderRes).filter(order => (
-        !order.externalUserId || String(order.externalUserId) === String(userId)
-      ));
+      (bundles || []).forEach(bundle => {
+        const merchantId = bundle.merchantId;
+        this.extractResponseList(bundle.roomRes).forEach(r => {
+          const roomInfo = {
+            name: r.resourceName || r.name || '',
+            image: (r.resourcePhoto && !r.resourcePhoto.startsWith('file://')) ? r.resourcePhoto : '',
+            tags: r.tags || '',
+            capacity: r.capacity || r.maxCapacity || r.peopleNum || '',
+            storeId: r.storeId || '',
+            merchantId
+          };
+          if (r.id) {
+            roomMap[r.id] = roomInfo;
+            roomMap[`${merchantId}:${r.id}`] = roomInfo;
+          }
+        });
+
+        Object.assign(storeMap, this.buildRemoteStoreMap(bundle.storeRes));
+
+        const merchant = (bundle.merchantRes && bundle.merchantRes.data && !Array.isArray(bundle.merchantRes.data))
+          ? bundle.merchantRes.data
+          : (bundle.merchantRes || {});
+        if (merchantId) merchantMap[merchantId] = merchant;
+
+        const bundleOrders = this.extractResponseList(bundle.orderRes)
+          .filter(order => !order.externalUserId || String(order.externalUserId) === String(userId))
+          .map(order => ({ ...order, merchantId: order.merchantId || merchantId }));
+        bundleOrders.forEach(order => {
+          if (!this.hasOrder(list, order)) list.push(order);
+        });
+      });
+
       (detailOrderResList || []).forEach(detailOrderRes => {
         const detailOrder = this.extractResponseObject(detailOrderRes);
         if (detailOrder && !this.hasOrder(list, detailOrder)) list = [detailOrder, ...list];
       });
+
+      list = this.applyPendingOrderOverlay(list);
+      this.syncPendingOrderCache(list);
+      list = this.applyLocalPaidOrderOverlay(list);
+      const pendingOrder = this.buildPendingBillingOrder();
+      if (pendingOrder && !this.hasOrder(list, pendingOrder)) {
+        list = [pendingOrder, ...list];
+      }
+      const localRoomBooking = this.buildLocalRoomBookingOrder();
+      if (localRoomBooking && !this.hasOrder(list, localRoomBooking)) {
+        list = [localRoomBooking, ...list];
+      }
+
       const localPaidOrder = this.buildLocalPaidOrder();
       if (localPaidOrder && !this.hasOrder(list, localPaidOrder)) {
         list = [localPaidOrder, ...list];
       }
       console.log('订单数量:', list.length);
       const orders = list.map(o => {
-        const normalizedStatus = this.normalizeOrderStatus(o.status || o.orderStatus || o.payStatus || o.tradeStatus);
-        const statusInfo = STATUS_MAP[normalizedStatus] || { text: '未知', key: 'completed' };
+        const normalizedStatus = this.resolveOrderStatus(o);
+        const statusInfo = STATUS_MAP[normalizedStatus] || UNKNOWN_STATUS;
         const startTime = this.parseDate(o.bookingStartTime || o.startTime);
         const endTime = this.parseDate(o.bookingEndTime || o.endTime);
-        const room = roomMap[o.resourceId] || {};
+        const orderMerchantId = o.merchantId || o.merchantID || o.mchId || pendingBooking.merchantId || this.getActiveMerchantId();
+        const room = roomMap[`${orderMerchantId}:${o.resourceId}`] || roomMap[o.resourceId] || {};
         const store = storeMap[o.storeId || room.storeId] || {};
+        const merchant = merchantMap[orderMerchantId] || {};
         const amountFen = this.pickFirstNumber(o, ['prepaidAmount', 'paidAmount', 'totalAmount', 'amount', 'orderAmount', 'payAmount']);
         return this.decorateOrder({
           ...o,
+          merchantId: orderMerchantId,
           status: normalizedStatus,
           statusText: statusInfo.text,
           statusKey: statusInfo.key,
@@ -194,8 +233,160 @@ Page({
       });
       this.applyFilters();
     }).catch(err => {
+      if (loadSeq !== this._loadOrdersSeq) return;
       console.error('加载订单失败:', err);
       this.setData({ orders: [], allOrders: [], loading: false });
+    });
+  },
+
+  safeRequest(url, options = {}, label = '') {
+    return request(url, options).catch(err => {
+      console.warn(label || 'request failed:', err);
+      return null;
+    });
+  },
+
+  getOrderMerchantIds() {
+    const ids = [];
+    const add = (value) => {
+      if (value === undefined || value === null || value === '') return;
+      const text = String(value);
+      if (!ids.some(item => String(item) === text)) ids.push(value);
+    };
+    const pending = wx.getStorageSync('pendingBillingBooking') || {};
+    const paid = wx.getStorageSync('lastPaidBooking') || {};
+    add(pending.merchantId);
+    add(paid.merchantId);
+    const activeMerchantId = this.getActiveMerchantId();
+    add(app.globalData.currentMerchantId);
+    add(wx.getStorageSync('currentMerchantId'));
+    add(activeMerchantId);
+    if (!ids.length && activeMerchantId) add(activeMerchantId);
+    return ids;
+  },
+
+  loadOrderBundle(merchantId, userId) {
+    const orderData = {
+      externalUserId: String(userId),
+      merchantId,
+      pageNo: 1,
+      pageSize: 100
+    };
+    return Promise.all([
+      this.safeRequest('/api/billing/order/list', { method: 'GET', data: orderData }, `load orders ${merchantId}`),
+      this.safeRequest('/api/rooms', { method: 'GET', data: { merchantId, pageNo: 1, pageSize: 100 } }, `load rooms ${merchantId}`),
+      this.safeRequest('/api/stores', { method: 'GET', data: { merchantId, pageNo: 1, pageSize: 100 } }, `load stores ${merchantId}`),
+      this.safeRequest(`/api/stores/merchants/${merchantId}`, { method: 'GET' }, `load merchant ${merchantId}`)
+    ]).then(([orderRes, roomRes, storeRes, merchantRes]) => ({
+      merchantId,
+      orderRes,
+      roomRes,
+      storeRes,
+      merchantRes
+    }));
+  },
+
+  buildPendingBillingOrder() {
+    const booking = wx.getStorageSync('pendingBillingBooking') || {};
+    if (!booking.orderId && !booking.resourceId) return null;
+    if (!booking.startTime) return null;
+
+    const start = this.parseDate(booking.startTime);
+    const durationMinutes = Number(booking.durationMinutes || 60);
+    const end = start ? new Date(start.getTime() + durationMinutes * 60000) : null;
+    const amount = Number(booking.amount || 0);
+
+    return {
+      id: booking.orderId || `pending-${booking.createdAt || Date.now()}`,
+      orderId: booking.orderId || '',
+      merchantId: booking.merchantId || this.getActiveMerchantId(),
+      resourceId: booking.resourceId || '',
+      status: 0,
+      cashierUrl: booking.cashierUrl || '',
+      tradeNo: booking.tradeNo || '',
+      paymentTradeNo: booking.paymentTradeNo || booking.tradeNo || '',
+      payExpireAt: booking.payExpireAt || booking.unlockDeadline || '',
+      unlockDeadline: booking.unlockDeadline || '',
+      bookingStartTime: booking.startTime,
+      bookingEndTime: end ? this.formatBackendTime(end) : '',
+      prepaidAmount: amount,
+      amount,
+      createdAt: booking.createdAt || Date.now(),
+      localPending: true
+    };
+  },
+
+  buildLocalRoomBookingOrder() {
+    const booking = wx.getStorageSync('lastRoomBooking') || {};
+    if (!booking.id && !booking.orderId && !booking.resourceId) return null;
+    if (!booking.bookingStartTime && !booking.startTime) return null;
+    return {
+      id: booking.id || booking.orderId || `room-booking-${booking.createdAt || Date.now()}`,
+      orderId: booking.orderId || booking.id || '',
+      merchantId: booking.merchantId || this.getActiveMerchantId(),
+      storeId: booking.storeId || '',
+      resourceId: booking.resourceId || '',
+      roomName: booking.roomName || '',
+      status: this.pickFirstValue(booking, ['status', 'orderStatus']) !== undefined ? this.pickFirstValue(booking, ['status', 'orderStatus']) : 10,
+      bookingStartTime: booking.bookingStartTime || booking.startTime,
+      bookingEndTime: booking.bookingEndTime || booking.endTime,
+      prepaidAmount: Number(booking.amount || 0),
+      paidAmount: Number(booking.amount || 0),
+      createdAt: booking.createdAt || Date.now(),
+      localRoomBooking: true
+    };
+  },
+
+  syncPendingOrderCache(remoteOrders = []) {
+    const pending = wx.getStorageSync('pendingBillingBooking') || {};
+    if (!pending.orderId && !pending.resourceId) return;
+
+    const remoteOrder = remoteOrders.find(order => this.ordersMatch(order, pending));
+    if (!remoteOrder) return;
+
+    const status = this.resolveOrderStatus(remoteOrder);
+    if (status !== null && status !== 0) {
+      wx.removeStorageSync('pendingBillingBooking');
+    }
+  },
+
+  applyPendingOrderOverlay(remoteOrders = []) {
+    const pending = wx.getStorageSync('pendingBillingBooking') || {};
+    if (!pending.orderId && !pending.resourceId) return remoteOrders;
+
+    return remoteOrders.map(order => {
+      if (!this.ordersMatch(order, pending)) return order;
+      const status = this.resolveOrderStatus(order);
+      if (status !== 0) return order;
+      return {
+        ...order,
+        cashierUrl: order.cashierUrl || pending.cashierUrl || '',
+        tradeNo: order.tradeNo || pending.tradeNo || '',
+        paymentTradeNo: order.paymentTradeNo || pending.paymentTradeNo || pending.tradeNo || '',
+        payExpireAt: order.payExpireAt || pending.payExpireAt || pending.unlockDeadline || '',
+        unlockDeadline: order.unlockDeadline || pending.unlockDeadline || ''
+      };
+    });
+  },
+
+  applyLocalPaidOrderOverlay(remoteOrders = []) {
+    const paid = wx.getStorageSync('lastPaidBooking') || {};
+    if (!paid.orderId && !paid.resourceId) return remoteOrders;
+
+    const paidAt = Number(paid.paidAt || 0);
+    if (paidAt && Date.now() - paidAt > LOCAL_PAID_OVERLAY_MS) return remoteOrders;
+
+    return remoteOrders.map(order => {
+      if (!this.ordersMatch(order, paid)) return order;
+      const status = this.resolveOrderStatus(order);
+      if (status !== 0 && status !== null) return order;
+      return {
+        ...order,
+        status: 10,
+        orderStatus: 10,
+        paidAmount: order.paidAmount || paid.amount || order.prepaidAmount || order.amount,
+        localPaid: true
+      };
     });
   },
 
@@ -269,32 +460,87 @@ Page({
     return isOrderObject(source) ? source : null;
   },
 
+  resolveOrderStatus(order = {}) {
+    const orderStatus = this.pickFirstValue(order, ['status', 'orderStatus', 'billingStatus', 'orderState']);
+    const normalizedOrderStatus = this.normalizeOrderStatus(orderStatus);
+    if (normalizedOrderStatus !== null) return normalizedOrderStatus;
+
+    const paymentStatus = this.pickFirstValue(order, ['payStatus', 'paymentStatus', 'tradeStatus', 'cashierStatus']);
+    const normalizedPaymentStatus = this.normalizePaymentStatus(paymentStatus);
+    if (normalizedPaymentStatus !== null) return normalizedPaymentStatus;
+
+    return null;
+  },
+
   normalizeOrderStatus(status) {
-    if (status === undefined || status === null || status === '') return 40;
+    if (status === undefined || status === null || status === '') return null;
     const value = Number(status);
     if (!Number.isNaN(value)) return value;
 
     const text = String(status).toUpperCase();
-    if (['WAIT_PAY', 'PENDING', 'NOTPAY', 'UNPAID'].includes(text)) return 0;
+    if (['WAIT_PAY', 'WAITING_PAY', 'WAIT_PAYMENT', 'WAITING_PAYMENT', 'PENDING', 'PENDING_PAY', 'PENDING_PAYMENT', 'NOTPAY', 'NOT_PAY', 'UNPAID', 'UN_PAID', 'TO_BE_PAID', 'CREATED'].includes(text)) return 0;
     if (['PAID', 'WAIT_USE', 'WAITING_USE', 'RESERVED', 'BOOKED'].includes(text)) return 10;
     if (['USING', 'IN_USE', 'STARTED'].includes(text)) return 20;
     if (['COMPLETED', 'FINISHED', 'DONE'].includes(text)) return 40;
     if (['REFUNDING', 'REFUND_APPLY'].includes(text)) return 50;
     if (['REFUNDED'].includes(text)) return 55;
     if (['CLOSED', 'CANCEL', 'CANCELED', 'CANCELLED'].includes(text)) return 60;
-    return 40;
+    return null;
+  },
+
+  normalizePaymentStatus(status) {
+    if (status === undefined || status === null || status === '') return null;
+    const value = Number(status);
+    if (!Number.isNaN(value)) {
+      if (value === 0 || value === 1) return 0;
+      if (value === 2) return 10;
+      if (value === 3 || value === -1) return 60;
+      if (STATUS_MAP[value]) return value;
+      return null;
+    }
+
+    const text = String(status).toUpperCase();
+    if (['WAIT_PAY', 'WAITING_PAY', 'WAIT_PAYMENT', 'WAITING_PAYMENT', 'PENDING', 'PENDING_PAY', 'PENDING_PAYMENT', 'NOTPAY', 'NOT_PAY', 'UNPAID', 'UN_PAID', 'TO_BE_PAID', 'CREATED'].includes(text)) return 0;
+    if (['SUCCESS', 'PAY_SUCCESS', 'PAID', 'TRADE_SUCCESS', 'PAYED'].includes(text)) return 10;
+    if (['CLOSED', 'CANCEL', 'CANCELED', 'CANCELLED', 'FAILED', 'FAIL', 'PAY_FAIL', 'TRADE_CLOSED'].includes(text)) return 60;
+    return null;
   },
 
   hasOrder(list, target) {
-    const targetId = this.getOrderIdentity(target);
-    if (!targetId) return false;
-    return list.some(order => this.getOrderIdentity(order) === targetId);
+    const targetIds = this.getOrderIdentities(target);
+    if (!targetIds.length) return false;
+    return list.some(order => this.ordersMatch(order, target));
+  },
+
+  ordersMatch(a, b) {
+    const aIds = this.getOrderIdentities(a);
+    const bIds = this.getOrderIdentities(b);
+    if (!aIds.length || !bIds.length) return false;
+    return aIds.some(id => bIds.includes(id));
+  },
+
+  getOrderIdentities(order) {
+    if (!order) return [];
+    const values = [
+      order.id,
+      order.orderId,
+      order.billingOrderId,
+      order.billingId,
+      order.orderNo,
+      order.businessOrderNo,
+      order.outTradeNo
+    ];
+    const ids = [];
+    values.forEach(value => {
+      if (value === undefined || value === null || value === '') return;
+      const text = String(value);
+      if (!ids.includes(text)) ids.push(text);
+    });
+    return ids;
   },
 
   getOrderIdentity(order) {
-    if (!order) return '';
-    const id = order.id || order.orderId || order.billingOrderId || order.billingId;
-    return id === undefined || id === null ? '' : String(id);
+    return this.getOrderIdentities(order)[0] || '';
   },
 
   buildLocalPaidOrder() {
@@ -331,6 +577,7 @@ Page({
     const isPendingUse = order.status === 10;
     const isUsing = order.status === 20 || order.status === 30;
     const isCompleted = order.status === 40;
+    const isExpiredPendingPay = isPendingPay && this.isPayExpired(order);
 
     return {
       ...order,
@@ -347,10 +594,10 @@ Page({
       capacityText: this.formatCapacity(order.capacity || this.parseCapacity(order.roomTags)),
       showCapacity: !!this.formatCapacity(order.capacity || this.parseCapacity(order.roomTags)),
       amountLabel: isPendingPay ? '应付金额' : '实付',
-      tipText: this.getTipText(order.status),
+      tipText: isExpiredPendingPay ? '支付已超时，请重新下单' : this.getTipText(order.status),
       tipType: isPendingPay ? 'warning' : 'success',
-      showCancelOrder: isPendingPay,
-      showPay: isPendingPay,
+      showCancelOrder: isPendingPay && !isExpiredPendingPay,
+      showPay: isPendingPay && !isExpiredPendingPay,
       showCancelBooking: isPendingUse,
       showDetail: isPendingUse || isUsing || isCompleted,
       showRenew: isUsing,
@@ -505,7 +752,7 @@ Page({
 
   markOrderCancelled(orderId, tipText) {
     const allOrders = this.data.allOrders.map(order => {
-      if (order.id !== orderId) return order;
+      if (!this.ordersMatch(order, { id: orderId })) return order;
       return {
         ...order,
         status: 60,
@@ -528,7 +775,7 @@ Page({
 
   markAutoCancelFailed(orderId) {
     const allOrders = this.data.allOrders.map(order => {
-      if (order.id !== orderId) return order;
+      if (!this.ordersMatch(order, { id: orderId })) return order;
       return {
         ...order,
         tipText: '支付已超时，自动取消失败，请手动取消',
@@ -544,14 +791,24 @@ Page({
     const explicitExpire = this.pickFirstDate(order, [
       'payExpireAt',
       'payExpireTime',
+      'payDeadline',
+      'paymentDeadline',
       'paymentExpireAt',
       'paymentExpireTime',
+      'paymentTimeoutAt',
+      'paymentTimeoutTime',
       'expireAt',
       'expireTime',
+      'deadline',
+      'deadlineTime',
       'expiredAt',
       'expiredTime',
       'cashierExpireAt',
-      'cashierExpireTime'
+      'cashierExpireTime',
+      'unlockDeadline',
+      'unlockDeadlineTime',
+      'unlockExpireAt',
+      'unlockExpireTime'
     ]);
     if (explicitExpire) return explicitExpire.getTime();
 
@@ -576,12 +833,27 @@ Page({
   },
 
   pickFirstDate(obj, keys) {
-    for (const key of keys) {
-      if (obj[key]) {
-        const date = this.parseDate(obj[key]);
-        if (date) return date;
+    const queue = [obj];
+    const seen = [];
+    const nestedKeys = ['data', 'order', 'billingOrder', 'payment', 'cashier'];
+
+    while (queue.length) {
+      const current = queue.shift();
+      if (!current || typeof current !== 'object' || seen.includes(current)) continue;
+      seen.push(current);
+
+      for (const key of keys) {
+        if (current[key]) {
+          const date = this.parseDate(current[key]);
+          if (date) return date;
+        }
       }
+
+      nestedKeys.forEach(key => {
+        if (current[key] && typeof current[key] === 'object') queue.push(current[key]);
+      });
     }
+
     return null;
   },
 
@@ -684,6 +956,14 @@ Page({
     return '';
   },
 
+  pickFirstValue(obj, keys) {
+    for (const key of keys) {
+      const value = obj && obj[key];
+      if (value !== undefined && value !== null && value !== '') return value;
+    }
+    return undefined;
+  },
+
   pickFirstNumber(obj, keys) {
     for (const key of keys) {
       const value = obj && obj[key];
@@ -716,7 +996,7 @@ Page({
 
   payOrder(e) {
     const orderId = e.currentTarget.dataset.id;
-    const order = this.data.allOrders.find(o => o.id === orderId);
+    const order = this.data.allOrders.find(o => this.ordersMatch(o, { id: orderId }));
     const cashierUrl = (order && order.cashierUrl) || '';
     if (cashierUrl) {
       openCashier({
@@ -849,7 +1129,7 @@ Page({
       placeholderText: '请输入评价内容',
       success: (res) => {
         if (!res.confirm) return;
-        const merchantId = (this.data.allOrders.find(o => o.id === orderId) || {}).merchantId || this.getActiveMerchantId();
+        const merchantId = (this.data.allOrders.find(o => this.ordersMatch(o, { id: orderId })) || {}).merchantId || this.getActiveMerchantId();
         request(`/api/sqd/payment/orders/${orderId}/review?merchantId=${merchantId}`, {
           method: 'POST',
           data: { rating: 5, content: res.content || '满意' }
@@ -896,7 +1176,7 @@ Page({
 
   rebookOrder(e) {
     const orderId = e.currentTarget.dataset.id;
-    const order = this.data.allOrders.find(o => o.id === orderId);
+    const order = this.data.allOrders.find(o => this.ordersMatch(o, { id: orderId }));
     if (order && order.resourceId) {
       wx.navigateTo({ url: `/pages/room-detail/room-detail?id=${order.resourceId}&merchantId=${order.merchantId || this.getActiveMerchantId()}` });
     } else {

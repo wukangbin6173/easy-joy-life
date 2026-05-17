@@ -99,7 +99,18 @@ function resolveBookingEnabled(...sources) {
   if (!validSources.length) return false;
 
   const firstSourceValue = resolveSource(validSources[0]);
-  return firstSourceValue === true;
+
+  // 调试日志
+  const src = validSources[0];
+  const configObj = readConfig(src);
+  console.log('[booking-mode] resolveBookingEnabled:', 
+    'bookingConfig=', JSON.stringify(configObj),
+    'showBooking=', readDeep(src, BOOKING_FLAG_KEYS),
+    '→ result=', firstSourceValue);
+
+  // 如果没有找到任何预约配置（null），默认为开启预约
+  // 只有明确返回 false 时才关闭预约
+  return firstSourceValue !== false;
 }
 
 function getBookingValue(source) {

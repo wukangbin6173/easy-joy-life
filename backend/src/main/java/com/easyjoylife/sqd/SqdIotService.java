@@ -4,12 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * 商起点 - IoT 设备控制模块
  *
- * 覆盖：设备列表、设备影子、下发命令、执行资源动作、查询动作结果
+ * 开锁/关锁走 billing 模块的设备控制接口（已转发为 IoT 资源动作）：
+ * - POST /v1/billing/resource/{resourceId}/unlock — 远程开锁
+ * - POST /v1/billing/resource/{resourceId}/lock — 远程关锁
+ * - POST /v1/billing/resource/batch-unlock — 批量开锁
+ * - POST /v1/billing/resource/batch-lock — 批量关锁
+ *
+ * 通用 IoT 动作执行走 /v1/iot/actions/execute（如果权限可用）
  */
 @Service
 @RequiredArgsConstructor
@@ -17,7 +24,41 @@ public class SqdIotService {
 
     private final SqdClient client;
 
-    // ========== 设备管理 ==========
+    // ========== 通过 billing 模块的设备控制（推荐，OpenAPI签名） ==========
+
+    /** 远程开锁（单个资源） */
+    public SqdResponse unlock(Long resourceId) {
+        return client.post("/v1/billing/resource/" + resourceId + "/unlock", new HashMap<>());
+    }
+
+    /** 远程关锁（单个资源） */
+    public SqdResponse lock(Long resourceId) {
+        return client.post("/v1/billing/resource/" + resourceId + "/lock", new HashMap<>());
+    }
+
+    /** 批量开锁 */
+    public SqdResponse batchUnlock(List<Long> resourceIds) {
+        return client.post("/v1/billing/resource/batch-unlock", resourceIds);
+    }
+
+    /** 批量关锁 */
+    public SqdResponse batchLock(List<Long> resourceIds) {
+        return client.post("/v1/billing/resource/batch-lock", resourceIds);
+    }
+
+    // ========== 通用 IoT 动作执行（/v1/iot，需要 iot 权限） ==========
+
+    /** 执行资源动作（推荐使用，优于逐个下发命令） */
+    public SqdResponse executeAction(Map<String, Object> body) {
+        return client.post("/v1/iot/actions/execute", body);
+    }
+
+    /** 查询动作执行结果 */
+    public SqdResponse getActionResult(String actionNo) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("actionNo", actionNo);
+        return client.get("/v1/iot/actions/get", params);
+    }
 
     /** 查询设备列表 */
     public SqdResponse listDevices(Map<String, Object> body) {
@@ -45,20 +86,6 @@ public class SqdIotService {
         return client.post("/v1/iot/devices/command?merchantId=" + merchantId, body);
     }
 
-    // ========== 资源动作 ==========
-
-    /** 执行资源动作（推荐使用，优于逐个下发命令） */
-    public SqdResponse executeAction(Map<String, Object> body) {
-        return client.post("/v1/iot/actions/execute", body);
-    }
-
-    /** 查询动作执行结果 */
-    public SqdResponse getActionResult(String actionNo) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("actionNo", actionNo);
-        return client.get("/v1/iot/actions/get", params);
-    }
-
     /** 查询资源动作模板 */
     public SqdResponse listActionTemplates(Long merchantId, Long storeId, String resourceType) {
         Map<String, Object> params = new HashMap<>();
@@ -71,8 +98,6 @@ public class SqdIotService {
         }
         return client.get("/v1/iot/actions/templates", params);
     }
-
-    // ========== 设备注册（管理端使用） ==========
 
     /** 绑定或注册 IoT 设备 */
     public SqdResponse bindDevice(Map<String, Object> body) {

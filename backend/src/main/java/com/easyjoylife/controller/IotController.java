@@ -30,6 +30,123 @@ public class IotController {
 
     private final SqdIotService sqdIotService;
 
+    // ========== 简化开锁/关锁接口（走 billing 通道，最可靠） ==========
+
+    /**
+     * 远程开锁（单个资源）
+     * POST /api/iot/unlock/{resourceId}
+     *
+     * 这是最简单的开锁方式，走 billing 模块的设备控制接口，
+     * 商起点内部会转发为 IoT 资源动作。
+     */
+    @PostMapping("/unlock/{resourceId}")
+    public ResponseEntity<Map<String, Object>> unlock(@PathVariable Long resourceId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            SqdResponse sqd = sqdIotService.unlock(resourceId);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("message", "开锁成功");
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("开锁失败: resourceId={}", resourceId, e);
+            response.put("success", false);
+            response.put("message", "开锁失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 远程关锁（单个资源）
+     * POST /api/iot/lock/{resourceId}
+     */
+    @PostMapping("/lock/{resourceId}")
+    public ResponseEntity<Map<String, Object>> lock(@PathVariable Long resourceId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            SqdResponse sqd = sqdIotService.lock(resourceId);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("message", "关锁成功");
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("关锁失败: resourceId={}", resourceId, e);
+            response.put("success", false);
+            response.put("message", "关锁失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 批量开锁
+     * POST /api/iot/batch-unlock
+     * body: [resourceId1, resourceId2, ...]
+     */
+    @PostMapping("/batch-unlock")
+    public ResponseEntity<Map<String, Object>> batchUnlock(@RequestBody java.util.List<Long> resourceIds) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            if (resourceIds == null || resourceIds.isEmpty()) {
+                return badRequest(response, "请选择需要开锁的资源");
+            }
+            SqdResponse sqd = sqdIotService.batchUnlock(resourceIds);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("message", "批量开锁已下发");
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("批量开锁失败", e);
+            response.put("success", false);
+            response.put("message", "批量开锁失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 批量关锁
+     * POST /api/iot/batch-lock
+     * body: [resourceId1, resourceId2, ...]
+     */
+    @PostMapping("/batch-lock")
+    public ResponseEntity<Map<String, Object>> batchLock(@RequestBody java.util.List<Long> resourceIds) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            if (resourceIds == null || resourceIds.isEmpty()) {
+                return badRequest(response, "请选择需要关锁的资源");
+            }
+            SqdResponse sqd = sqdIotService.batchLock(resourceIds);
+            if (sqd.isSuccess()) {
+                response.put("success", true);
+                response.put("message", "批量关锁已下发");
+                response.put("data", sqd.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", sqd.getMsg());
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("批量关锁失败", e);
+            response.put("success", false);
+            response.put("message", "批量关锁失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
     // ========== 资源动作（小程序端核心接口） ==========
 
     /**

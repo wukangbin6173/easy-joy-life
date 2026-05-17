@@ -177,22 +177,41 @@ const storeApi = {
   getStoreWithBookingMode(storeId) {
     return this.getStoreById(storeId).then(res => {
       const store = (res && res.data) || {};
-      if (store.bookingConfig || store.displayConfig || store.showBooking !== undefined) return res;
+      const merchantId = store.merchantId || store.merchantID || '';
 
-      return this.getStoreBookingMode(storeId).then(modeRes => {
-        const mode = (modeRes && modeRes.data) || {};
+      // 直接调预约配置专用接口
+      const configUrl = merchantId
+        ? `/api/rooms/booking-config?merchantId=${merchantId}&storeId=${storeId}`
+        : `/api/rooms/booking-config?storeId=${storeId}`;
+
+      return request(configUrl).then(configRes => {
+        const configData = (configRes && configRes.data) || configRes || {};
+        // status: 0=预约开启，1=预约关闭
+        const status = configData.status !== undefined ? configData.status : (configData.bookingEnabled === true ? 0 : configData.bookingEnabled === false ? 1 : undefined);
+        const bookingConfig = { status };
+        console.log('[booking-config] storeId:', storeId, 'merchantId:', merchantId, '返回:', JSON.stringify(configData), '→ status:', status);
         return {
           ...res,
           data: {
             ...store,
-            ...mode,
-            bookingConfig: mode.bookingConfig || mode.config || store.bookingConfig,
-            displayConfig: mode.displayConfig || store.displayConfig
+            bookingConfig
           }
         };
       }).catch(err => {
-        console.warn('加载门店预约配置失败:', err);
-        return res;
+        console.warn('加载门店预约配置失败，尝试 booking-mode 接口:', err);
+        // 降级：尝试旧的 booking-mode 接口
+        return this.getStoreBookingMode(storeId).then(modeRes => {
+          const mode = (modeRes && modeRes.data) || {};
+          return {
+            ...res,
+            data: {
+              ...store,
+              ...mode,
+              bookingConfig: mode.bookingConfig || mode.config || store.bookingConfig,
+              displayConfig: mode.displayConfig || store.displayConfig
+            }
+          };
+        }).catch(() => res);
       });
     });
   },

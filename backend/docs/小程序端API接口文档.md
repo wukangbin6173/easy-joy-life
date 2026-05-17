@@ -897,9 +897,49 @@ GET /api/payment/order/{orderNo}
 ## 十五、IoT设备控制
 
 > 用于控制棋牌室的智能门锁、电源等IoT设备。  
-> ⚠️ **推荐使用"资源动作"接口**（`/api/iot/actions/execute`），而非逐个下发设备命令。资源动作会根据预配置的模板统一完成多设备、多步骤操作。
+> ⚠️ **开锁/关锁推荐使用简化接口**（`/api/iot/unlock/{resourceId}`），内部走 billing 模块的设备控制通道，最可靠。  
+> 更复杂的多设备动作（开灯、开电源等）使用 `/api/iot/actions/execute`。
 
-### 15.1 执行资源动作（核心接口）
+### 15.1 远程开锁（推荐）
+
+```
+POST /api/iot/unlock/{resourceId}
+```
+
+最简单的开锁方式，不需要传其他参数。
+
+**返回示例：**
+```json
+{ "success": true, "message": "开锁成功" }
+```
+
+### 15.2 远程关锁
+
+```
+POST /api/iot/lock/{resourceId}
+```
+
+### 15.3 批量开锁
+
+```
+POST /api/iot/batch-unlock
+Content-Type: application/json
+
+[1, 2, 3]
+```
+
+**返回：** `{ success, data: { successResourceIds: [...], failures: [...] } }`
+
+### 15.4 批量关锁
+
+```
+POST /api/iot/batch-lock
+Content-Type: application/json
+
+[1, 2, 3]
+```
+
+### 15.5 执行资源动作（通用接口）
 
 ```
 POST /api/iot/actions/execute
@@ -953,7 +993,7 @@ POST /api/iot/actions/execute
 
 ---
 
-### 15.2 查询动作执行结果
+### 15.6 查询动作执行结果
 
 ```
 GET /api/iot/actions/{actionNo}
@@ -974,7 +1014,7 @@ GET /api/iot/actions/{actionNo}
 
 ---
 
-### 15.3 查询资源动作模板
+### 15.7 查询资源动作模板
 
 ```
 GET /api/iot/actions/templates?merchantId={merchantId}&storeId={storeId}&resourceType=CHESS_ROOM
@@ -982,7 +1022,7 @@ GET /api/iot/actions/templates?merchantId={merchantId}&storeId={storeId}&resourc
 
 ---
 
-### 15.4 查询设备列表
+### 15.8 查询设备列表
 
 ```
 POST /api/iot/devices/list
@@ -999,7 +1039,7 @@ POST /api/iot/devices/list
 
 ---
 
-### 15.5 查询设备详情
+### 15.9 查询设备详情
 
 ```
 GET /api/iot/devices/{deviceNo}?merchantId={merchantId}
@@ -1007,7 +1047,7 @@ GET /api/iot/devices/{deviceNo}?merchantId={merchantId}
 
 ---
 
-### 15.6 查询设备影子（实时状态）
+### 15.10 查询设备影子（实时状态）
 
 ```
 GET /api/iot/devices/{deviceNo}/shadow?merchantId={merchantId}
@@ -1029,7 +1069,7 @@ GET /api/iot/devices/{deviceNo}/shadow?merchantId={merchantId}
 
 ---
 
-### 15.7 下发设备命令（低级接口）
+### 15.11 下发设备命令（低级接口）
 
 > ⚠️ 推荐优先使用 15.1 的资源动作接口
 
@@ -1061,15 +1101,21 @@ POST /api/iot/devices/command?merchantId={merchantId}
 
 ---
 
-### 15.8 IoT 使用流程
+### 15.12 IoT 使用流程
 
-**用户端典型流程：**
+**用户端典型流程（简化版）：**
 
 1. 用户下单支付成功后，前端显示"开门"按钮
-2. 用户点击"开门" → 调用 `POST /api/iot/actions/execute`，传 `actionType: "START_USAGE"`
-3. 前端轮询 `GET /api/iot/actions/{actionNo}` 确认开锁结果
-4. status=20 → 显示"开门成功"；status=40/50 → 提示"开门失败，请重试"
-5. 退房时调用 `POST /api/iot/actions/execute`，传 `actionType: "END_USAGE"`
+2. 用户点击"开门" → 调用 `POST /api/iot/unlock/{resourceId}`
+3. 返回 success=true → 显示"开门成功"
+4. 退房时调用 `POST /api/iot/lock/{resourceId}`
+
+**用户端典型流程（完整版，需要轮询）：**
+
+1. 用户点击"开门" → 调用 `POST /api/iot/actions/execute`，传 `actionType: "START_USAGE"`
+2. 前端轮询 `GET /api/iot/actions/{actionNo}` 确认开锁结果（1秒间隔，最多30次）
+3. status=20 → 显示"开门成功"；status=40/50 → 提示"开门失败，请重试"
+4. 退房时调用 `POST /api/iot/actions/execute`，传 `actionType: "END_USAGE"`
 
 **注意事项：**
 - 未配置IoT设备的门店，预约/计费流程不受影响，只是不会触发设备动作
